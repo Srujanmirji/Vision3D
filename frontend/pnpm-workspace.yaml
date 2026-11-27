@@ -1,2 +1,8 @@
 allowBuilds:
   esbuild: true
+
+minimumReleaseAgeExclude:
+  - postcss@8.5.34
+
+overrides:
+  postcss: 8.5.34

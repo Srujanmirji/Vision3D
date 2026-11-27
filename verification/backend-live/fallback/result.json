@@ -1,0 +1,14 @@
+{
+  "job_id": "643924fb5c97df99a46c7377145cfd9f",
+  "status": "failed",
+  "stage": "failed",
+  "progress": null,
+  "error": {
+    "code": "QUOTA_EXCEEDED",
+    "message": "The generation provider has no quota available."
+  },
+  "model_id": null,
+  "provider": "hunyuan-shape",
+  "created_at": "2026-11-27T15:08:27.427977+00:00",
+  "updated_at": "2026-11-27T15:08:33.969642+00:00"
+}

@@ -11,3 +11,6 @@ node_modules/
 backend/data/
 .pytest_cache/
 *.tsbuildinfo
+
+.coverage
+/frontend/coverage/

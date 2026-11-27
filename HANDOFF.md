@@ -1,12 +1,210 @@
 # Vision3D engineering handoff
 
+## Audit resolution — 27 November 2026
+
+The audit code fixes, affected files, regression tests and open findings are tracked in [AUDIT_RESOLUTION.md](AUDIT_RESOLUTION.md). The production browser regression ran locally over HTTPS, verified upload through download and cookie-free sharing, and recorded 375–1440px screenshots and a wireframe capture. It uses a fixture runner with an archived real GLB. Separately, fresh live community TripoSR succeeded in 83.64 seconds.
+
+Release gates remain open for an operator-owned Hugging Face Space and physical iPhone/Android AR over public HTTPS. The owned-provider smoke test now uses `TRIPOSR_SPACE` when configured. Run with a team-controlled Space before depending on it. The [physical device checklist](AR_DEVICE_TESTING.md) remains pending, including older-iPhone USDZ memory checks.
+
+The backend now prunes retained data while running. For per-client upload limits behind a public edge, follow the trust and header-replacement contract in [DEPLOYMENT.md](DEPLOYMENT.md). Keep the option disabled until that rule is enforced and verified.
+
+## Independent audit — 27 November 2026
+
+A full code, security and QA audit is recorded in [AUDIT_REPORT.md](AUDIT_REPORT.md). No application code was changed. Another session was editing frontend files during the audit, so the report describes a snapshot of the working copy.
+
+**Re-run by the audit:**
+- Backend: pytest passed 12 tests with 3 live tests skipped; ruff, strict mypy, pip check and pip-audit were clean.
+- Frontend: tsc, eslint, all 36 Vitest tests and `next build` passed.
+- `pnpm audit` reports four `postcss` advisories through `next`.
+- Coverage was not measured. No live inference, browser end-to-end run, device AR or accessibility scan was run.
+
+**No faking found.** Progress is always null and stages are real. The one bundled sample GLB is labelled wherever it appears and is never used for a failed job. No placeholder buttons or settings the providers can't support were found. `HF_TOKEN` stays in the backend.
+
+**Critical:**
+- AR has not been tested on a physical phone, and nothing has been deployed to a public HTTPS origin.
+- Generation still depends on the unowned community TripoSR Space.
+
+**High:**
+- `AbortSignal.any` in `frontend/lib/api.ts` breaks every API call on iOS Safari before 17.4, including the shared AR page.
+- The 300 s job deadline includes time spent waiting in the queue, so a job queued behind two others almost certainly times out.
+- The backend and the current frontend are not committed to git. Some task.md ticks have no reproducible evidence: the 1440/834/390 layouts and the wireframe check.
+
+**Medium:**
+- The upload rate limit behind the proxy is unverified.
+- Retention cleanup runs only at startup.
+- Icon buttons are 32–40 px, below the 44 px tap-target floor.
+- There is no coverage measurement and no committed E2E test.
+- The `postcss` advisories need a `next` upgrade.
+- No CSP, `nosniff` or frame headers are set.
+
+**H1 fixed after the audit.**
+- `timedSignal()` in `frontend/lib/api.ts` replaces both `AbortSignal.any` and `AbortSignal.timeout`, using an `AbortController` and `setTimeout`. Its listeners and timers are cleaned up after each request.
+- `frontend/__tests__/abort-compat.test.ts` deletes both APIs before running. It failed before the change and passes after it.
+- Re-checked: frontend 38 of 38 tests, tsc, eslint and `next build` pass; backend 21 tests pass with 3 skipped, and ruff and mypy are clean.
+- Not checked on a physical older iPhone.
+
+**Next steps, in order:**
+1. Commit the work once the other session stops.
+2. Provision and verify an owned Space.
+3. Run [AR_DEVICE_TESTING.md](AR_DEVICE_TESTING.md) on an iPhone and an ARCore Android phone over a public HTTPS origin.
+
+## Mobile camera, QR & AR UX polish — 27 November 2026
+
+Reviewed and refined the complete mobile camera, desktop QR handoff, mobile AR preview, and touch-navigation experience across [CameraCaptureDialog.tsx](frontend/components/upload/CameraCaptureDialog.tsx), [ImageInputPanel.tsx](frontend/components/upload/ImageInputPanel.tsx), [QrArDialog.tsx](frontend/components/ar-dialog/QrArDialog.tsx), [app/ar/[token]/page.tsx](frontend/app/ar/%5Btoken%5D/page.tsx), [AppShell.tsx](frontend/components/sidebar/AppShell.tsx), and [ModelViewport.tsx](frontend/components/viewer/ModelViewport.tsx), preserving the Obsidian Black (`#101011`), Charcoal (`#19191B`), and Copper Orange (`#F79448`) identity and all existing security/AR URL checks.
+
+- **Mobile image capture & permission UX**: Added calm waiting-for-permission viewfinder state, subtle copper corner framing brackets, immediate camera-track shutdown on capture, an in-dialog **Review Captured Photo** preview (`W × H · JPEG` badge with `Retake` vs `Use Photo`), and explicit iOS Safari / Android Chrome permission recovery steps on denial alongside Gallery and native `capture="environment"` fallbacks.
+- **Desktop QR handoff (`QrArDialog.tsx`)**: Refined `"View in Your Space"` (`Phone AR Handoff`) dialog with a framed Ivory quiet-zone QR card, live remaining-time badge, concise 2-step scan instructions, localhost HTTPS guard, and honest iOS Quick Look / Android ARCore disclosure (no fake in-AR controls).
+- **Mobile AR preview (`app/ar/[token]/page.tsx`)**: Upgraded `<model-viewer>` to neutral studio environment lighting (`environment-image="neutral"`, `tone-mapping="commerce"`, `shadow-intensity="1.25"`), subtle 360° floor ring, GLB download loading overlay, touch-friendly `Perspective | Front | Rear | Side` + `Reset` + `Auto Rotate` controls, full-width `52px` Copper **`View in Your Space`** button with platform runtime copy when AR is supported, and a calm **Interactive 360° Preview** fallback card with iPhone Safari & Android Chrome AR compatibility notes + `44px` `Download GLB` button when unsupported.
+- **Mobile navigation & touch ergonomics**: Added `env(safe-area-inset-bottom)` padding and a top copper active indicator bar to the mobile bottom navigation bar, plus horizontally scrollable `36px+` touch camera presets in the main workspace.
+- **Verification**: `pnpm typecheck`, `pnpm lint`, `pnpm test` (36/36 Vitest tests across 6 files, including new [ar-ux.test.tsx](frontend/__tests__/ar-ux.test.tsx)), and `pnpm build` all exited 0. Browser QA verified Desktop and Mobile (`390×844`) across `/create?sample=1`, QR dialog, Camera Capture dialog (live stream), and `/ar/sample` with zero console errors, clean `inline-end` toolbar tooltip positioning, and zero horizontal overflow. Physical iPhone/Android AR device testing over a public HTTPS origin remains pending per [AR_DEVICE_TESTING.md](AR_DEVICE_TESTING.md).
+
+## Production interactive 3D viewer — 27 November 2026
+
+Implemented the production interactive 3D viewer across [frontend/components/viewer](frontend/components/viewer) and [frontend/app/models/[id]/page.tsx](frontend/app/models/%5Bid%5D/page.tsx) using Google `<model-viewer>` and a lazy-loaded Three.js wireframe canvas (`three` + `GLTFLoader` + `OrbitControls`).
+
+- **Viewer capabilities**:
+  - **Textured mode (`<model-viewer>`)**: Full 360° rotation, mouse and touch controls, zoom (`field-of-view` controls + scroll/pinch), primary-drag Pan mode (plus native Shift+drag / two-finger pan), auto-rotation, reset camera, fullscreen, realistic neutral studio environment lighting (`environment-image="neutral"`, `tone-mapping="commerce"`), and soft ground shadows (`shadow-intensity="1.25"`, `shadow-softness="0.82"`).
+  - **Camera presets**: `Perspective`, `Front`, `Rear`, and `Side` view presets synchronized across both Textured and Wireframe renderers.
+  - **Wireframe mode (`ThreeWireframeCanvas.tsx`)**: Real Three.js WebGL wireframe overlay (Copper `#F79448` wireframe over obsidian occluded mesh + ground shadow plane) fetched with session credentials (`credentials: "include"`), with explicit cleanup of geometries, materials, textures, controls, `ResizeObserver`, `requestAnimationFrame`, and WebGL context (`renderer.forceContextLoss()`) on model switch or unmount.
+  - **Actual model metadata & loading/error states**: Displays real server-reported `triangles`, `vertices`, `bounds_extent`, `appearance`, `provider`, and `byte_size` (augmented by `<model-viewer>` `getDimensions()` / Three.js mesh counts only when server stats are absent, never fabricated), plus loading spinners and retryable error states.
+- **Live multi-model browser verification**:
+  - Verified against live FastAPI (`VISION3D_COMMUNITY_DEMO=1`, isolated temp data dir) + Next.js production server through `/api/*`:
+    - **Sneaker (`shoe.jpg`)**: Generated real `2.68 MB` GLB (`69,614` tris, `53,669` verts, `0.83 × 0.75 × 0.49 u`, `Baked Texture`). Verified Textured + Wireframe rendering, Front/Rear/Side/Perspective views, Orbit/Pan/Zoom/Auto-Rotate/Reset controls.
+    - **Chair (`chair.png`)**: Generated real `2.88 MB` GLB (`82,564` tris, `61,900` verts, `0.56 × 1.03 × 0.57 u`, `Baked Texture`). Verified clean model switching, metadata updates, Textured + Wireframe rendering, `/models` library, `/models/[id]` detail view, and `390×844` mobile layout with zero JS or WebGL console errors.
+  - Automated checks: `pnpm typecheck`, `pnpm lint`, `pnpm test` (34/34 Vitest tests across 5 files), and `pnpm build` all exited 0.
+
+## Mobile capture and AR integration — 27 November 2026
+
+**Camera:** Take Photo requests browser permission and prefers the rear camera. Capture converts the frame to JPEG and goes through the same preview, validation, consent and FastAPI generation path as gallery uploads. Tracks stop on capture, close or page exit. Denial shows a recovery message, gallery selection and the native capture picker.
+
+**Sharing:** The desktop QR encodes a unique, validated HTTPS share link. The model stays private to its session except through the expiring read-only token. The mobile page loads that exact model without an owner cookie. Expired links cannot keep serving bytes, and deleting the model revokes its shares. The shared GLB supports byte ranges, public-asset CORS and attachment download.
+
+**AR:** Google Model Viewer selects WebXR, Android Scene Viewer or iOS Quick Look based on the device. It uses horizontal placement and runtime-managed tracking, rotation and scaling. On Quick Look launch it converts the textured GLB to a USDZ blob in the browser. Unsupported browsers and AR launch failures keep the 360° model available. Vision3D needs no separate mobile app. Android native AR depends on the phone's supported Google runtime.
+
+**Verified:** On isolated local HTTPS, Chromium captured a JPEG from a test-camera feed of a public sneaker photo, stopped camera tracks, and submitted the image to live CPU TripoSR. The job succeeded in 104.89 seconds. A browser-injected denial exercised the gallery fallback. The desktop QR decoded to the issued URL, an independent cookie-free browser loaded the exact GLB at 375px, and the file endpoint returned the correct MIME and range response. Model Viewer produced an embedded-texture USDZ that passed `usdchecker --arkit --strict`. [Verification artifacts](verification/mobile)
+
+**Pending manual verification:** Public-network reachability and physical iPhone/Android camera behavior, Quick Look launch and texture appearance, WebXR and Scene Viewer placement, tracking and gestures. Use the [physical-device checklist](AR_DEVICE_TESTING.md). The browser test used a local HTTPS stand-in and did not create a public tunnel. Frontend lint, type checking, 34 Vitest tests and the production build passed. Backend Ruff, strict mypy and 12 tests passed.
+
+For deployment, set `PUBLIC_APP_URL` to the same publicly reachable HTTPS origin serving Next.js and route `/api/*` to FastAPI. Keep the frontend API base at `/api`. Use that origin for the QR and both phones. The backend returns a structured error when sharing is attempted without its public URL configured.
+
+## Live frontend integration — 27 November 2026
+
+The frontend uses the FastAPI session through the Next.js `/api/*` rewrite. Uploads send the selected photo, supported provider options, and explicit external-processing consent. Once FastAPI accepts the job, the workspace uses `/create?job=<job_id>` so a browser reload can resume polling. The workspace shows server stages with indeterminate progress, retries transient polling failures within a deadline, and uses the cancellation endpoint for active jobs. A terminal failure requires a new upload, while a polling or model-retrieval error can recheck the same job.
+
+My Models reads generated assets and paginated generation history from FastAPI under the anonymous session cookie. The library refreshes on navigation, window focus, manual refresh, and deletion. The details page and export dialog display returned metadata. Private GLBs use the same-origin proxy for viewing and download, even when local FastAPI returns an absolute loopback URL. The export dialog checks the GLB signature and reports failed downloads. The bundled sample is still explicitly labeled and separate from generated records.
+
+### Run both services
+
+Use the backend setup below, then from `frontend/` run:
+
+```sh
+VISION3D_BACKEND_ORIGIN=http://127.0.0.1:8000 npm run dev
+```
+
+Open `http://localhost:3000/create`. The backend needs a configured provider. For the verified free demo, start FastAPI with `VISION3D_COMMUNITY_DEMO=1` and keep the frontend API base at its default `/api`. For public deployment, set the public HTTPS origin on the backend and use the same-origin rewrite. No provider credentials belong in frontend variables.
+
+### Integration verification
+
+- Chrome submitted a real sneaker JPEG with consent through Next.js to FastAPI. FastAPI returned 202. Polling resumed after a browser reload, and TripoSR completed in 103.2 seconds with no reported percentage.
+- The browser loaded that job’s generated model and exported its **2,608,380-byte** GLB with **63,725 triangles** and a baked texture. Khronos reported zero errors and zero warnings. The first browser harness stopped on a viewer-property assertion, so validation and download continued against the same persisted job and isolated test session.
+- The library showed the generated record and completed history after reload. A separate live job returned 200 from cancellation and remained in history as Cancelled. A repeat provider call returned TIMEOUT. The UI surfaced the failure, allowed selecting a fresh image for retry, and showed no model for that failed job.
+- Checked 375px and 1280px layouts, keyboard focus through the upload controls, and no viewer-toolbar overlap with the success banner. No paid inference or physical phone AR test was performed.
+
+Frontend lint, strict type checking, all 22 Vitest tests, and the production build passed. Artifacts, API response trace, GLB, and validator report are in [verification/frontend-live](verification/frontend-live).
+
+## Frontend design system & all 13 screens — 27 November 2026
+
+Implemented the complete Vision3D frontend in [frontend](frontend) (Next.js App Router, strict TypeScript, Tailwind CSS v4) preserving the approved Obsidian (`#101011`), Charcoal (`#19191B`), Copper Orange (`#F79448`), Ivory (`#F5F3F0`), and Muted Silver (`#A6A3A0`) visual identity from [design-reference.png](design-reference.png) and [DESIGN.md](DESIGN.md). Backend code in [backend](backend) was not modified.
+
+- **Completed screens**:
+  1. **Landing page** (`/`) — compact nav, hero split with live interactive sample `<model-viewer>`, 3-step workflow strip, zero pricing/credit fluff.
+  2. **Main image-to-3D workspace** (`/create`) — dominant central viewport, compact sidebar (desktop) / inline nav tabs (tablet) / bottom nav (mobile), right settings panel closely matching `design-reference.png`.
+  3. **Image upload & preview** — drag-and-drop, file picker, mobile camera capture (`capture="environment"`), JPEG/PNG/WebP + 10 MB + decoded dimension validation, thumbnail preview, replace/clear.
+  4. **Generation settings** — strictly provider-capability-gated (`GET /health`); only exposes provider selector when 2+ verified providers exist and background removal when supported, plus required `allow_external_processing` consent checkbox.
+  5. **Generation progress** — semantic indeterminate/determinate `<progress>` bar, stage label, spinner, and `Cancel Job` (`DELETE /v1/jobs/{id}`).
+  6. **Interactive 3D workspace** — client-only `<model-viewer>`, floating glass toolbar (Orbit, Pan, Zoom In/Out, Reset, Fullscreen with tooltips), 360° floor ring, `Auto Rotate` switch, `360°` reset, `View in AR`, and `Download` (Export Dialog).
+  7. **Model library** (`/models`) — session-scoped list (`GET /v1/models`), offline/empty states, delete confirmation `<dialog>`, Export/AR triggers, and explicitly labeled local Sample 3D Asset section.
+  8. **Model details** (`/models/[id]` & `/models/sample`) — interactive 3D preview, honest asset specifications (`id`, format, size, appearance, triangles, vertices, extents, provider when returned), Open in Studio, Export GLB, View in AR, and delete confirmation.
+  9. **Export dialog** ([ExportDialog.tsx](frontend/components/export-dialog/ExportDialog.tsx)) — native `<dialog>` showing verified `.glb` specs, Copy Asset URL, Download GLB (`?download=true` for private models), and honest disclosure that USDZ/OBJ/STL are not enabled unless provided.
+  10. **Mobile AR entry screen** (`/ar/[token]` & `/ar/sample`) — `<model-viewer ar ar-modes="webxr scene-viewer quick-look">`, `canActivateAR` detection with 3D fallback banner, scale disclaimer, 42px `Download GLB` button, and expired-link error state.
+  11. **Desktop QR code dialog** ([QrArDialog.tsx](frontend/components/ar-dialog/QrArDialog.tsx)) — native `<dialog>` generating SVG QR codes for HTTPS public URLs while refusing to silently encode `localhost`.
+  12. **Settings** (`/settings`) — live `/health` diagnostics, API/AR origin status, verified provider list, auto-rotate default (respecting `prefers-reduced-motion`), and privacy/retention disclosures.
+  13. **Empty, loading, error & success states** — reusable `Spinner`, `ProgressBar`, `Skeleton`, `AlertBanner`, `ErrorState`, and generation success banner.
+- **Reusable UI design system (`frontend/components/ui/`)**: `Button`, `TextInput`, `Checkbox`, `Select`, `CopperSwitch`, `Dialog`, `Tooltip`, `Spinner`, `ProgressBar`, `Skeleton`, `Badge`, `AlertBanner`, `ErrorState`.
+- **Same-origin proxy**: [frontend/next.config.ts](frontend/next.config.ts) rewrites `/api/*` to `VISION3D_BACKEND_ORIGIN` (default `http://127.0.0.1:8000`) for iOS Safari session-cookie compatibility.
+- **Verification**: `pnpm typecheck`, `pnpm lint`, `pnpm test` (17/17 Vitest tests), and `pnpm build` all exited 0. Browser QA verified every route at Desktop (`1440×900`) and Mobile (`390×844`) with zero JS/React console errors and zero horizontal overflow.
+- **Remaining integration work**:
+  - Run live end-to-end frontend → FastAPI upload, consent, polling, cancel, GLB view, download, and deletion with `VISION3D_COMMUNITY_DEMO=1` (or an owned TripoSR Space) running on port 8000.
+  - Configure an HTTPS tunnel or deployed HTTPS origin (`PUBLIC_APP_URL` + `NEXT_PUBLIC_PUBLIC_APP_URL`) and test QR scanning + AR placement/scaling on physical iPhone Safari (Quick Look) and ARCore Android Chrome (Scene Viewer / WebXR).
+  - Provision an operator-owned TripoSR Space for demo reliability and update `README.md` with final setup and device test results.
+
+## Backend delivery — 27 November 2026
+
+FastAPI is implemented in [backend](backend). The service runs as one process with one active generation slot, a bounded local queue, SQLite records and private local GLBs. Jobs are persisted and interrupted jobs become terminal on restart. The service strips EXIF and other metadata before upload, restricts upload and model sizes, applies a per-IP upload limit, and requires explicit consent for Hugging Face processing. Provider credentials stay in the backend worker.
+
+The TripoSR worker now unwraps the inferred vertex colors and bakes them into an embedded PNG base-color texture. The API labels this `baked_texture`. This closes the texture-file gap from the review without claiming photographic detail or measured dimensions. Valid GLBs are limited to 100,000 triangles and 10 MB by default. Hunyuan is an opt-in shape-only fallback with cleanup and a distinct `shape_only` label. It remains subject to the provider license and shared ZeroGPU quota.
+
+The preferred deployment primary is an operator-owned, API-compatible free TripoSR Space configured through `TRIPOSR_SPACE`. This hook is implemented. An owned Space has not been provisioned or verified. The successful live tests used the opt-in public CPU community Space. Cookie-free shared GLB URLs and expiry were tested against the API. Phone reachability, Android Scene Viewer, iPhone Quick Look and USDZ remain unverified.
+
+### Start the backend
+
+From the repository root:
+
+```sh
+cd backend
+python3.13 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+VISION3D_COMMUNITY_DEMO=1 uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+Open `http://localhost:8000/docs` or fetch `/openapi.json`. For an owned Space, use [backend/.env.example](backend/.env.example) and supply any required `HF_TOKEN` only to the backend environment. Run one process per data directory. Keep access logging off or redact share-token paths. Set `PUBLIC_APP_URL` to a public HTTPS origin and have the deployment proxy map its `/api/*` to this service, stripping `/api`. For direct local calls use the backend URL. The frontend integration above now sends consent and uses the same-origin proxy.
+
+Example upload and poll with an anonymous cookie jar:
+
+```sh
+curl -c /tmp/vision3d.cookies -F 'allow_external_processing=true' \
+  -F 'image=@../verification/reconstruction/inputs/shoes.jpg' \
+  http://localhost:8000/v1/jobs
+curl -b /tmp/vision3d.cookies http://localhost:8000/v1/jobs/JOB_ID
+```
+
+| Area | Endpoints |
+|---|---|
+| Health and schema | GET /health, /health/live, /health/ready, /docs, /openapi.json |
+| Jobs | POST /v1/jobs, GET /v1/jobs, GET or DELETE /v1/jobs/{id} |
+| Models | GET /v1/models, GET or DELETE /v1/models/{id}, GET or HEAD /v1/models/{id}/glb, optional ?download=true |
+| Sharing | POST /v1/models/{id}/share, GET /v1/share/{token}, GET or HEAD /v1/share/{token}/glb |
+
+See [API.md](API.md) for the canonical wire shapes. Share creation requires a configured public HTTPS origin. The private asset endpoints require the session cookie.
+
+### Verification
+
+From `backend/`:
+
+```sh
+ruff check app tests
+mypy app tests
+python -m pytest -q
+VISION3D_RUN_LIVE=1 python -m pytest -q tests/test_live.py
+VISION3D_RUN_LIVE_FALLBACK=1 python -m pytest -q tests/test_live.py -k fallback
+```
+
+The default suite passed 12 tests, with three live tests skipped unless enabled. Ruff, strict mypy, dependency checks and Uvicorn HTTP checks also passed. The two opt-in public CPU integration cases passed from POST upload through real inference, texture baking, metadata, download and deletion. The sneaker took 106.81 s and produced a 2.61 MB GLB with 63,725 triangles. The chair took 99.70 s and produced a 3.00 MB GLB with 82,911 triangles. Both downloaded assets passed the Khronos validator with zero errors or warnings and rendered through 360° in desktop Chrome. [Live artifacts and reports](verification/backend-live)
+
+The opt-in Hunyuan fallback test induced a primary failure and contacted the real fallback. It received `QUOTA_EXCEEDED` and published no model. The controlled tests cover a successful fallback and bounded retry. Offline post-processing of a previously generated Hunyuan model yielded a shape-only GLB with 99,897 triangles. No paid API ran.
+
+Worker cancellation is immediate for API state and prevents asset publication. Cancellation at the hosted provider is best effort. The queue is local to one process, and retention pruning runs at startup and periodically. A token or owned Space configuration cannot guarantee free public capacity. Native AR acceptance still requires compatible phones and the HTTPS proxy path.
+
+## Prior geometry proof of concept
+
 27 November 2026. The live proof of concept saved five GLBs across a chair, sneaker, headphones and a photo of toys. All five passed geometry validation and a desktop Chrome orbit through 360°. Hunyuan generated shape-only GLBs for the chair, sneaker and headphones. The community CPU TripoSR endpoint generated GLBs with vertex colors and OBJ files for the sneaker and toys.
 
 For the geometry demo, use community CPU TripoSR as primary and Hunyuan3D-2 shape-only as the quota-dependent fallback. Hunyuan's textured route failed upstream. No tested route met the MVP's textured GLB requirement.
 
 Start with [AI_RESEARCH.md](AI_RESEARCH.md) for provider coverage, licenses, timing and reproduction. The probe, validators, public input provenance and downloaded artifacts are under [verification/reconstruction](verification/reconstruction). Earlier Stability AI evidence is in [verification/phase0/RESULTS.md](verification/phase0/RESULTS.md).
 
-The app's backend integration remains pending at the feasibility gate. The desktop browser orbit was verified. Device AR and USDZ are pending. Before wiring an adapter, establish a repeatable free textured GLB route and test a single-object toy photo. A free-account Hugging Face token is a possible follow-up only after its available quota is known. Treat two ZeroGPU Spaces as sharing a failure domain when considering fallback.
+At the time of this earlier spike, backend integration was pending at the feasibility gate. The desktop browser orbit was verified. Device AR and USDZ are pending. That spike called for a repeatable textured GLB route and a single-object toy photo. The backend now verifies the texture-baking route. The single-object toy test remains open. A free-account Hugging Face token is a possible follow-up only after its available quota is known. Treat two ZeroGPU Spaces as sharing a failure domain when considering fallback.
 
 The probe and validation code passed Ruff and strict mypy. Existing frontend lint, type checking and 13 tests passed. No UI changes were required for this proof of concept.
 
@@ -43,4 +241,4 @@ The blockers are now:
 4. Add a clean single-object toy photo and a cluttered photo as test inputs.
 5. Fix the contracts before building the backend.
 
-Start with step 3. It needs no backend.
+This was the review order before the backend phase. Current status is above.

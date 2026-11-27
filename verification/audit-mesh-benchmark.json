@@ -1,0 +1,16 @@
+{
+  "inputTriangles": 102400,
+  "elapsedSeconds": 4.148,
+  "output": {
+    "vertices": 50294,
+    "triangles": 99000,
+    "bounds_extent": [
+      3.5,
+      1.9999993443489075,
+      2.0
+    ],
+    "appearance": "baked_texture",
+    "byte_size": 2508580
+  },
+  "testMesh": "synthetic colored spheres for performance testing"
+}

@@ -1,0 +1,42 @@
+{
+  "job": {
+    "job_id": "7a0bf5e811867dafb7297485696b0d85",
+    "status": "succeeded",
+    "stage": "complete",
+    "progress": null,
+    "error": null,
+    "model_id": "8a6d60ba55b08d6eaba34368599c9d2a",
+    "provider": "triposr",
+    "created_at": "2026-11-27T15:07:23.908155+00:00",
+    "updated_at": "2026-11-27T15:09:02.800906+00:00"
+  },
+  "model": {
+    "vertices": 62759,
+    "triangles": 82911,
+    "bounds_extent": [
+      0.6595501899719238,
+      1.0479615926742554,
+      0.7034404277801514
+    ],
+    "appearance": "baked_texture",
+    "byte_size": 2998884,
+    "id": "8a6d60ba55b08d6eaba34368599c9d2a",
+    "name": "Model 8a6d60ba",
+    "provider": "triposr",
+    "glb_url": "http://localhost:8000/v1/models/8a6d60ba55b08d6eaba34368599c9d2a/glb",
+    "usdz_url": null,
+    "created_at": "2026-11-27T15:09:02.800906+00:00",
+    "is_sample": false
+  },
+  "stages": [
+    "contacting_provider",
+    "provider_preprocessing",
+    "provider_running",
+    "provider_generation",
+    "provider_running",
+    "downloading",
+    "validating",
+    "complete"
+  ],
+  "total_seconds": 99.7
+}

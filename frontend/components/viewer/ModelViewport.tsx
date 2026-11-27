@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  AlertTriangle,
   Box,
+  CheckCircle2,
+  ChevronDown,
   Download,
   Hand,
   Maximize2,
@@ -13,14 +14,40 @@ import {
   RefreshCw,
   Smartphone,
   Upload,
+  XCircle,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import type { ApiErrorPayload, JobStatusResponse, ModelAsset } from "@/lib/api";
+import Link from "next/link";
+import {
+  formatAppearanceLabel,
+  jobStageLabel,
+  type ApiErrorPayload,
+  type JobStatusResponse,
+  type ModelAsset,
+} from "@/lib/api";
 import type { ValidatedImageInfo } from "@/lib/validation";
 import { formatBytes } from "@/lib/validation";
-import { CopperSwitch } from "@/components/ui/CopperSwitch";
-import type { ModelViewerElement } from "@/types/model-viewer";
+import {
+  Badge,
+  Button,
+  CopperSwitch,
+  ErrorState,
+  ProgressBar,
+  Spinner,
+  Tooltip,
+} from "@/components/ui";
+import { InteractiveModelCanvas } from "./InteractiveModelCanvas";
+import {
+  CAMERA_PRESETS,
+  DEFAULT_FOV_DEG,
+  MAX_FOV_DEG,
+  MIN_FOV_DEG,
+  type CameraPreset,
+  type InteractionMode,
+  type RenderMode,
+  type RuntimeMeshMetadata,
+} from "./viewerTypes";
 
 export type WorkspaceStage =
   | "empty"
@@ -36,15 +63,17 @@ interface ModelViewportProps {
   jobStatus: JobStatusResponse | null;
   error: ApiErrorPayload | null;
   autoRotate: boolean;
+  cancelling?: boolean;
+  successNotice?: string | null;
   onAutoRotateChange: (enabled: boolean) => void;
   onOpenArDialog: () => void;
+  onOpenExportDialog: () => void;
   onLoadSample: () => void;
   onRetry: () => void;
+  retryLabel?: string;
+  onCancelJob: () => void;
   onTriggerUpload: () => void;
 }
-
-const DEFAULT_ORBIT = "35deg 75deg 105%";
-const DEFAULT_FOV = 34;
 
 export function ModelViewport({
   stage,
@@ -53,61 +82,36 @@ export function ModelViewport({
   jobStatus,
   error,
   autoRotate,
+  cancelling = false,
+  successNotice = null,
   onAutoRotateChange,
   onOpenArDialog,
+  onOpenExportDialog,
   onLoadSample,
   onRetry,
+  retryLabel = "Retry Generation",
+  onCancelJob,
   onTriggerUpload,
 }: ModelViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<ModelViewerElement>(null);
 
-  const [viewerReady, setViewerReady] = useState(false);
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const [modelLoadError, setModelLoadError] = useState<string | null>(null);
-  const [interactionMode, setInteractionMode] = useState<"orbit" | "pan">("orbit");
-  const [fov, setFov] = useState(DEFAULT_FOV);
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>("orbit");
+  const [renderMode, setRenderMode] = useState<RenderMode>("textured");
+  const [cameraPreset, setCameraPreset] = useState<CameraPreset>("perspective");
+  const [presetVersion, setPresetVersion] = useState(0);
+  const [fov, setFov] = useState(DEFAULT_FOV_DEG);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [runtimeStats, setRuntimeStats] = useState<RuntimeMeshMetadata | null>(
+    null
+  );
 
-  // Load @google/model-viewer strictly on the client to isolate browser APIs from SSR
+  // Reset per-model camera & inspected runtime stats cleanly on model switch
   useEffect(() => {
-    let active = true;
-    import("@google/model-viewer")
-      .then(() => {
-        if (active) setViewerReady(true);
-      })
-      .catch(() => {
-        if (active) setModelLoadError("Failed to initialize 3D viewer module.");
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    setModelLoaded(false);
-    setModelLoadError(null);
-  }, [model?.glb_url]);
-
-  useEffect(() => {
-    const el = viewerRef.current;
-    if (!el || !viewerReady || !model) return;
-
-    const handleLoad = () => {
-      setModelLoaded(true);
-      setModelLoadError(null);
-    };
-    const handleError = () => {
-      setModelLoadError("Could not load the 3D GLB model file.");
-    };
-
-    el.addEventListener("load", handleLoad);
-    el.addEventListener("error", handleError);
-    return () => {
-      el.removeEventListener("load", handleLoad);
-      el.removeEventListener("error", handleError);
-    };
-  }, [viewerReady, model]);
+    setRuntimeStats(null);
+    setCameraPreset("perspective");
+    setFov(DEFAULT_FOV_DEG);
+    setPresetVersion((v) => v + 1);
+  }, [model?.id, model?.glb_url]);
 
   useEffect(() => {
     const onFsChange = () => {
@@ -118,34 +122,23 @@ export function ModelViewport({
   }, []);
 
   const handleZoomIn = useCallback(() => {
-    setFov((prev) => {
-      const next = Math.max(14, prev - 5);
-      if (viewerRef.current) {
-        viewerRef.current.fieldOfView = `${next}deg`;
-      }
-      return next;
-    });
+    setFov((prev) => Math.max(MIN_FOV_DEG, prev - 5));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setFov((prev) => {
-      const next = Math.min(60, prev + 5);
-      if (viewerRef.current) {
-        viewerRef.current.fieldOfView = `${next}deg`;
-      }
-      return next;
-    });
+    setFov((prev) => Math.min(MAX_FOV_DEG, prev + 5));
+  }, []);
+
+  const handleSelectPreset = useCallback((preset: CameraPreset) => {
+    setCameraPreset(preset);
+    setPresetVersion((v) => v + 1);
   }, []);
 
   const handleResetView = useCallback(() => {
-    setFov(DEFAULT_FOV);
-    const el = viewerRef.current;
-    if (!el) return;
-    el.cameraOrbit = DEFAULT_ORBIT;
-    el.cameraTarget = "auto auto auto";
-    el.fieldOfView = `${DEFAULT_FOV}deg`;
-    el.resetTurntableRotation?.(0);
-    el.jumpCameraToGoal?.();
+    setFov(DEFAULT_FOV_DEG);
+    setCameraPreset("perspective");
+    setInteractionMode("orbit");
+    setPresetVersion((v) => v + 1);
   }, []);
 
   const handleToggleFullscreen = useCallback(async () => {
@@ -162,189 +155,239 @@ export function ModelViewport({
     }
   }, []);
 
-  const handleDownload = useCallback(() => {
-    if (!model) return;
-    const link = document.createElement("a");
-    link.href = model.glb_url;
-    const safeName = model.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    link.download = `${safeName || "vision3d-model"}.glb`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }, [model]);
+  const handleMetadataLoaded = useCallback((stats: RuntimeMeshMetadata) => {
+    setRuntimeStats((prev) => ({
+      vertices: stats.vertices ?? prev?.vertices,
+      triangles: stats.triangles ?? prev?.triangles,
+      dimensions: stats.dimensions ?? prev?.dimensions,
+      materialCount: stats.materialCount ?? prev?.materialCount,
+      hasTextures: stats.hasTextures ?? prev?.hasTextures,
+    }));
+  }, []);
 
   const hasModel = stage === "result" && Boolean(model);
-  const progressValue =
-    typeof jobStatus?.progress === "number" && Number.isFinite(jobStatus.progress)
-      ? Math.max(0, Math.min(100, Math.round(jobStatus.progress)))
-      : null;
+  const appearanceLabel = formatAppearanceLabel(model?.appearance);
+  const triangles = model?.triangles ?? runtimeStats?.triangles;
+  const vertices = model?.vertices ?? runtimeStats?.vertices;
+  const extents = model?.bounds_extent ?? runtimeStats?.dimensions;
 
   return (
     <section
       ref={containerRef}
       aria-label="3D model viewport"
-      className="relative flex flex-col justify-between overflow-hidden rounded-[20px] border border-border-subtle bg-[#141416] min-h-[440px] lg:min-h-[600px]"
+      className="relative flex flex-col justify-between overflow-hidden rounded-[16px] border border-border-subtle bg-[#131315] min-h-[460px] md:min-h-[540px] lg:min-h-[600px]"
     >
-      {/* Subtle studio floor radial wash — restrained, no excessive glow */}
+      {/* Controlled warm floor wash — restrained studio lighting */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(56% 42% at 50% 68%, rgba(247, 148, 72, 0.08) 0%, rgba(25, 25, 27, 0.25) 55%, transparent 100%)",
+            "radial-gradient(54% 40% at 50% 68%, rgba(247, 148, 72, 0.08) 0%, rgba(25, 25, 27, 0.22) 55%, transparent 100%)",
         }}
       />
 
-      {/* Top Overlay Bar: Status / Sample Label */}
+      {/* Top Overlay Bar: Status badges + Textured/Wireframe Segmented Control */}
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-5">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {hasModel && model && (
-            <span
-              className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${
-                model.is_sample
-                  ? "border-copper/35 bg-copper/12 text-copper"
-                  : "border-border-subtle bg-raised/90 text-ink-primary"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                  model.is_sample ? "bg-copper" : "bg-emerald-400"
-                }`}
-              />
+            <Badge tone={model.is_sample ? "copper" : "success"} dot>
               {model.is_sample ? "Sample 3D Model (Demo Preview)" : "Generated GLB"}
-            </span>
+            </Badge>
+          )}
+          {hasModel && appearanceLabel && (
+            <Badge tone="neutral">{appearanceLabel}</Badge>
           )}
         </div>
 
-        {hasModel && model?.byte_size ? (
-          <span className="shrink-0 whitespace-nowrap rounded-full border border-border-subtle bg-raised/85 px-3 py-1 text-xs text-ink-secondary">
-            GLB · {formatBytes(model.byte_size)}
-          </span>
+        {hasModel && model ? (
+          <div
+            role="group"
+            aria-label="Shading mode"
+            className="v3d-glass inline-flex shrink-0 items-center rounded-[10px] border border-border-subtle p-0.5"
+          >
+            <button
+              type="button"
+              aria-pressed={renderMode === "textured"}
+              onClick={() => setRenderMode("textured")}
+              className={`min-h-[32px] rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
+                renderMode === "textured"
+                  ? "bg-ink-primary text-ink-on-copper shadow-xs"
+                  : "text-ink-secondary hover:text-ink-primary"
+              }`}
+            >
+              Textured
+            </button>
+            <button
+              type="button"
+              aria-pressed={renderMode === "wireframe"}
+              onClick={() => setRenderMode("wireframe")}
+              className={`min-h-[32px] rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
+                renderMode === "wireframe"
+                  ? "bg-ink-primary text-ink-on-copper shadow-xs"
+                  : "text-ink-secondary hover:text-ink-primary"
+              }`}
+            >
+              Wireframe
+            </button>
+          </div>
         ) : null}
       </div>
 
-      {/* Left Vertical Floating Toolbar (matches design-reference.png) */}
-      <div
-        role="toolbar"
-        aria-label="Viewport camera controls"
-        className="absolute left-4 top-16 z-20 flex flex-col gap-1 rounded-2xl border border-border-subtle bg-raised/90 p-1.5 backdrop-blur-md"
-      >
-        <button
-          type="button"
-          onClick={() => setInteractionMode("orbit")}
-          disabled={!hasModel}
-          aria-pressed={interactionMode === "orbit"}
-          aria-label="Orbit camera mode"
-          title="Orbit (drag to rotate 360°)"
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${
-            interactionMode === "orbit" && hasModel
-              ? "border-copper/45 bg-copper/18 text-copper"
-              : "border-transparent text-ink-secondary hover:bg-panel hover:text-ink-primary"
-          }`}
+      {/* Optional Generation Success Status Banner */}
+      {hasModel && successNotice && model ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="relative z-10 mx-4 mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs text-emerald-300 sm:mx-5"
         >
-          <Orbit className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setInteractionMode("pan")}
-          disabled={!hasModel}
-          aria-pressed={interactionMode === "pan"}
-          aria-label="Pan camera mode"
-          title="Pan (Shift + drag or two-finger drag)"
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${
-            interactionMode === "pan" && hasModel
-              ? "border-copper/45 bg-copper/18 text-copper"
-              : "border-transparent text-ink-secondary hover:bg-panel hover:text-ink-primary"
-          }`}
-        >
-          <Hand className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        </button>
-
-        <button
-          type="button"
-          onClick={handleZoomIn}
-          disabled={!hasModel}
-          aria-label="Zoom in"
-          title="Zoom in"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-ink-secondary transition-colors hover:bg-panel hover:text-ink-primary disabled:opacity-35 disabled:cursor-not-allowed"
-        >
-          <ZoomIn className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        </button>
-
-        <button
-          type="button"
-          onClick={handleZoomOut}
-          disabled={!hasModel}
-          aria-label="Zoom out"
-          title="Zoom out"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-ink-secondary transition-colors hover:bg-panel hover:text-ink-primary disabled:opacity-35 disabled:cursor-not-allowed"
-        >
-          <ZoomOut className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        </button>
-
-        <button
-          type="button"
-          onClick={handleResetView}
-          disabled={!hasModel}
-          aria-label="Reset camera view"
-          title="Reset camera view"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-ink-secondary transition-colors hover:bg-panel hover:text-ink-primary disabled:opacity-35 disabled:cursor-not-allowed"
-        >
-          <Box className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        </button>
-
-        <button
-          type="button"
-          onClick={handleToggleFullscreen}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-ink-secondary transition-colors hover:bg-panel hover:text-ink-primary"
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
-          ) : (
-            <Maximize2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
-          )}
-        </button>
-      </div>
+          <span className="inline-flex items-center gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+            <span>{successNotice}</span>
+          </span>
+          <Link
+            href={
+              model.is_sample
+                ? "/models/sample"
+                : `/models/${encodeURIComponent(model.id)}`
+            }
+            className="font-medium text-ink-primary underline underline-offset-2 hover:text-copper"
+          >
+            View Details
+          </Link>
+        </div>
+      ) : null}
 
       {/* Central Stage */}
-      <div className="relative z-0 flex flex-1 items-center justify-center pl-[76px] pr-4 py-6 sm:px-16">
+      <div className="relative z-0 flex flex-1 items-center justify-center pl-[74px] pr-4 py-4 sm:px-16">
+        {/* Left Vertical Floating Glass Toolbar */}
+        <div
+          role="toolbar"
+          aria-label="Viewport camera controls"
+          data-result={hasModel ? "true" : undefined}
+          className="v3d-glass absolute left-3.5 top-12 data-[result=true]:top-3 z-20 flex flex-col gap-1 rounded-[12px] border border-border-subtle p-1"
+        >
+          <Tooltip content="Orbit camera (drag to rotate 360°)">
+            {(tip) => (
+              <Button
+                variant="icon"
+                size="md"
+                active={interactionMode === "orbit" && hasModel}
+                disabled={!hasModel}
+                aria-pressed={interactionMode === "orbit"}
+                aria-label="Orbit camera mode"
+                onClick={() => setInteractionMode("orbit")}
+                {...tip}
+              >
+                <Orbit className="h-[17px] w-[17px]" strokeWidth={1.75} />
+              </Button>
+            )}
+          </Tooltip>
+
+          <Tooltip content="Pan camera (drag to move target)">
+            {(tip) => (
+              <Button
+                variant="icon"
+                size="md"
+                active={interactionMode === "pan" && hasModel}
+                disabled={!hasModel}
+                aria-pressed={interactionMode === "pan"}
+                aria-label="Pan camera mode"
+                onClick={() => setInteractionMode("pan")}
+                {...tip}
+              >
+                <Hand className="h-[17px] w-[17px]" strokeWidth={1.75} />
+              </Button>
+            )}
+          </Tooltip>
+
+          <Tooltip content="Zoom in">
+            {(tip) => (
+              <Button
+                variant="icon"
+                size="md"
+                disabled={!hasModel}
+                aria-label="Zoom in"
+                onClick={handleZoomIn}
+                {...tip}
+              >
+                <ZoomIn className="h-[17px] w-[17px]" strokeWidth={1.75} />
+              </Button>
+            )}
+          </Tooltip>
+
+          <Tooltip content="Zoom out">
+            {(tip) => (
+              <Button
+                variant="icon"
+                size="md"
+                disabled={!hasModel}
+                aria-label="Zoom out"
+                onClick={handleZoomOut}
+                {...tip}
+              >
+                <ZoomOut className="h-[17px] w-[17px]" strokeWidth={1.75} />
+              </Button>
+            )}
+          </Tooltip>
+
+          <Tooltip content="Reset camera view">
+            {(tip) => (
+              <Button
+                variant="icon"
+                size="md"
+                disabled={!hasModel}
+                aria-label="Reset camera view"
+                onClick={handleResetView}
+                {...tip}
+              >
+                <Box className="h-[17px] w-[17px]" strokeWidth={1.75} />
+              </Button>
+            )}
+          </Tooltip>
+
+          <Tooltip content={isFullscreen ? "Exit fullscreen" : "Fullscreen viewport"}>
+            {(tip) => (
+              <Button
+                variant="icon"
+                size="md"
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                onClick={handleToggleFullscreen}
+                {...tip}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                ) : (
+                  <Maximize2 className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                )}
+              </Button>
+            )}
+          </Tooltip>
+        </div>
+
         {stage === "empty" && (
           <div className="flex max-w-md flex-col items-center text-center">
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border-subtle bg-panel">
-              <Box className="h-8 w-8 text-copper" strokeWidth={1.5} />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[12px] border border-border-subtle bg-panel">
+              <Box className="h-7 w-7 text-copper" strokeWidth={1.5} />
             </div>
-            <h2 className="text-lg font-semibold text-ink-primary">
+            <h2 className="text-base font-semibold text-ink-primary">
               Ready for your 2D image
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
+            <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-ink-secondary">
               Upload a JPEG, PNG, or WebP photo of a single foreground object to
               generate an interactive 360° GLB model and mobile AR preview.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={onTriggerUpload}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-copper px-4 py-2.5 text-sm font-semibold text-ink-on-copper transition-colors hover:bg-copper-hover active:bg-copper-pressed"
-              >
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+              <Button variant="primary" size="md" onClick={onTriggerUpload}>
                 <Upload className="h-4 w-4" />
                 Upload Image
-              </button>
-              <button
-                type="button"
-                onClick={onLoadSample}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-border-subtle bg-raised px-4 py-2.5 text-sm font-medium text-ink-primary transition-colors hover:border-border-strong hover:bg-[#2a2a2e]"
-              >
+              </Button>
+              <Button variant="secondary" size="md" onClick={onLoadSample}>
                 <Box className="h-4 w-4 text-copper" />
                 Load Sample 3D Model
-              </button>
+              </Button>
             </div>
-            <p className="mt-3 text-xs text-ink-muted">
+            <p className="mt-3 text-[11px] text-ink-muted">
               Sample model is a local demo GLB for inspecting the 3D viewer and AR flow.
             </p>
           </div>
@@ -352,21 +395,21 @@ export function ModelViewport({
 
         {stage === "uploaded" && uploadedImage && (
           <div className="flex max-w-md flex-col items-center text-center">
-            <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-panel p-2">
+            <div className="relative overflow-hidden rounded-[12px] border border-border-subtle bg-panel p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={uploadedImage.previewUrl}
                 alt="Uploaded source image ready for 3D generation"
-                className="max-h-[280px] max-w-full rounded-xl object-contain"
+                className="max-h-[260px] max-w-full rounded-[8px] object-contain"
               />
             </div>
-            <p className="mt-4 text-sm font-medium text-ink-primary">
+            <p className="mt-3.5 text-xs sm:text-sm font-medium text-ink-primary">
               Source image validated ({uploadedImage.width} × {uploadedImage.height}px ·{" "}
               {formatBytes(uploadedImage.sizeBytes)})
             </p>
             <p className="mt-1 text-xs leading-relaxed text-ink-secondary">
-              Click <span className="text-copper font-medium">Generate 3D</span> in the
-              panel to submit this photo to the server-side inference API.
+              Confirm external processing consent and click{" "}
+              <span className="font-medium text-copper">Generate 3D</span> to start.
             </p>
           </div>
         )}
@@ -377,212 +420,187 @@ export function ModelViewport({
             aria-live="polite"
             className="flex w-full max-w-sm flex-col items-center text-center"
           >
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-copper/30 bg-copper/10">
-              <Orbit className="h-7 w-7 text-copper" strokeWidth={1.6} />
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[12px] border border-copper/30 bg-copper/10">
+              <Spinner size="md" label="Generating 3D model" />
             </div>
-            <h2 className="text-base font-semibold text-ink-primary">
+            <h2 className="text-sm font-semibold text-ink-primary">
               {jobStatus?.status === "queued"
                 ? "Queued for 3D generation"
-                : "Generating 3D mesh"}
+                : jobStatus
+                ? "Generating 3D mesh"
+                : "Preparing generation"}
             </h2>
             <p className="mt-1 text-xs text-ink-secondary">
-              {jobStatus?.stage
-                ? jobStatus.stage
-                : "Waiting for server-side provider response…"}
+              {jobStageLabel(jobStatus?.stage) ?? "Waiting for the backend…"}
             </p>
-            <div className="mt-5 w-full">
-              <label htmlFor="v3d-job-progress" className="sr-only">
-                3D generation progress
-              </label>
-              <progress
-                id="v3d-job-progress"
-                className="v3d-progress"
-                max={100}
-                {...(progressValue !== null ? { value: progressValue } : {})}
-              />
-              <p className="mt-2 text-xs text-ink-muted">
-                {progressValue !== null
-                  ? `${progressValue}% reported by provider`
-                  : "Indeterminate stage — progress percentage not reported by provider"}
-              </p>
-            </div>
+            <ProgressBar
+              id="v3d-job-progress"
+              label="3D generation progress"
+              value={null}
+              className="mt-4"
+            />
+            <p className="mt-2 text-[11px] text-ink-muted">
+              Progress is reported by stage.
+            </p>
+            {jobStatus?.job_id &&
+            (jobStatus.status === "queued" || jobStatus.status === "processing") ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={cancelling}
+                onClick={onCancelJob}
+                className="mt-4"
+              >
+                <XCircle className="h-3.5 w-3.5 text-ink-secondary" />
+                Cancel Job
+              </Button>
+            ) : null}
           </div>
         )}
 
         {stage === "error" && error && (
-          <div
-            role="alert"
-            className="flex max-w-md flex-col items-center rounded-2xl border border-border-subtle bg-panel/90 p-6 text-center"
-          >
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-copper/35 bg-copper/12 text-copper">
-              <AlertTriangle className="h-6 w-6" strokeWidth={1.75} />
-            </div>
-            <span className="rounded-md border border-border-subtle bg-raised px-2 py-0.5 font-mono text-[11px] text-ink-secondary">
-              {error.code}
-            </span>
-            <h2 className="mt-3 text-base font-semibold text-ink-primary">
-              3D generation did not complete
-            </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink-secondary">
-              {error.message}
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={onRetry}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-copper px-4 py-2 text-sm font-semibold text-ink-on-copper transition-colors hover:bg-copper-hover active:bg-copper-pressed"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Retry Generation
-              </button>
-              <button
-                type="button"
-                onClick={onLoadSample}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-border-subtle bg-raised px-4 py-2 text-sm font-medium text-ink-primary transition-colors hover:bg-[#2a2a2e]"
-              >
-                Inspect Sample 3D Model
-              </button>
-            </div>
-          </div>
+          <ErrorState
+            code={error.code}
+            title="3D generation did not complete"
+            message={error.message}
+            actions={
+              <>
+                <Button variant="primary" size="md" onClick={onRetry}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {retryLabel}
+                </Button>
+                <Button variant="secondary" size="md" onClick={onLoadSample}>
+                  Inspect Sample 3D Model
+                </Button>
+              </>
+            }
+          />
         )}
 
         {hasModel && model && (
-          <div className="relative h-[340px] w-full sm:h-[420px] lg:h-[470px]">
-            {/* Subtle 360° turntable floor ring matching design-reference.png */}
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 600 140"
-              className="pointer-events-none absolute bottom-3 left-1/2 w-[min(92%,520px)] -translate-x-1/2 opacity-65"
-            >
-              <defs>
-                <linearGradient id="ringFade" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#A6A3A0" stopOpacity="0.15" />
-                  <stop offset="30%" stopColor="#F5F3F0" stopOpacity="0.55" />
-                  <stop offset="50%" stopColor="#F79448" stopOpacity="0.5" />
-                  <stop offset="70%" stopColor="#F5F3F0" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="#A6A3A0" stopOpacity="0.15" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 246 116 A 252 54 0 1 1 354 116"
-                fill="none"
-                stroke="url(#ringFade)"
-                strokeWidth="1.25"
-              />
-              <circle cx="176" cy="108" r="2.5" fill="#F5F3F0" fillOpacity="0.65" />
-              <circle cx="424" cy="108" r="2.5" fill="#F5F3F0" fillOpacity="0.65" />
-              <text
-                x="300"
-                y="121"
-                textAnchor="middle"
-                fill="#F5F3F0"
-                fontSize="15"
-                fontWeight="500"
-                fontFamily="Inter, system-ui, sans-serif"
-              >
-                360°
-              </text>
-            </svg>
-
-            {viewerReady ? (
-              <model-viewer
-                ref={viewerRef}
-                src={model.glb_url}
-                ios-src={model.usdz_url ?? undefined}
-                alt={`Interactive 3D model: ${model.name}`}
-                camera-controls
-                auto-rotate={autoRotate || undefined}
-                auto-rotate-delay={0}
-                rotation-per-second="18deg"
-                camera-orbit={DEFAULT_ORBIT}
-                field-of-view={`${fov}deg`}
-                shadow-intensity="1"
-                shadow-softness="0.85"
-                exposure="1.05"
-                interaction-prompt="none"
-                touch-action="pan-y"
-                style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-ink-secondary">
-                Initializing 3D viewport…
-              </div>
-            )}
-
-            {viewerReady && !modelLoaded && !modelLoadError && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <span className="rounded-full border border-border-subtle bg-panel/90 px-3.5 py-1.5 text-xs text-ink-secondary">
-                  Loading GLB geometry…
-                </span>
-              </div>
-            )}
-
-            {modelLoadError && (
-              <div
-                role="alert"
-                className="absolute inset-0 flex items-center justify-center"
-              >
-                <div className="rounded-2xl border border-border-subtle bg-panel px-5 py-4 text-center">
-                  <p className="text-sm font-medium text-ink-primary">{modelLoadError}</p>
-                </div>
-              </div>
-            )}
+          <div className="relative h-[340px] w-full sm:h-[410px] lg:h-[448px]">
+            <InteractiveModelCanvas
+              modelKey={model.id}
+              src={model.glb_url}
+              iosSrc={model.usdz_url}
+              alt={`Interactive 3D model: ${model.name}`}
+              renderMode={renderMode}
+              interactionMode={interactionMode}
+              cameraPreset={cameraPreset}
+              presetVersion={presetVersion}
+              fov={fov}
+              autoRotate={autoRotate}
+              onMetadataLoaded={handleMetadataLoaded}
+              onRenderModeFallback={() => setRenderMode("textured")}
+            />
 
             {interactionMode === "pan" && (
-              <div className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-full border border-border-subtle bg-panel/90 px-3 py-1 text-[11px] text-ink-secondary">
-                Pan: Hold Shift + drag (desktop) or two-finger drag (touch)
+              <div className="v3d-glass pointer-events-none absolute top-2 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-[8px] border border-border-subtle px-3 py-1 text-[11px] text-ink-secondary">
+                Pan active · Drag to move camera target
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Bottom Viewport Controls Bar (matches design-reference.png) */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-4 pb-4 sm:px-5">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="inline-flex min-h-[42px] items-center gap-2.5 rounded-xl border border-border-subtle bg-raised/90 px-3.5 py-2 backdrop-blur-md">
+      {/* Camera Presets + Real Model Metadata Strip */}
+      {hasModel && model ? (
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle/60 bg-obsidian/45 px-4 py-2 sm:px-5">
+          <div
+            role="group"
+            aria-label="Camera angle presets"
+            className="flex max-w-full items-center gap-1 overflow-x-auto"
+          >
+            {CAMERA_PRESETS.map((preset) => {
+              const active = cameraPreset === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => handleSelectPreset(preset.id)}
+                  className={`min-h-[36px] sm:min-h-[30px] shrink-0 rounded-[7px] px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    active
+                      ? "border border-copper/50 bg-copper/16 text-copper"
+                      : "border border-transparent text-ink-secondary hover:bg-raised/80 hover:text-ink-primary"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div
+            aria-label="Model geometry metadata"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-muted"
+          >
+            {typeof triangles === "number" ? (
+              <span>{triangles.toLocaleString()} tris</span>
+            ) : null}
+            {typeof vertices === "number" ? (
+              <span>{vertices.toLocaleString()} verts</span>
+            ) : null}
+            {extents ? (
+              <span title="Bounding box dimensions in model units">
+                {extents.map((n) => n.toFixed(2)).join(" × ")} u
+              </span>
+            ) : null}
+            {model.byte_size ? <span>{formatBytes(model.byte_size)}</span> : null}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Bottom Viewport Controls Bar */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-2.5 px-4 py-3.5 sm:px-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="v3d-glass inline-flex min-h-[42px] items-center gap-2.5 rounded-[10px] border border-border-subtle px-3 py-1.5">
             <Play className="h-3.5 w-3.5 text-ink-secondary" strokeWidth={1.75} />
             <CopperSwitch
               id="viewport-auto-rotate"
               label="Auto Rotate"
-              labelClassName="text-xs sm:text-sm font-medium text-ink-primary"
+              labelClassName="text-xs font-medium text-ink-primary"
               checked={autoRotate}
               disabled={!hasModel}
               onCheckedChange={onAutoRotateChange}
             />
           </div>
 
-          <button
-            type="button"
-            onClick={handleResetView}
+          <Button
+            variant="secondary"
+            size="md"
             disabled={!hasModel}
-            className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-border-subtle bg-raised/90 px-3.5 py-2 text-xs sm:text-sm font-medium text-ink-primary backdrop-blur-md transition-colors hover:border-border-strong hover:bg-[#2a2a2e] disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={handleResetView}
             title="Reset 360° camera angle"
+            className="v3d-glass"
           >
             360°
-          </button>
+          </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onOpenArDialog}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="secondary"
+            size="md"
             disabled={!hasModel}
-            className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-border-subtle bg-raised/90 px-4 py-2 text-xs sm:text-sm font-medium text-ink-primary backdrop-blur-md transition-colors hover:border-copper/50 hover:bg-[#2a2a2e] disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={onOpenArDialog}
+            className="v3d-glass hover:border-copper/50"
           >
             <Smartphone className="h-4 w-4 text-ink-secondary" strokeWidth={1.75} />
             <span>View in AR</span>
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleDownload}
+          <Button
+            variant="secondary"
+            size="md"
             disabled={!hasModel}
-            className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-border-subtle bg-raised/90 px-4 py-2 text-xs sm:text-sm font-medium text-ink-primary backdrop-blur-md transition-colors hover:border-copper/50 hover:bg-[#2a2a2e] disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={onOpenExportDialog}
+            className="v3d-glass hover:border-copper/50"
           >
             <Download className="h-4 w-4 text-ink-secondary" strokeWidth={1.75} />
-            <span>Download GLB</span>
-          </button>
+            <span>Download</span>
+            <ChevronDown className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
+          </Button>
         </div>
       </div>
     </section>

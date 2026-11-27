@@ -1,11 +1,22 @@
 export type JobStatus = "queued" | "processing" | "succeeded" | "failed";
 
+export type ModelAppearance = "baked_texture" | "native_texture" | "shape_only";
+
 export type ApiErrorCode =
   | "INVALID_IMAGE"
   | "PROVIDER_UNAVAILABLE"
   | "QUOTA_EXCEEDED"
   | "TIMEOUT"
   | "INVALID_MODEL"
+  | "CANCELLED"
+  | "INTERRUPTED"
+  | "INVALID_REQUEST"
+  | "CONSENT_REQUIRED"
+  | "ORIGIN_FORBIDDEN"
+  | "RATE_LIMITED"
+  | "QUEUE_FULL"
+  | "QUEUE_TIMEOUT"
+  | "JOB_FINISHED"
   | "NOT_FOUND"
   | "EXPIRED"
   | "NETWORK_ERROR"
@@ -32,15 +43,18 @@ export interface ProviderCapability {
   id: string;
   label: string;
   verified: boolean;
+  operator_configured?: boolean;
   supports_background_removal?: boolean;
 }
 
 export interface HealthResponse {
   status: string;
   providers?: ProviderCapability[];
+  fallback_provider?: ProviderCapability | null;
   max_upload_bytes?: number;
   retention_days?: number;
   share_ttl_seconds?: number;
+  poll_timeout_seconds?: number;
 }
 
 export interface JobCreatedResponse {
@@ -49,15 +63,19 @@ export interface JobCreatedResponse {
 }
 
 export interface JobStatusResponse {
-  job_id?: string;
-  id?: string;
+  job_id: string;
   status: JobStatus;
   stage?: string | null;
   progress?: number | null;
   error?: ApiErrorPayload | null;
-  error_code?: ApiErrorCode | null;
-  error_message?: string | null;
   model_id?: string | null;
+  provider?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface JobHistoryResponse {
+  jobs: JobStatusResponse[];
 }
 
 export interface ModelAsset {
@@ -66,6 +84,11 @@ export interface ModelAsset {
   glb_url: string;
   usdz_url?: string | null;
   thumbnail_url?: string | null;
+  provider?: string;
+  vertices?: number;
+  triangles?: number;
+  bounds_extent?: [number, number, number];
+  appearance?: ModelAppearance;
   byte_size?: number | null;
   created_at: string;
   is_sample?: boolean;
@@ -87,10 +110,12 @@ export interface SharedAssetResponse {
   glb_url: string;
   usdz_url?: string | null;
   expires_at?: string | null;
+  appearance?: ModelAppearance;
   is_sample?: boolean;
 }
 
 export interface CreateJobOptions {
+  allow_external_processing: boolean;
   provider?: string;
   remove_background?: boolean;
 }
@@ -100,7 +125,7 @@ export function getApiBaseUrl(): string {
   if (configured) {
     return configured.replace(/\/+$/, "");
   }
-  return "http://localhost:8000";
+  return "/api";
 }
 
 export function getPublicAppUrl(): string | null {
@@ -135,6 +160,19 @@ export function isHttpsUrl(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function getModelDownloadUrl(model: ModelAsset): string {
+  if (model.is_sample) return model.glb_url;
+  const sep = model.glb_url.includes("?") ? "&" : "?";
+  return `${model.glb_url}${sep}download=true`;
+}
+
+export function formatAppearanceLabel(appearance?: ModelAppearance): string | null {
+  if (appearance === "baked_texture") return "Baked Texture";
+  if (appearance === "native_texture") return "Textured";
+  if (appearance === "shape_only") return "Shape Only";
+  return null;
 }
 
 async function parseErrorResponse(res: Response): Promise<Vision3DApiError> {
@@ -174,31 +212,76 @@ function statusToCode(status: number): ApiErrorCode {
   return "UNKNOWN_ERROR";
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${getApiBaseUrl()}${path}`;
-  let response: Response;
+function abortReason(signal: AbortSignal): unknown {
+  return signal.reason ?? new DOMException("Request cancelled.", "AbortError");
+}
+
+function checkAbort(signal?: AbortSignal | null) {
+  if (signal?.aborted) throw abortReason(signal);
+}
+
+function timedSignal(caller: AbortSignal | undefined | null, ms: number) {
+  const controller = new AbortController();
+  const forward = () => controller.abort(caller ? abortReason(caller) : undefined);
+  const timer = setTimeout(() => controller.abort(new DOMException("Request timed out.", "TimeoutError")), ms);
+  if (caller?.aborted) forward();
+  else caller?.addEventListener("abort", forward, { once: true });
+  return {
+    signal: controller.signal,
+    dispose() {
+      clearTimeout(timer);
+      caller?.removeEventListener("abort", forward);
+    },
+  };
+}
+
+async function request<T>(
+  path: string, init: RequestInit, consume: (response: Response) => Promise<T>,
+): Promise<T> {
+  const caller = init.signal;
+  const { signal, dispose } = timedSignal(caller, 30000);
   try {
-    response = await fetch(url, {
-      credentials: "include",
-      ...init,
+    const response = await fetch(`${getApiBaseUrl()}${path}`, {
+      credentials: "include", ...init, cache: "no-store", signal,
     });
-  } catch {
-    throw new Vision3DApiError(
-      "NETWORK_ERROR",
-      "Cannot reach the Vision3D backend service. Verify the backend server is running and NEXT_PUBLIC_API_BASE_URL is configured.",
-      0
-    );
+    if (!response.ok) throw await parseErrorResponse(response);
+    return await consume(response);
+  } catch (error) {
+    checkAbort(caller);
+    if (signal.aborted) throw new Vision3DApiError("TIMEOUT", "The server did not respond in time.");
+    if (error instanceof Vision3DApiError) throw error;
+    throw new Vision3DApiError("NETWORK_ERROR", "Cannot reach the Vision3D backend or read its response.");
+  } finally {
+    dispose();
   }
+}
 
-  if (!response.ok) {
-    throw await parseErrorResponse(response);
+async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return request(path, init, async (response) => (
+    response.status === 204 ? undefined as T : (await response.json()) as T
+  ));
+}
+
+function privateModelPath(id: string): string {
+  return `/v1/models/${encodeURIComponent(id)}/glb`;
+}
+
+function proxyPrivateAsset(model: ModelAsset): ModelAsset {
+  return { ...model, glb_url: `${getApiBaseUrl()}${privateModelPath(model.id)}` };
+}
+
+export async function downloadModel(model: ModelAsset, signal?: AbortSignal): Promise<Blob> {
+  const blob = model.is_sample
+    ? await fetch(model.glb_url, { signal }).then(async (response) => {
+        if (!response.ok) throw await parseErrorResponse(response);
+        return response.blob();
+      })
+    : await request(`${privateModelPath(model.id)}?download=true`, { signal }, (response) => response.blob());
+  const header = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+  if (header.join(",") !== "103,108,84,70") {
+    throw new Vision3DApiError("INVALID_MODEL", "The server did not return a GLB file.");
   }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
+  return blob;
 }
 
 export async function checkHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -207,15 +290,19 @@ export async function checkHealth(signal?: AbortSignal): Promise<HealthResponse>
 
 export async function createJob(
   file: File,
-  options?: CreateJobOptions,
+  options: CreateJobOptions,
   signal?: AbortSignal
 ): Promise<JobCreatedResponse> {
   const formData = new FormData();
   formData.append("image", file);
-  if (options?.provider) {
+  formData.append(
+    "allow_external_processing",
+    String(options.allow_external_processing)
+  );
+  if (options.provider) {
     formData.append("provider", options.provider);
   }
-  if (typeof options?.remove_background === "boolean") {
+  if (typeof options.remove_background === "boolean") {
     formData.append("remove_background", String(options.remove_background));
   }
 
@@ -236,22 +323,63 @@ export async function getJobStatus(
   });
 }
 
-export async function getModel(
-  modelId: string,
+export async function cancelJob(
+  jobId: string,
   signal?: AbortSignal
-): Promise<ModelAsset> {
-  return requestJson<ModelAsset>(`/v1/models/${encodeURIComponent(modelId)}`, {
-    method: "GET",
+): Promise<JobStatusResponse> {
+  return requestJson<JobStatusResponse>(`/v1/jobs/${encodeURIComponent(jobId)}`, {
+    method: "DELETE",
     signal,
   });
 }
 
-export async function listModels(signal?: AbortSignal): Promise<ModelAsset[]> {
-  const res = await requestJson<ModelListResponse | ModelAsset[]>("/v1/models", {
+export async function getModel(modelId: string, signal?: AbortSignal): Promise<ModelAsset> {
+  const model = await requestJson<ModelAsset>(`/v1/models/${encodeURIComponent(modelId)}`, {
     method: "GET",
     signal,
   });
-  return Array.isArray(res) ? res : res.models ?? [];
+  return proxyPrivateAsset(model);
+}
+
+export async function listModels(signal?: AbortSignal): Promise<ModelAsset[]> {
+  const models: ModelAsset[] = [];
+  const limit = 100;
+  while (true) {
+    const page = await requestJson<ModelListResponse>(
+      `/v1/models?limit=${limit}&offset=${models.length}`, { signal },
+    );
+    models.push(...page.models.map(proxyPrivateAsset));
+    if (page.models.length < limit) return models;
+  }
+}
+
+export async function listJobs(offset = 0, limit = 20, signal?: AbortSignal): Promise<JobStatusResponse[]> {
+  const result = await requestJson<JobHistoryResponse>(
+    `/v1/jobs?limit=${limit}&offset=${offset}`, { signal },
+  );
+  return result.jobs;
+}
+
+export function jobStatusLabel(job: JobStatusResponse): string {
+  if (job.stage === "cancelled" || job.error?.code === "CANCELLED") return "Cancelled";
+  return {
+    queued: "Queued", processing: "Processing", succeeded: "Completed", failed: "Failed",
+  }[job.status];
+}
+
+export function jobStageLabel(stage?: string | null): string | undefined {
+  switch (stage) {
+    case "queued": return "Waiting for the generation worker";
+    case "contacting_provider": return "Connecting to the AI provider";
+    case "provider_preprocessing": return "Preparing the image with the provider";
+    case "provider_generation": return "Submitting the reconstruction request";
+    case "provider_queued": return "Waiting in the provider queue";
+    case "provider_running": return "The provider is processing the request";
+    case "retrying": return "Retrying the provider connection";
+    case "downloading": return "Retrieving the generated mesh";
+    case "validating": return "Validating the GLB and preparing the asset";
+    default: return stage ?? undefined;
+  }
 }
 
 export async function createShareLink(
@@ -275,6 +403,7 @@ export async function getSharedAsset(
     `/v1/share/${encodeURIComponent(token)}`,
     {
       method: "GET",
+      credentials: "omit",
       signal,
     }
   );
@@ -290,39 +419,56 @@ export async function deleteModel(
   });
 }
 
+function waitForPoll(ms: number, signal: AbortSignal): Promise<void> {
+  checkAbort(signal);
+  return new Promise((resolve, reject) => {
+    function abort() {
+      clearTimeout(timer);
+      reject(abortReason(signal));
+    }
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", abort);
+      resolve();
+    }, ms);
+    signal.addEventListener("abort", abort, { once: true });
+  });
+}
+
 export async function pollJobUntilDone(
   jobId: string,
   onUpdate: (status: JobStatusResponse) => void,
-  signal?: AbortSignal
+  caller?: AbortSignal,
+  timeoutMs = 1530000,
 ): Promise<JobStatusResponse> {
-  let delayMs = 1500;
-  const maxDelayMs = 6000;
-
-  while (true) {
-    if (signal?.aborted) {
-      throw new DOMException("Polling aborted", "AbortError");
+  const { signal, dispose } = timedSignal(caller, timeoutMs);
+  let delay = 1500;
+  let failures = 0;
+  try {
+    while (true) {
+      try {
+        const job = await getJobStatus(jobId, signal);
+        checkAbort(signal);
+        onUpdate(job);
+        if (job.status === "succeeded" || job.status === "failed") return job;
+        failures = 0;
+      } catch (error) {
+        if (
+          signal.aborted || !(error instanceof Vision3DApiError) ||
+          !(error.code === "NETWORK_ERROR" || error.code === "TIMEOUT" || error.status >= 500) ||
+          ++failures > 2
+        ) throw error;
+      }
+      await waitForPoll(delay, signal);
+      delay = Math.min(Math.round(delay * 1.4), 6000);
     }
-
-    const status = await getJobStatus(jobId, signal);
-    onUpdate(status);
-
-    if (status.status === "succeeded" || status.status === "failed") {
-      return status;
+  } catch (error) {
+    checkAbort(caller);
+    if (signal.aborted) {
+      throw new Vision3DApiError("TIMEOUT", "Job status could not be confirmed. Check it again without re-uploading.");
     }
-
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(resolve, delayMs);
-      signal?.addEventListener(
-        "abort",
-        () => {
-          clearTimeout(timer);
-          reject(new DOMException("Polling aborted", "AbortError"));
-        },
-        { once: true }
-      );
-    });
-
-    delayMs = Math.min(Math.round(delayMs * 1.4), maxDelayMs);
+    throw error;
+  } finally {
+    dispose();
   }
 }
 

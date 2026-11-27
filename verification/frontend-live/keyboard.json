@@ -1,0 +1,116 @@
+[
+  {
+    "width": 375,
+    "stops": [
+      {
+        "label": "Vision3D",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Enter fullscreen",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Remove uploaded image",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Change Image",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Background Removal",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Allow server-side upload (EXIF stripped) to the hosted 3D inference provider. Hidden surfaces are inferred, not measured.",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Generate 3D",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "stops": [
+      {
+        "label": "Vision3D\nSTUDIO",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Create 3D",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "My Models",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Settings",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Enter fullscreen",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Remove uploaded image",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Change Image",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Background Removal",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Allow server-side upload (EXIF stripped) to the hosted 3D inference provider. Hidden surfaces are inferred, not measured.",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      },
+      {
+        "label": "Generate 3D",
+        "outline": "solid",
+        "shadow": "none",
+        "visible": true
+      }
+    ],
+    "overflow": false
+  }
+]

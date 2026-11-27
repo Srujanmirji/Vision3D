@@ -1,0 +1,14 @@
+{
+  "bytes": 6506661,
+  "sha256": "cabc513dedce98c5155220ac65005a0543055439775f731c9f2a2be98b00a551",
+  "mesh": true,
+  "embeddedTexture": true,
+  "storedAligned64": true,
+  "entries": [
+    "model.usda",
+    "geometries/Geometry_8.usda",
+    "textures/Texture_13_false.png"
+  ],
+  "usdchecker": "Validation Result with no explicit variants set\nSuccess!",
+  "nativeQuickLookTested": false
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/sidebar/AppShell";
 import {
   ModelViewport,
@@ -9,7 +9,10 @@ import {
 } from "@/components/viewer/ModelViewport";
 import { ImageInputPanel } from "@/components/upload/ImageInputPanel";
 import { QrArDialog } from "@/components/ar-dialog/QrArDialog";
+import { ExportDialog } from "@/components/export-dialog/ExportDialog";
 import {
+  cancelJob,
+  Vision3DApiError,
   checkHealth,
   createJob,
   formatUserError,
@@ -25,12 +28,16 @@ import { loadViewerPreferences } from "@/lib/preferences";
 import type { ValidatedImageInfo } from "@/lib/validation";
 
 export function CreateWorkspace() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedJobId = searchParams.get("job");
   const requestedModelId = searchParams.get("model");
   const requestedSample = searchParams.get("sample");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pollAbortRef = useRef<AbortController | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
+  const pollingBudget = useRef<number | undefined>(undefined);
+  const previewRef = useRef<string | null>(null);
 
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
@@ -42,26 +49,30 @@ export function CreateWorkspace() {
   const [activeModel, setActiveModel] = useState<ModelAsset | null>(null);
   const [jobStatus, setJobStatus] = useState<JobStatusResponse | null>(null);
   const [error, setError] = useState<ApiErrorPayload | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [retryJobId, setRetryJobId] = useState<string | null>(null);
 
   const [selectedProvider, setSelectedProvider] = useState("");
   const [removeBackground, setRemoveBackground] = useState(true);
+  const [allowExternalProcessing, setAllowExternalProcessing] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
   const [arDialogOpen, setArDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const verifiedProviders = (health?.providers ?? []).filter((p) => p.verified);
 
-  // Load viewer preferences respecting prefers-reduced-motion
   useEffect(() => {
     const prefs = loadViewerPreferences();
     setAutoRotate(prefs.defaultAutoRotate);
   }, []);
 
-  // Probe backend /health once on mount
   useEffect(() => {
     const controller = new AbortController();
     checkHealth(controller.signal)
       .then((res) => {
         setHealth(res);
+        pollingBudget.current = res.poll_timeout_seconds ? res.poll_timeout_seconds * 1000 : undefined;
         setBackendOnline(true);
         const firstVerified = (res.providers ?? []).find((p) => p.verified);
         if (firstVerified) {
@@ -69,166 +80,198 @@ export function CreateWorkspace() {
         }
       })
       .catch(() => {
-        setBackendOnline(false);
+        if (!controller.signal.aborted) setBackendOnline(false);
       });
     return () => controller.abort();
   }, []);
 
-  // Open requested model or sample from query string (?model=... or ?sample=1)
-  useEffect(() => {
-    if (requestedSample === "1") {
-      setActiveModel(SAMPLE_MODEL);
-      setStage("result");
-      setError(null);
-      return;
-    }
-
-    if (!requestedModelId) return;
-
+  const startRequest = useCallback(() => {
+    requestRef.current?.abort();
     const controller = new AbortController();
-    getModel(requestedModelId, controller.signal)
-      .then((asset) => {
-        setActiveModel(asset);
-        setStage("result");
-        setError(null);
-      })
-      .catch((err) => {
-        if ((err as Error).name !== "AbortError") {
-          setError(formatUserError(err));
-          setStage("error");
-        }
-      });
-
-    return () => controller.abort();
-  }, [requestedModelId, requestedSample]);
-
-  // Cleanup object URLs and active pollers on unmount
-  useEffect(() => {
-    return () => {
-      pollAbortRef.current?.abort();
-    };
+    requestRef.current = controller;
+    return controller.signal;
   }, []);
 
-  const handleImageValidated = useCallback(
-    (info: ValidatedImageInfo) => {
-      if (uploadedImage) {
-        URL.revokeObjectURL(uploadedImage.previewUrl);
-      }
-      setUploadedImage(info);
-      setError(null);
-      if (stage !== "result") {
-        setStage("uploaded");
-      }
-    },
-    [uploadedImage, stage]
-  );
-
-  const handleClearImage = useCallback(() => {
-    if (uploadedImage) {
-      URL.revokeObjectURL(uploadedImage.previewUrl);
-    }
-    setUploadedImage(null);
-    if (!activeModel) {
-      setStage("empty");
-    }
-  }, [uploadedImage, activeModel]);
-
-  const handleLoadSample = useCallback(() => {
-    pollAbortRef.current?.abort();
-    setActiveModel(SAMPLE_MODEL);
-    setError(null);
-    setJobStatus(null);
-    setStage("result");
-  }, []);
-
-  const handleGenerate = useCallback(async () => {
-    if (!uploadedImage) return;
-
-    pollAbortRef.current?.abort();
-    const controller = new AbortController();
-    pollAbortRef.current = controller;
-
-    setError(null);
-    setActiveModel(null);
+  const showJob = useCallback(async (jobId: string, signal: AbortSignal) => {
+    setRetryJobId(jobId);
     setStage("processing");
-    setJobStatus({ status: "queued", stage: "Submitting image to backend…" });
-
+    setError(null);
     try {
-      const providerObj = verifiedProviders.find((p) => p.id === selectedProvider);
-      const created = await createJob(
-        uploadedImage.file,
-        {
-          provider: providerObj ? providerObj.id : undefined,
-          remove_background: providerObj?.supports_background_removal
-            ? removeBackground
-            : undefined,
-        },
-        controller.signal
-      );
-
-      setJobStatus({
-        job_id: created.job_id,
-        status: created.status,
-        stage: "Job accepted, waiting for inference worker…",
-      });
-
-      const finalStatus = await pollJobUntilDone(
-        created.job_id,
-        (update) => setJobStatus(update),
-        controller.signal
-      );
-
-      if (finalStatus.status === "failed") {
-        setError({
-          code:
-            finalStatus.error?.code ??
-            finalStatus.error_code ??
-            "PROVIDER_UNAVAILABLE",
-          message:
-            finalStatus.error?.message ??
-            finalStatus.error_message ??
-            "The 3D provider failed to generate a model.",
-        });
+      const job = await pollJobUntilDone(jobId, setJobStatus, signal, pollingBudget.current);
+      if (job.status === "failed") {
+        setRetryJobId(null);
+        setError(job.error ?? { code: "PROVIDER_UNAVAILABLE", message: "Generation failed." });
         setStage("error");
         return;
       }
-
-      if (!finalStatus.model_id) {
-        setError({
-          code: "INVALID_MODEL",
-          message: "Job completed without returning a valid model identifier.",
-        });
-        setStage("error");
-        return;
+      if (!job.model_id) {
+        setRetryJobId(null);
+        throw new Vision3DApiError("NOT_FOUND", "This job’s model is no longer in the library.", 404);
       }
-
-      const modelAsset = await getModel(finalStatus.model_id, controller.signal);
-      setActiveModel(modelAsset);
+      const asset = await getModel(job.model_id, signal);
+      if (signal.aborted) return;
+      setActiveModel(asset);
+      setRetryJobId(null);
+      setSuccessNotice("3D model generated and validated.");
       setStage("result");
     } catch (err) {
-      if ((err as Error).name === "AbortError") return;
+      if (signal.aborted) return;
+      if (err instanceof Vision3DApiError && err.status === 404) setRetryJobId(null);
       setError(formatUserError(err));
       setStage("error");
     }
-  }, [uploadedImage, verifiedProviders, selectedProvider, removeBackground]);
+  }, []);
+
+  const openModel = useCallback(async (id: string, signal: AbortSignal) => {
+    setError(null);
+    try {
+      const model = await getModel(id, signal);
+      if (signal.aborted) return;
+      setActiveModel(model);
+      setStage("result");
+    } catch (err) {
+      if (signal.aborted) return;
+      setError(formatUserError(err));
+      setStage("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    const signal = startRequest();
+    setRetryJobId(null);
+    setCancelling(false);
+    setJobStatus(null);
+    setError(null);
+    setSuccessNotice(null);
+    if (requestedJobId) {
+      setActiveModel(null);
+      void showJob(requestedJobId, signal);
+    } else if (requestedSample === "1") {
+      setActiveModel(SAMPLE_MODEL);
+      setStage("result");
+    } else if (requestedModelId) {
+      setActiveModel(null);
+      setStage("empty");
+      void openModel(requestedModelId, signal);
+    } else {
+      setActiveModel(null);
+      setStage(previewRef.current ? "uploaded" : "empty");
+    }
+    return () => requestRef.current?.abort();
+  }, [requestedJobId, requestedModelId, requestedSample, showJob, openModel, startRequest]);
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
+
+  function handleImageValidated(info: ValidatedImageInfo) {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = info.previewUrl;
+    setUploadedImage(info);
+    if (!retryJobId) {
+      setError(null);
+      setSuccessNotice(null);
+      if (!activeModel) setStage("uploaded");
+    }
+  }
+
+  function handleClearImage() {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
+    setUploadedImage(null);
+    if (!activeModel && !retryJobId) setStage("empty");
+  }
+
+  function handleLoadSample() {
+    if (requestedSample === "1" && !requestedJobId) {
+      setActiveModel(SAMPLE_MODEL);
+      setError(null);
+      setStage("result");
+    } else {
+      router.replace("/create?sample=1");
+    }
+  }
+
+  async function handleCancelJob() {
+    const id = jobStatus?.job_id;
+    if (!id || cancelling) return;
+    setCancelling(true);
+    const signal = startRequest();
+    try {
+      const result = await cancelJob(id, signal);
+      if (signal.aborted) return;
+      setJobStatus(result);
+      if (result.error?.code === "CANCELLED") {
+        setRetryJobId(null);
+        setError(result.error);
+        setStage("error");
+      } else {
+        await showJob(id, signal);
+      }
+    } catch (err) {
+      if (signal.aborted) return;
+      if (err instanceof Vision3DApiError && err.status === 409) {
+        await showJob(id, signal);
+      } else {
+        setRetryJobId(id);
+        setError(formatUserError(err));
+        setStage("error");
+      }
+    } finally {
+      if (!signal.aborted) setCancelling(false);
+    }
+  }
+
+  async function handleGenerate() {
+    if (!uploadedImage || !allowExternalProcessing || stage === "processing" || retryJobId) return;
+    const signal = startRequest();
+    setError(null);
+    setActiveModel(null);
+    setSuccessNotice(null);
+    setJobStatus(null);
+    setStage("processing");
+    try {
+      const provider = verifiedProviders.find((p) => p.id === selectedProvider);
+      const job = await createJob(uploadedImage.file, {
+        allow_external_processing: true,
+        provider: provider?.id,
+        remove_background: provider?.supports_background_removal ? removeBackground : undefined,
+      }, signal);
+      if (signal.aborted) return;
+      router.replace(`/create?job=${encodeURIComponent(job.job_id)}`);
+    } catch (err) {
+      if (signal.aborted) return;
+      setError(formatUserError(err));
+      setStage("error");
+    }
+  }
+
+  const mayRetryUpload = Boolean(uploadedImage && allowExternalProcessing);
+  const retryLabel = retryJobId ? "Check Job Status" : mayRetryUpload ? "Retry Generation"
+    : requestedModelId ? "Retry Loading Model" : "Choose Image";
+
+  function handleRetry() {
+    if (retryJobId) void showJob(retryJobId, startRequest());
+    else if (mayRetryUpload) void handleGenerate();
+    else if (requestedModelId) void openModel(requestedModelId, startRequest());
+    else fileInputRef.current?.click();
+  }
 
   return (
     <AppShell backendOnline={backendOnline}>
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-        {/* Top Title Header (matches design-reference.png) */}
-        <header className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-ink-primary sm:text-[34px] sm:leading-tight">
-              2D to <span className="text-copper">3D</span>
-            </h1>
-            <p className="mt-1 text-sm text-ink-secondary">
-              Convert any image into a 3D model with interactive 360° view and mobile AR.
-            </p>
-          </div>
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-4 py-5 sm:px-6 lg:px-7 lg:py-6">
+        {/* Top Title Header — crisp scale, no oversized headings */}
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink-primary sm:text-[28px] sm:leading-tight">
+            2D to <span className="text-copper">3D</span>
+          </h1>
+          <p className="text-xs sm:text-sm text-ink-secondary">
+            Convert any image into a 3D model with interactive 360° view and mobile AR.
+          </p>
         </header>
 
-        {/* Main 2-Column Workspace (Dominant Viewport + Right Input/Settings Panel) */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_336px] xl:grid-cols-[minmax(0,1fr)_356px]">
+        {/* Responsive Workspace Grid: Mobile stacked, Tablet 2-col, Desktop dominant viewport + right panel */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_300px] lg:grid-cols-[minmax(0,1fr)_328px] xl:grid-cols-[minmax(0,1fr)_348px]">
           <ModelViewport
             stage={stage}
             model={activeModel}
@@ -236,10 +279,15 @@ export function CreateWorkspace() {
             jobStatus={jobStatus}
             error={error}
             autoRotate={autoRotate}
+            cancelling={cancelling}
+            successNotice={successNotice}
             onAutoRotateChange={setAutoRotate}
             onOpenArDialog={() => setArDialogOpen(true)}
+            onOpenExportDialog={() => setExportDialogOpen(true)}
             onLoadSample={handleLoadSample}
-            onRetry={() => void handleGenerate()}
+            onRetry={handleRetry}
+            retryLabel={retryLabel}
+            onCancelJob={() => void handleCancelJob()}
             onTriggerUpload={() => fileInputRef.current?.click()}
           />
 
@@ -252,18 +300,25 @@ export function CreateWorkspace() {
             onProviderChange={setSelectedProvider}
             removeBackground={removeBackground}
             onRemoveBackgroundChange={setRemoveBackground}
+            allowExternalProcessing={allowExternalProcessing}
+            onAllowExternalProcessingChange={setAllowExternalProcessing}
             maxUploadBytes={health?.max_upload_bytes}
             isGenerating={stage === "processing"}
+            generationBlocked={Boolean(retryJobId)}
             onGenerate={() => void handleGenerate()}
             fileInputRef={fileInputRef}
           />
         </div>
       </div>
 
-      {/* Native Modal QR Dialog */}
       <QrArDialog
         open={arDialogOpen}
         onClose={() => setArDialogOpen(false)}
+        model={activeModel}
+      />
+      <ExportDialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
         model={activeModel}
       />
     </AppShell>

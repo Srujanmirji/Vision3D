@@ -2,22 +2,26 @@
 
 :root {
   color-scheme: dark;
+  /* Core Vision3D Palette */
   --bg-obsidian: #101011;
   --bg-panel: #19191B;
   --bg-raised: #232326;
   --bg-viewport: #131315;
-  --border-subtle: #343437;
-  --border-strong: #454549;
+  --border-subtle: #2C2C30;
+  --border-strong: #3E3E43;
   --text-primary: #F5F3F0;
   --text-secondary: #A6A3A0;
-  --text-muted: #7C7976;
+  --text-muted: #787572;
   --accent-copper: #F79448;
   --accent-copper-hover: #FBA25E;
   --accent-copper-pressed: #D87532;
   --text-on-copper: #14110F;
-  --radius-panel: 20px;
-  --radius-card: 16px;
-  --radius-control: 12px;
+
+  /* Precision radii — restrained, no bubbly corners */
+  --radius-panel: 16px;
+  --radius-card: 12px;
+  --radius-control: 10px;
+  --radius-pill: 8px;
 }
 
 @theme inline {
@@ -46,21 +50,28 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle studio warmth matching design-reference.png without excessive gradients or glow */
+/* Controlled warm studio lighting matching design-reference.png */
 .studio-ambient-bg {
   background-color: var(--bg-obsidian);
   background-image:
-    radial-gradient(640px 360px at 72% -4%, rgba(247, 148, 72, 0.11), transparent 70%),
-    radial-gradient(440px 420px at 6% 96%, rgba(216, 117, 50, 0.08), transparent 72%);
+    radial-gradient(580px 300px at 70% -6%, rgba(247, 148, 72, 0.10), transparent 72%),
+    radial-gradient(380px 360px at 4% 96%, rgba(216, 117, 50, 0.07), transparent 74%);
 }
 
-/* Focus visibility */
+/* Subtle dark glass surface for floating toolbars & overlays */
+.v3d-glass {
+  background-color: rgba(25, 25, 27, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Accessible keyboard focus indicator */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--accent-copper);
   outline-offset: 2px;
 }
 
-/* Native <dialog> scroll containment & modal styling (modern-web-guidance: dialog) */
+/* Native <dialog> modal with scroll containment (modern-web-guidance: dialog) */
 dialog.v3d-dialog {
   margin: auto;
   padding: 0;
@@ -70,7 +81,7 @@ dialog.v3d-dialog {
   color: var(--text-primary);
   max-width: min(460px, calc(100vw - 32px));
   width: 100%;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.62);
 }
 
 dialog.v3d-dialog:modal {
@@ -84,7 +95,38 @@ dialog.v3d-dialog::backdrop {
   overscroll-behavior: contain;
 }
 
-/* Native <progress> styling (modern-web-guidance: progress) */
+/* Interest-triggered tooltip popover (modern-web-guidance: interest-triggered-tooltips) */
+[interestfor] {
+  --interest-delay-start: 0.2s;
+  interest-delay-start: var(--interest-delay-start);
+  --interest-delay-end: 0.1s;
+  interest-delay-end: var(--interest-delay-end);
+}
+
+.v3d-tooltip[popover] {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: #1F1F22;
+  color: var(--text-primary);
+  padding: 5px 9px;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 500;
+  max-width: 240px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+@supports (position-area: inline-end) {
+  .v3d-tooltip[popover] {
+    inset: auto;
+    margin: 0;
+    position-area: inline-end;
+    position-try-fallbacks: flip-inline, flip-block;
+    margin-inline-start: 8px;
+  }
+}
+
+/* Native <progress> horizontal bar (modern-web-guidance: progress) */
 progress.v3d-progress {
   appearance: none;
   border: 0 solid;
@@ -95,7 +137,7 @@ progress.v3d-progress {
   --progress-bar-indeterminate-animation-duration: 1.5s;
   border-radius: var(--progress-bar-radius);
   background: var(--bg-raised);
-  height: 6px;
+  height: 5px;
   width: 100%;
 }
 
@@ -149,21 +191,129 @@ progress.v3d-progress::-moz-progress-bar {
   }
 }
 
-/* Accessible toggle switch styling (modern-web-guidance: switch + dark copper pill) */
+/* Semantic <progress> loading spinner (modern-web-guidance: spinner) */
+@property --arc-start {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --arc-end {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 150deg;
+}
+@property --v3d-spinner-dash {
+  syntax: "*";
+  inherits: false;
+  initial-value: , v3d-spinner-dash 2.4s ease-in-out infinite;
+}
+
+progress.v3d-spinner:indeterminate::-webkit-progress-bar,
+progress.v3d-spinner:indeterminate::-webkit-progress-value,
+progress.v3d-spinner:indeterminate::-moz-progress-bar {
+  display: none;
+  background: none;
+}
+
+progress.v3d-spinner:indeterminate {
+  --_from: calc(90deg + var(--arc-start, 0deg));
+  --_to: calc(90deg + var(--arc-end, 150deg));
+  --size: 20px;
+  --thickness: 2px;
+  --spinner-color: var(--accent-copper);
+  --track-color: rgba(245, 243, 240, 0.14);
+  --spinner-duration: 1.2s;
+  --_used-spinner-duration: var(--spinner-duration);
+
+  display: inline-block;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  appearance: none;
+  background: conic-gradient(
+      from var(--_from),
+      var(--spinner-color) calc(var(--_to) - var(--_from)),
+      transparent 0
+    )
+    var(--track-color);
+  animation:
+    v3d-spinner-spin var(--_used-spinner-duration) linear infinite
+    var(--v3d-spinner-dash, );
+}
+
+@supports (background-clip: border-area) {
+  progress.v3d-spinner:indeterminate {
+    background-clip: border-area;
+    border: var(--thickness) solid transparent;
+    background-origin: border-box;
+  }
+}
+
+@supports not (background-clip: border-area) {
+  progress.v3d-spinner:indeterminate {
+    --clip-boundary: calc(100% - var(--thickness));
+    mask-image: radial-gradient(
+      farthest-side,
+      transparent var(--clip-boundary),
+      black var(--clip-boundary)
+    );
+    border: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  progress.v3d-spinner:indeterminate {
+    forced-color-adjust: none;
+    --spinner-color: CanvasText;
+    --track-color: Canvas;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  progress.v3d-spinner:indeterminate {
+    --_used-spinner-duration: 6s;
+    --v3d-spinner-dash: ;
+    --arc-end: 150deg;
+  }
+}
+
+@keyframes v3d-spinner-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes v3d-spinner-dash {
+  from {
+    --arc-start: 0deg;
+    --arc-end: 10deg;
+  }
+  50% {
+    --arc-start: 100deg;
+    --arc-end: 340deg;
+  }
+  to {
+    --arc-start: 360deg;
+    --arc-end: 370deg;
+  }
+}
+
+/* Accessible toggle switch (modern-web-guidance: switch) */
 input.v3d-switch {
   appearance: none;
   -webkit-appearance: none;
   position: relative;
-  width: 40px;
+  width: 38px;
   height: 22px;
   border-radius: 999px;
-  background-color: #323236;
-  border: 1px solid #454549;
+  background-color: #2E2E32;
+  border: 1px solid #434348;
   cursor: pointer;
   margin: 0;
   flex-shrink: 0;
   accent-color: var(--accent-copper);
-  transition: background-color 160ms ease, border-color 160ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
 input.v3d-switch::after {
@@ -175,7 +325,7 @@ input.v3d-switch::after {
   height: 16px;
   border-radius: 999px;
   background-color: #F5F3F0;
-  transition: transform 160ms ease;
+  transition: transform 150ms ease;
 }
 
 input.v3d-switch:checked {
@@ -184,10 +334,44 @@ input.v3d-switch:checked {
 }
 
 input.v3d-switch:checked::after {
-  transform: translateX(18px);
+  transform: translateX(16px);
 }
 
 input.v3d-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Accessible dark copper checkbox */
+input.v3d-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg-obsidian);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-content: center;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+input.v3d-checkbox:checked {
+  background-color: var(--accent-copper);
+  border-color: var(--accent-copper);
+}
+
+input.v3d-checkbox:checked::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background-color: var(--text-on-copper);
+}
+
+input.v3d-checkbox:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -204,5 +388,5 @@ input.v3d-switch:disabled {
 model-viewer {
   --poster-color: transparent;
   --progress-bar-color: #F79448;
-  --progress-bar-height: 3px;
+  --progress-bar-height: 2px;
 }

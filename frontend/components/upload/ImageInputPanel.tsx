@@ -1,15 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import {
-  AlertCircle,
-  Camera,
-  ImagePlus,
-  Info,
-  Sparkles,
-  Upload,
-  X,
-} from "lucide-react";
+import { Camera, ImagePlus, Sparkles, Upload, X } from "lucide-react";
+import { CameraCaptureDialog } from "./CameraCaptureDialog";
 import type { ProviderCapability } from "@/lib/api";
 import {
   DEFAULT_MAX_UPLOAD_BYTES,
@@ -17,7 +10,13 @@ import {
   validateImageFile,
   type ValidatedImageInfo,
 } from "@/lib/validation";
-import { CopperSwitch } from "@/components/ui/CopperSwitch";
+import {
+  AlertBanner,
+  Button,
+  Checkbox,
+  CopperSwitch,
+  Select,
+} from "@/components/ui";
 
 interface ImageInputPanelProps {
   uploadedImage: ValidatedImageInfo | null;
@@ -28,8 +27,11 @@ interface ImageInputPanelProps {
   onProviderChange: (providerId: string) => void;
   removeBackground: boolean;
   onRemoveBackgroundChange: (enabled: boolean) => void;
+  allowExternalProcessing: boolean;
+  onAllowExternalProcessingChange: (allowed: boolean) => void;
   maxUploadBytes?: number;
   isGenerating: boolean;
+  generationBlocked?: boolean;
   onGenerate: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
@@ -43,12 +45,16 @@ export function ImageInputPanel({
   onProviderChange,
   removeBackground,
   onRemoveBackgroundChange,
+  allowExternalProcessing,
+  onAllowExternalProcessingChange,
   maxUploadBytes = DEFAULT_MAX_UPLOAD_BYTES,
   isGenerating,
+  generationBlocked = false,
   onGenerate,
   fileInputRef,
 }: ImageInputPanelProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -56,9 +62,8 @@ export function ImageInputPanel({
   const showProviderSelector = verifiedProviders.length > 1;
   const showBgRemovalToggle = Boolean(activeProvider?.supports_background_removal);
 
-  const handleFiles = async (files: FileList | null) => {
-    const file = files?.[0];
-    if (!file) return;
+  const handleFile = async (file?: File) => {
+    if (isGenerating || !file) return;
     setValidationError(null);
     const result = await validateImageFile(file, maxUploadBytes);
     if (!result.ok) {
@@ -71,7 +76,7 @@ export function ImageInputPanel({
   return (
     <aside
       aria-label="Input image and generation settings"
-      className="flex flex-col rounded-[20px] border border-border-subtle bg-panel p-5"
+      className="flex flex-col rounded-[16px] border border-border-subtle bg-panel p-5"
     >
       {/* Hidden File Picker & Mobile Environment Camera Input */}
       <input
@@ -80,8 +85,10 @@ export function ImageInputPanel({
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
         aria-label="Choose image file"
+        tabIndex={-1}
+        disabled={isGenerating}
         onChange={(e) => {
-          void handleFiles(e.target.files);
+          void handleFile(e.target.files?.[0]);
           e.target.value = "";
         }}
       />
@@ -92,17 +99,19 @@ export function ImageInputPanel({
         capture="environment"
         className="sr-only"
         aria-label="Capture photo with camera"
+        tabIndex={-1}
+        disabled={isGenerating}
         onChange={(e) => {
-          void handleFiles(e.target.files);
+          void handleFile(e.target.files?.[0]);
           e.target.value = "";
         }}
       />
 
       {/* Input Image Section */}
       <div>
-        <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold text-ink-primary">Input Image</h2>
-          <span className="text-[11px] text-ink-muted">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-ink-primary">Input Image</h2>
+          <span className="text-[11px] text-ink-secondary">
             JPEG, PNG, WebP · ≤ {formatBytes(maxUploadBytes)}
           </span>
         </div>
@@ -116,17 +125,17 @@ export function ImageInputPanel({
           onDrop={(e) => {
             e.preventDefault();
             setDragActive(false);
-            void handleFiles(e.dataTransfer.files);
+            void handleFile(e.dataTransfer.files[0]);
           }}
-          className={`mt-3.5 rounded-2xl border border-dashed p-4 transition-colors ${
+          className={`mt-3 rounded-[12px] border border-dashed p-3.5 transition-colors ${
             dragActive
               ? "border-copper bg-copper/8"
-              : "border-border-subtle bg-obsidian/45"
+              : "border-border-subtle bg-obsidian/50"
           }`}
         >
           {uploadedImage ? (
-            <div className="flex items-center gap-4">
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-raised">
+            <div className="flex items-center gap-3.5">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] border border-border-subtle bg-raised">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={uploadedImage.previewUrl}
@@ -138,13 +147,13 @@ export function ImageInputPanel({
                   onClick={onClearImage}
                   disabled={isGenerating}
                   aria-label="Remove uploaded image"
-                  className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-obsidian/85 text-ink-primary transition-colors hover:bg-obsidian disabled:opacity-40"
+                  className="absolute right-0 top-0 flex size-11 items-start justify-end rounded-[8px] p-1 text-ink-primary disabled:opacity-40"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <span className="grid size-6 place-items-center rounded-full bg-obsidian/85"><X className="h-3.5 w-3.5" /></span>
                 </button>
               </div>
 
-              <div className="min-w-0 flex-1 space-y-2">
+              <div className="min-w-0 flex-1 space-y-1.5">
                 <p
                   className="truncate text-xs font-medium text-ink-primary"
                   title={uploadedImage.file.name}
@@ -155,116 +164,113 @@ export function ImageInputPanel({
                   {uploadedImage.width} × {uploadedImage.height} ·{" "}
                   {formatBytes(uploadedImage.sizeBytes)}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isGenerating}
-                  className="inline-flex min-h-[38px] items-center gap-2 rounded-xl border border-border-subtle bg-raised px-3 py-1.5 text-xs font-medium text-ink-primary transition-colors hover:border-border-strong hover:bg-[#2a2a2e] disabled:opacity-45"
-                >
-                  <ImagePlus className="h-3.5 w-3.5 text-ink-secondary" />
-                  Change Image
-                </button>
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={isGenerating}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImagePlus className="h-3.5 w-3.5 text-ink-secondary" />
+                    Change Image
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={isGenerating}
+                    onClick={() => setCameraOpen(true)}
+                  >
+                    <Camera className="h-3.5 w-3.5 text-ink-secondary" />
+                    Retake Photo
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center py-4 text-center">
-              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-border-subtle bg-raised text-ink-secondary">
-                <Upload className="h-5 w-5" strokeWidth={1.75} />
+              <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] border border-border-subtle bg-raised text-ink-secondary">
+                <Upload className="h-4 w-4" strokeWidth={1.75} />
               </div>
-              <p className="text-sm font-medium text-ink-primary">
+              <p className="text-xs font-medium text-ink-primary">
                 Drop an object photo here
               </p>
-              <p className="mt-1 text-xs text-ink-secondary">
+              <p className="mt-1 text-[11px] text-ink-secondary">
                 Single opaque foreground object works best
               </p>
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
+              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={isGenerating}
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-border-subtle bg-raised px-3.5 py-2 text-xs font-medium text-ink-primary transition-colors hover:border-copper/50 hover:bg-[#2a2a2e]"
                 >
                   <ImagePlus className="h-3.5 w-3.5 text-copper" />
                   Browse Files
-                </button>
-                <button
-                  type="button"
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-border-subtle bg-raised px-3.5 py-2 text-xs font-medium text-ink-primary transition-colors hover:border-copper/50 hover:bg-[#2a2a2e]"
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={isGenerating}
+                  onClick={() => setCameraOpen(true)}
                 >
                   <Camera className="h-3.5 w-3.5 text-ink-secondary" />
                   Take Photo
-                </button>
+                </Button>
               </div>
             </div>
           )}
         </div>
 
-        {validationError && (
-          <div
-            role="alert"
-            className="mt-3 flex items-start gap-2 rounded-xl border border-copper/35 bg-copper/10 px-3 py-2.5 text-xs text-ink-primary"
-          >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
-            <span>{validationError}</span>
-          </div>
-        )}
+        {validationError ? (
+          <AlertBanner tone="error" className="mt-3">
+            {validationError}
+          </AlertBanner>
+        ) : null}
 
-        {uploadedImage?.warning && (
-          <div className="mt-3 flex items-start gap-2 rounded-xl border border-border-subtle bg-raised/70 px-3 py-2.5 text-xs text-ink-secondary">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
-            <span>{uploadedImage.warning}</span>
-          </div>
-        )}
+        {uploadedImage?.warning ? (
+          <AlertBanner tone="info" className="mt-3">
+            {uploadedImage.warning}
+          </AlertBanner>
+        ) : null}
       </div>
 
-      {/* Divider */}
-      <hr className="my-5 border-border-subtle/70" />
+      <hr className="my-5 border-border-subtle/80" />
 
-      {/* Model Settings — strictly capability-gated per DESIGN.md and AGENTS.md */}
-      <div className="space-y-4">
-        <h2 className="text-[15px] font-semibold text-ink-primary">Model Settings</h2>
+      {/* Model Settings — strictly capability-gated */}
+      <div className="space-y-3.5">
+        <h2 className="text-sm font-semibold text-ink-primary">Model Settings</h2>
 
         {showProviderSelector && (
-          <div className="space-y-1.5">
-            <label
-              htmlFor="provider-select"
-              className="block text-xs font-medium text-ink-secondary"
-            >
-              Verified Provider
-            </label>
-            <select
-              id="provider-select"
-              value={selectedProvider}
-              onChange={(e) => onProviderChange(e.target.value)}
-              disabled={isGenerating}
-              className="w-full min-h-[42px] rounded-xl border border-border-subtle bg-raised px-3 py-2 text-sm text-ink-primary transition-colors hover:border-border-strong disabled:opacity-50"
-            >
-              {verifiedProviders.map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            id="provider-select"
+            label="Verified Provider"
+            value={selectedProvider}
+            disabled={isGenerating}
+            onChange={(e) => onProviderChange(e.target.value)}
+            options={verifiedProviders.map((p) => ({
+              value: p.id,
+              label: p.label,
+            }))}
+          />
         )}
 
         {verifiedProviders.length === 1 && activeProvider && (
-          <div className="rounded-xl border border-border-subtle bg-raised/70 px-3.5 py-3">
-            <p className="text-[11px] uppercase tracking-wider text-ink-muted">
+          <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-ink-secondary">
               Verified Provider
             </p>
-            <p className="mt-1 text-sm font-medium text-ink-primary">
+            <p className="mt-1 text-xs font-medium text-ink-primary">
               {activeProvider.label}
             </p>
           </div>
         )}
 
         {showBgRemovalToggle && (
-          <div className="flex items-center justify-between rounded-xl border border-border-subtle bg-raised/60 px-3.5 py-3">
+          <div className="flex items-center justify-between rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
             <CopperSwitch
               id="bg-removal-switch"
               label="Background Removal"
-              labelClassName="text-sm font-medium text-ink-primary"
+              labelClassName="text-xs font-medium text-ink-primary"
               checked={removeBackground}
               disabled={isGenerating}
               onCheckedChange={onRemoveBackgroundChange}
@@ -273,34 +279,54 @@ export function ImageInputPanel({
         )}
 
         {verifiedProviders.length === 0 && (
-          <div className="rounded-xl border border-border-subtle bg-obsidian/55 px-3.5 py-3 text-xs leading-relaxed text-ink-secondary">
+          <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5 text-xs leading-relaxed text-ink-secondary">
             <p className="font-medium text-ink-primary">Server-side provider pending</p>
-            <p className="mt-1">
+            <p className="mt-1 text-[11px]">
               Provider options appear automatically once the backend verifies an
               active image-to-3D endpoint.
             </p>
           </div>
         )}
 
-        <p className="text-[11px] leading-relaxed text-ink-muted">
-          Single-image 3D reconstruction infers hidden surfaces and does not
-          measure exact physical dimensions. Uploaded photos are processed via the
-          configured server-side inference service.
-        </p>
+        {/* Required external processing consent per API.md & HANDOFF.md */}
+        <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-3">
+          <Checkbox
+            id="external-processing-consent"
+            checked={allowExternalProcessing}
+            disabled={isGenerating}
+            onCheckedChange={onAllowExternalProcessingChange}
+            label={
+              <span>
+                Allow server-side upload (EXIF stripped) to the hosted 3D inference
+                provider. Hidden surfaces are inferred, not measured.
+              </span>
+            }
+          />
+        </div>
       </div>
 
-      {/* Primary Action — Sticky on mobile, pinned to panel bottom on desktop */}
-      <div className="mt-6 pt-2 lg:mt-auto">
-        <button
-          type="button"
+      {/* Primary CTA */}
+      <div className="mt-5 pt-2 lg:mt-auto">
+        <Button
+          variant="primary"
+          size="lg"
+          loading={isGenerating}
+          disabled={!uploadedImage || !allowExternalProcessing || isGenerating || generationBlocked}
           onClick={onGenerate}
-          disabled={!uploadedImage || isGenerating}
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-copper px-5 py-3 text-sm font-semibold text-ink-on-copper transition-colors hover:bg-copper-hover active:bg-copper-pressed disabled:cursor-not-allowed disabled:opacity-45"
+          className="w-full"
         >
-          <Sparkles className="h-4 w-4" strokeWidth={2} />
+          {!isGenerating ? <Sparkles className="h-4 w-4" strokeWidth={2} /> : null}
           <span>{isGenerating ? "Generating 3D…" : "Generate 3D"}</span>
-        </button>
+        </Button>
       </div>
+      {cameraOpen && !isGenerating && (
+        <CameraCaptureDialog
+          onClose={() => setCameraOpen(false)}
+          onCapture={(file) => { setCameraOpen(false); void handleFile(file); }}
+          onGallery={() => { fileInputRef.current?.click(); setCameraOpen(false); }}
+          onNativeCamera={() => { cameraInputRef.current?.click(); setCameraOpen(false); }}
+        />
+      )}
     </aside>
   );
 }
