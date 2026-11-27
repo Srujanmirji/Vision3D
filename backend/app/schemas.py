@@ -99,6 +99,7 @@ class Health(BaseModel):
     external_processing: bool = True
     # Round-object mode (bottles, cans, jars): needs the local background-removal model.
     round_mode: bool = False
+    box_mode: bool = False
 
 
 class CaptureSession(BaseModel):

@@ -2,6 +2,7 @@ import { createRef, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ImageInputPanel } from "@/components/upload/ImageInputPanel";
+import { availableModes } from "@/components/upload/ShapeModeSelect";
 import { formatElapsed } from "@/components/viewer/ElapsedTime";
 import { friendlyError } from "@/lib/errorCopy";
 import type { ValidatedImageInfo } from "@/lib/validation";
@@ -65,18 +66,18 @@ describe("consent only when photos can leave the server", () => {
   });
 });
 
-describe("round-object switch", () => {
-  it("is hidden unless the server supports it", () => {
-    panel({ roundModeAvailable: false, onRoundModeChange: vi.fn() });
-    expect(screen.queryByText(/Round object/)).not.toBeInTheDocument();
+describe("shape mode", () => {
+  it("is hidden unless the server offers a shape mode", () => {
+    panel({ modes: ["auto"], onModeChange: vi.fn() });
+    expect(screen.queryByLabelText("Shape")).not.toBeInTheDocument();
   });
 
-  it("toggles round mode and hides background removal while on", () => {
-    const onRoundModeChange = vi.fn();
-    const { rerender } = panel({ roundModeAvailable: true, roundMode: false, onRoundModeChange });
+  it("offers round and box, and hides background removal outside AI mode", () => {
+    const onModeChange = vi.fn();
+    const { rerender } = panel({ modes: ["auto", "round", "box"], mode: "auto", onModeChange });
     expect(screen.getByText("Background Removal")).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText(/Round object/));
-    expect(onRoundModeChange).toHaveBeenCalledWith(true);
+    fireEvent.change(screen.getByLabelText("Shape"), { target: { value: "box" } });
+    expect(onModeChange).toHaveBeenCalledWith("box");
 
     rerender(
       <ImageInputPanel
@@ -94,19 +95,25 @@ describe("round-object switch", () => {
         onGenerate={vi.fn()}
         onPhoneJob={vi.fn()}
         fileInputRef={createRef<HTMLInputElement>()}
-        roundModeAvailable
-        roundMode
-        onRoundModeChange={onRoundModeChange}
+        modes={["auto", "round", "box"]}
+        mode="box"
+        onModeChange={onModeChange}
       />
     );
     expect(screen.queryByText("Background Removal")).not.toBeInTheDocument();
+    expect(screen.getByText(/Depth is estimated/)).toBeInTheDocument();
+  });
+
+  it("lists only the modes the server reports", () => {
+    expect(availableModes({ status: "ok", round_mode: true, box_mode: false })).toEqual(["auto", "round"]);
+    expect(availableModes(null)).toEqual(["auto"]);
   });
 });
 
 describe("phone page round mode", () => {
   it("sends round mode without consent when the server offers it", async () => {
     Object.assign(URL, { revokeObjectURL: vi.fn() }); // jsdom lacks it
-    api.checkHealth.mockResolvedValue({ status: "ok", external_processing: true, round_mode: true });
+    api.checkHealth.mockResolvedValue({ status: "ok", external_processing: true, round_mode: true, box_mode: true });
     api.getCaptureInfo.mockResolvedValue({ expires_at: new Date(Date.now() + 600_000).toISOString(), received: false });
     api.sendCapture.mockResolvedValue({ expires_at: new Date().toISOString(), received: true });
     const { default: Page } = await import("@/app/capture/[token]/page");
@@ -116,7 +123,7 @@ describe("phone page round mode", () => {
     const file = new File(["jpeg"], "bottle.jpg", { type: "image/jpeg" });
     fireEvent.change(await screen.findByLabelText("Choose a photo from the gallery"), { target: { files: [file] } });
 
-    fireEvent.click(await screen.findByLabelText(/Round object/));
+    fireEvent.change(await screen.findByLabelText("Shape"), { target: { value: "round" } });
     expect(screen.queryByRole("checkbox", { name: /hosted 3D AI provider/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Send to Computer/ }));
 

@@ -1,5 +1,29 @@
 # Vision3D engineering handoff
 
+## Box mode and paid-model research — 28 November 2026
+
+**Box mode** (`backend/app/box.py`, `mode=box`) is for packaging, books and phones.
+- **Front:** the cut-out photo itself.
+- **Other faces:** sides, back, top and bottom use the product's colour at each height, via the `row_colours` helper shared with round mode.
+- **Depth:** estimated at 0.35 × the width, because one photo can't measure it.
+- **UI:** the round switch is now a **Shape** select (AI, Round, Box) on PC and phone, listing only the modes `/health` reports (`round_mode`, `box_mode`).
+- **Verified:**
+  - Live: a carton on a plain background took 4.5 s through https://vision3d-sigma.vercel.app (`verification/round-mode/live-box.json`, renders in `verification/round-mode/`).
+  - Tests: backend 37 (3 new), frontend 63.
+
+**Paid image-to-3D options** (official pages, 28 Nov 2026; nothing was signed up for or spent):
+
+| Option | Per textured model | Access | Commercial |
+|---|---|---|---|
+| fal.ai TRELLIS | $0.02 (texture price not stated) | pay-as-you-go, no subscription | allowed |
+| Tripo API | ~$0.20–0.30 (+10–30 credits if the texture is charged separately) | credits at $0.01, non-refundable | paid users own outputs |
+| fal.ai Hunyuan3D v2 textured | $0.48 | pay-as-you-go | allowed |
+| Meshy API | not stated in USD | Pro plan ₹1,699/month billed yearly | Pro commercial licence |
+
+Recommendation: test fal.ai first (no subscription; TRELLIS is cheap, Hunyuan3D textured is a quality benchmark). It would plug in as a hosted provider behind the existing consent flow. This needs your approval and an API key.
+
+**Not done yet:** the optional back photo for round mode.
+
 ## Polish, round-object mode and warm TripoSR — 28 November 2026
 
 **Polish:**

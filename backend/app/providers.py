@@ -11,11 +11,12 @@ from urllib.parse import quote, urlsplit
 
 import httpx
 
+from .box import build_box_object
 from .lathe import build_round_object
 from .mesh import finish_mesh
 from .schemas import Failure
 
-Kind = Literal["triposr", "hunyuan", "local", "round"]
+Kind = Literal["triposr", "hunyuan", "local", "round", "box"]
 LOCAL_SCRIPTS = Path(__file__).resolve().parents[1] / "local_triposr"
 LOCAL_MESH_RESOLUTION = 256  # 384 is smoother but exceeds the 100k-triangle phone budget
 LOCAL_TEXTURE_RESOLUTION = 2048
@@ -92,23 +93,23 @@ def local_env(home: Path) -> dict[str, str]:
     return env
 
 
-def invoke_round(home: Path, image: Path, folder: Path, limit: int) -> None:
-    """Round-object mode: cut the object out, then spin its silhouette and wrap the photo on it."""
+def invoke_shape(kind: Kind, home: Path, image: Path, folder: Path, limit: int) -> None:
+    """Round or box mode: cut the object out, then build the shape and wrap the photo on it."""
     python = str(home / "venv" / "bin" / "python")
     send(stage="provider_preprocessing")
     cutout = folder / "cutout.png"
     run_child([python, str(LOCAL_SCRIPTS / "prep.py"), str(image), str(cutout), "--cutout"], local_env(home))
     send(stage="provider_running")
     raw = folder / "raw.glb"
-    build_round_object(cutout, raw)
+    (build_box_object if kind == "box" else build_round_object)(cutout, raw)
     send(stage="validating")
     info = finish_mesh(raw, folder / "model.glb", limit, allow_shape=False)
     send(info=info.model_dump())
 
 
 def invoke(kind: Kind, space: str, image: Path, folder: Path, remove: bool, limit: int) -> None:
-    if kind == "round":
-        invoke_round(Path(space), image, folder, limit)
+    if kind in ("round", "box"):
+        invoke_shape(kind, Path(space), image, folder, limit)
         return
     # Gradio imports and credentials are isolated to this short-lived worker.
     os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
@@ -184,7 +185,7 @@ def invoke(kind: Kind, space: str, image: Path, folder: Path, remove: bool, limi
 def main() -> None:
     kind, space, filename, folder, remove, limit = sys.argv[1:]
     try:
-        if kind not in ("triposr", "hunyuan", "round"):
+        if kind not in ("triposr", "hunyuan", "round", "box"):
             raise ValueError("Unknown provider kind")
         invoke(cast(Kind, kind), space, Path(filename), Path(folder), remove == "1", int(limit))
     except Failure as exc:

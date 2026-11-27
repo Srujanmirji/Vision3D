@@ -1,6 +1,6 @@
 # Vision3D
 
-Upload or capture a photo of one object. Vision3D turns it into a textured 3D model (GLB) that you can rotate 360°, download as GLB or USDZ (for iPhone and iPad), and open on a phone in AR through a QR code. The upload panel shows tips for taking a photo that reconstructs well. On a computer, **Use Phone** shows a QR code: take the photo on your phone and the model is generated on the computer. For bottles, cans and jars, **Round object** mode wraps the photo itself onto a smooth round shape, so labels stay sharp (about 3 s).
+Upload or capture a photo of one object. Vision3D turns it into a textured 3D model (GLB) that you can rotate 360°, download as GLB or USDZ (for iPhone and iPad), and open on a phone in AR through a QR code. The upload panel shows tips for taking a photo that reconstructs well. On a computer, **Use Phone** shows a QR code: take the photo on your phone and the model is generated on the computer. The **Shape** choice adds Round (bottles, cans, jars) and Box (packaging, books, phones) modes. They wrap the photo itself onto a clean shape, so labels and printed text stay sharp (3–5 s).
 
 The hidden sides are inferred by the AI, not measured, and sizes are estimates.
 

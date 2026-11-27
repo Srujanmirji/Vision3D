@@ -63,6 +63,8 @@ export interface HealthResponse {
   external_processing?: boolean;
   /** Round-object mode is available (needs local processing on the server). */
   round_mode?: boolean;
+  /** Box mode is available (needs local processing on the server). */
+  box_mode?: boolean;
 }
 
 export interface JobCreatedResponse {
@@ -134,7 +136,7 @@ export interface SharedAssetResponse {
 }
 
 /** auto: AI reconstruction. round: bottle/can/jar built from the silhouette with the photo wrapped on. */
-export type GenerationMode = "auto" | "round";
+export type GenerationMode = "auto" | "round" | "box";
 
 export interface CreateJobOptions {
   allow_external_processing: boolean;
@@ -340,8 +342,8 @@ export async function createJob(
   if (typeof options.remove_background === "boolean") {
     formData.append("remove_background", String(options.remove_background));
   }
-  if (options.mode === "round") {
-    formData.append("mode", "round");
+  if (options.mode && options.mode !== "auto") {
+    formData.append("mode", options.mode);
   }
 
   return requestJson<JobCreatedResponse>("/v1/jobs", {
@@ -463,7 +465,7 @@ export async function sendCapture(
   const formData = new FormData();
   formData.append("image", await shrinkForUpload(file));
   formData.append("allow_external_processing", String(options.allow_external_processing));
-  if (options.mode === "round") formData.append("mode", "round");
+  if (options.mode && options.mode !== "auto") formData.append("mode", options.mode);
   return requestJson<CaptureInfo>(`/v1/captures/${encodeURIComponent(token)}`, {
     method: "POST", body: formData, credentials: "omit", signal,
   }, UPLOAD_TIMEOUT_MS);

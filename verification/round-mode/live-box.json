@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-28",
+  "origin": "https://vision3d-sigma.vercel.app",
+  "input": "synthetic carton on a plain background",
+  "run": {
+    "mode": "box",
+    "status": "succeeded",
+    "provider": "box",
+    "seconds": 4.5,
+    "triangles": 12,
+    "bytes": 195580,
+    "extent": [
+      0.6683250665664673,
+      1.0,
+      0.23391376435756683
+    ]
+  }
+}

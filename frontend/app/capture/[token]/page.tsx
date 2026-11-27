@@ -2,12 +2,13 @@
 
 import { use, useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle2, ImagePlus, Monitor, Send } from "lucide-react";
-import { checkHealth, formatUserError, getCaptureInfo, sendCapture } from "@/lib/api";
+import { checkHealth, formatUserError, getCaptureInfo, sendCapture, type GenerationMode } from "@/lib/api";
 import { DEFAULT_MAX_UPLOAD_BYTES, validateImageFile, type ValidatedImageInfo } from "@/lib/validation";
 import { PhotoTips } from "@/components/upload/PhotoTips";
+import { availableModes, ShapeModeSelect } from "@/components/upload/ShapeModeSelect";
 import { friendlyError } from "@/lib/errorCopy";
 import { originalPhotoLimit } from "@/lib/uploadImage";
-import { AlertBanner, Button, Checkbox, CopperSwitch, Spinner } from "@/components/ui";
+import { AlertBanner, Button, Checkbox, Spinner } from "@/components/ui";
 
 type Stage = "checking" | "ready" | "sending" | "sent" | "closed";
 
@@ -25,10 +26,10 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
   const [consent, setConsent] = useState(false);
   // Unknown counts as required, so consent is never skipped by accident.
   const [externalProcessing, setExternalProcessing] = useState(true);
-  const [roundModeAvailable, setRoundModeAvailable] = useState(false);
-  const [roundMode, setRoundMode] = useState(false);
-  // Round-object mode always runs on the server's own machine, so it never needs consent.
-  const consentRequired = externalProcessing && !roundMode;
+  const [modes, setModes] = useState<GenerationMode[]>(["auto"]);
+  const [mode, setMode] = useState<GenerationMode>("auto");
+  // Round and box modes always run on the server's own machine, so they never need consent.
+  const consentRequired = externalProcessing && mode === "auto";
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
     checkHealth(controller.signal)
       .then((health) => {
         setExternalProcessing(health.external_processing !== false);
-        setRoundModeAvailable(health.round_mode === true);
+        setModes(availableModes(health));
       })
       .catch(() => {}); // keep asking for consent if the check fails
     return () => controller.abort();
@@ -86,7 +87,7 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
     setStage("sending");
     setError(null);
     try {
-      await sendCapture(token, photo.file, { allow_external_processing: consent, mode: roundMode ? "round" : "auto" });
+      await sendCapture(token, photo.file, { allow_external_processing: consent, mode });
       setStage("sent");
     } catch (err) {
       const failure = formatUserError(err);
@@ -188,21 +189,13 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
 
             {photo && (
               <>
-                {roundModeAvailable && (
-                  <div className="rounded-[12px] border border-border-subtle bg-panel px-3.5 py-3">
-                    <CopperSwitch
-                      id="phone-round-mode"
-                      label="Round object (bottle, can, jar)"
-                      labelClassName="text-sm font-medium text-ink-primary"
-                      checked={roundMode}
-                      disabled={stage === "sending"}
-                      onCheckedChange={setRoundMode}
-                    />
-                    <p className="mt-1.5 text-xs text-ink-secondary">
-                      Wraps your photo onto a smooth round shape, so labels stay sharp.
-                    </p>
-                  </div>
-                )}
+                <ShapeModeSelect
+                  id="phone-shape-mode"
+                  modes={modes}
+                  value={mode}
+                  onChange={setMode}
+                  disabled={stage === "sending"}
+                />
                 {consentRequired ? (
                   <Checkbox
                     label="Send this photo (location and camera data removed) to the hosted 3D AI provider. Hidden sides are inferred, not measured."

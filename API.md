@@ -45,10 +45,12 @@ A desktop session can start a phone-capture link and show it as a QR code. The p
 
 `POST /v1/jobs` and `POST /v1/captures/{token}` accept an optional `mode` form field:
 - `auto` (default): AI reconstruction through the provider chain.
+- `box`: for packaging, books and phones. The photo goes on the front face of a box; the other faces take the product's colour at each height, and the depth is estimated (0.35 × width).
+  - Same requirements and privacy as `round`; without local processing the server returns `422 BOX_MODE_UNAVAILABLE`.
 - `round`: for bottles, cans and jars. The object is cut out, its silhouette is spun into a round mesh, and the photo is wrapped on as the texture.
   - Needs local processing (`LOCAL_TRIPOSR_HOME`); without it the server returns `422 ROUND_MODE_UNAVAILABLE`.
   - Never leaves the machine, so consent is not required.
 
 `GET /health` reports:
-- `round_mode`: whether round mode is available.
+- `round_mode` and `box_mode`: whether each shape mode is available.
 - `external_processing`: whether any provider is hosted. When it is `false`, the UI hides the consent checkbox.
