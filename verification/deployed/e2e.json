@@ -1,0 +1,77 @@
+{
+  "origin": "https://vision3d-sigma.vercel.app",
+  "started": "2026-11-27T22:49:25+0530",
+  "large_upload": {
+    "bytes": 20311474,
+    "status": 413,
+    "body": {
+      "error": {
+        "code": "INVALID_IMAGE",
+        "message": "The upload exceeds the size limit."
+      }
+    }
+  },
+  "submit": {
+    "status": 202,
+    "seconds": 0.92
+  },
+  "poll_errors": [
+    "ReadTimeout"
+  ],
+  "job": {
+    "status": "succeeded",
+    "stages": [
+      "queued",
+      "provider_running",
+      "validating",
+      "complete"
+    ],
+    "error": null,
+    "seconds": 127.6
+  },
+  "model": {
+    "triangles": 63725,
+    "vertices": 50017,
+    "byte_size": 2608380,
+    "appearance": "baked_texture",
+    "glb_url": "https://vision3d-sigma.vercel.app/api/v1/models/4d98f2cd06cf266cbfcccba10b6d0454/glb"
+  },
+  "share": {
+    "mobile_url": "https://vision3d-sigma.vercel.app/ar/lYBNRDs5b8HCFL8oraE0djwI0KXSERwU",
+    "expires_at": "2026-11-27T18:21:41.024373+00:00"
+  },
+  "guest": {
+    "page_status": 200,
+    "page_headers": {
+      "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "referrer-policy": "no-referrer",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "glb_url": "https://vision3d-sigma.vercel.app/api/v1/share/lYBNRDs5b8HCFL8oraE0djwI0KXSERwU/glb",
+    "glb_status": 200,
+    "glb_magic": "glTF",
+    "glb_bytes": 2608380,
+    "glb_headers": {
+      "content-type": "model/gltf-binary",
+      "cache-control": "private, no-store",
+      "access-control-allow-origin": "*",
+      "accept-ranges": null,
+      "x-vercel-cache": "MISS"
+    },
+    "head_status": 200,
+    "range_status": 206,
+    "content_range": "bytes 0-11/2608380",
+    "private_glb_without_cookie": 404
+  },
+  "after_delete_share_status": 404,
+  "upload_9mb_through_vercel": {
+    "bytes": 8889554,
+    "status": 403,
+    "body": {
+      "error": {
+        "code": "CONSENT_REQUIRED",
+        "message": "This provider requires permission to send your photo to Hugging Face."
+      }
+    }
+  }
+}

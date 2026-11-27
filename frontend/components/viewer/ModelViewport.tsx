@@ -175,7 +175,7 @@ export function ModelViewport({
     <section
       ref={containerRef}
       aria-label="3D model viewport"
-      className="relative flex flex-col justify-between overflow-hidden rounded-[16px] border border-border-subtle bg-[#131315] min-h-[460px] md:min-h-[540px] lg:min-h-[600px]"
+      className="relative flex flex-col justify-between overflow-hidden rounded-[16px] border border-border-subtle bg-[#131315] min-h-[420px] md:min-h-[540px] lg:min-h-[600px]"
     >
       {/* Controlled warm floor wash — restrained studio lighting */}
       <div
@@ -210,7 +210,7 @@ export function ModelViewport({
               type="button"
               aria-pressed={renderMode === "textured"}
               onClick={() => setRenderMode("textured")}
-              className={`min-h-[32px] rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-[36px] rounded-[8px] px-3.5 py-1 text-xs font-medium transition-colors ${
                 renderMode === "textured"
                   ? "bg-ink-primary text-ink-on-copper shadow-xs"
                   : "text-ink-secondary hover:text-ink-primary"
@@ -222,7 +222,7 @@ export function ModelViewport({
               type="button"
               aria-pressed={renderMode === "wireframe"}
               onClick={() => setRenderMode("wireframe")}
-              className={`min-h-[32px] rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-[36px] rounded-[8px] px-3.5 py-1 text-xs font-medium transition-colors ${
                 renderMode === "wireframe"
                   ? "bg-ink-primary text-ink-on-copper shadow-xs"
                   : "text-ink-secondary hover:text-ink-primary"
@@ -259,13 +259,13 @@ export function ModelViewport({
       ) : null}
 
       {/* Central Stage */}
-      <div className="relative z-0 flex flex-1 items-center justify-center pl-[74px] pr-4 py-4 sm:px-16">
+      <div className="relative z-0 flex flex-1 items-center justify-center pl-[74px] pr-4 py-3 sm:px-16 min-h-[300px] sm:min-h-[340px]">
         {/* Left Vertical Floating Glass Toolbar */}
         <div
           role="toolbar"
           aria-label="Viewport camera controls"
           data-result={hasModel ? "true" : undefined}
-          className="v3d-glass absolute left-3.5 top-12 data-[result=true]:top-3 z-20 flex flex-col gap-1 rounded-[12px] border border-border-subtle p-1"
+          className="v3d-glass absolute left-3.5 top-3 z-20 flex flex-col gap-1 rounded-[12px] border border-border-subtle p-1"
         >
           <Tooltip content="Orbit camera (drag to rotate 360°)">
             {(tip) => (
@@ -478,7 +478,7 @@ export function ModelViewport({
         )}
 
         {hasModel && model && (
-          <div className="relative h-[340px] w-full sm:h-[410px] lg:h-[448px]">
+          <div className="relative h-[304px] w-full sm:h-[430px] lg:h-[472px]">
             <InteractiveModelCanvas
               modelKey={model.id}
               src={model.glb_url}

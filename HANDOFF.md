@@ -1,5 +1,43 @@
 # Vision3D engineering handoff
 
+## Production deployment — 27 November 2026
+
+**Live:** https://vision3d-sigma.vercel.app on Vercel Hobby (project `vision3d`). The backend is FastAPI on the presenter's Mac, exposed through a Cloudflare Quick Tunnel, using the community TripoSR Space. No paid service was enabled. Exact steps are in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+**Verified through the public URL** ([evidence](verification/deployed)):
+- **Upload size:** an 8.9 MB upload passed Vercel's external rewrite, and a 20 MB upload got the backend's structured `413`.
+- **Generation:** a real photo produced a 63,725-triangle model with a baked texture: 127.6 s via `scripts/deployed_e2e.py`, and 89.7 s via the browser UI.
+- **Cookie-free sharing:** a guest loaded the share page and the GLB: `model/gltf-binary`, `no-store`, CORS `*`, HEAD and a `206` range response. The private GLB returns `404` without the owner's cookie. Deleting the model revoked the share.
+- **QR handoff:** the desktop QR, decoded in Chrome, matches the displayed `https://vision3d-sigma.vercel.app/ar/<token>`. That page loaded the model in a new tab and showed the 360° fallback, because desktop has no native AR.
+
+**Added in this phase:**
+- `frontend/vercel.json`: pins the Next.js preset. The CLI-created project had defaulted to "Other" and served 404.
+- Node 24 and pnpm 11.20.0 pinned in `package.json`.
+- `scripts/setup.sh`: verified from a clean copy, followed by lint, typecheck, 38 tests and a production build.
+- `scripts/deployed_e2e.py`.
+- `deploy/`: systemd API and health units, plus a Caddyfile. Not yet exercised on a server.
+- `QUEUE_LIMIT` and `UPLOADS_PER_MINUTE` are now read from the environment, with a test. The backend suite passes 22 tests.
+
+**Limits and risks:**
+- **Laptop dependency:** the tunnel URL changes on every restart, and each change needs `VISION3D_BACKEND_ORIGIN` updated and a Vercel redeploy. The laptop must stay awake.
+- **Shared upload limit:** all tunnel traffic shares one upload rate-limit bucket.
+- **Poll stalls:** one poll per job stalled for 30–60 s on the Vercel → tunnel path. The frontend's retry absorbed it.
+- **No free owned Space:** Hugging Face now requires a paid plan to create Gradio or Docker Spaces, so a free owned TripoSR Space is no longer possible.
+- **Oracle Cloud reclamation:** Always Free can reclaim instances that stay idle for 7 days.
+
+**Still open:**
+- A durable backend (Oracle Cloud Always Free plus systemd and Caddy, as in `deploy/`), which needs your account.
+- Scanning the QR with real phones, and Quick Look, Scene Viewer and WebXR on devices.
+- The phone-width layout from a QR scan. The Chrome window would not resize in this run.
+
+## Final visual & UX audit — 27 November 2026
+
+Completed the final visual and UX audit of the Vision3D production build against [design-reference.png](design-reference.png) across `1440×900`, `1280×800`, `768×1024`, and `390×844` with live FastAPI connected (`Connected (ok)`, `TripoSR community demo`). Full report in [VISUAL_REVIEW.md](VISUAL_REVIEW.md).
+
+- **Verified**: Zero horizontal overflow across all 4 breakpoints and all 7 routes (`/`, `/create`, `/create?sample=1`, `/models`, `/models/sample`, `/ar/sample`, `/settings`), zero JS console errors, zero WebGL errors, all 3 dialogs (`ExportDialog`, `QrArDialog`, `CameraCaptureDialog`), `Textured`/`Wireframe` switching, camera presets, and settings controls.
+- **Refinements applied**: Raised `--text-muted` to `#938F8B` (`>= 5.3:1` WCAG AA contrast), tightened Landing hero heading scale and matched studio `<model-viewer>` lighting, unified left toolbar `top-3` clearance and `36px` shading pill height, made desktop sidebar `lg:sticky lg:h-dvh` for `1280×800` laptop viewports, tuned `390×844` mobile viewport fold height, and removed mobile title ellipsis truncation on `/models/[id]`.
+- **Checks**: `pnpm typecheck`, `pnpm lint`, `pnpm test` (38/38 Vitest tests across 7 files), and `pnpm build` all exited 0 after the final edits. No backend contracts were modified.
+
 ## Audit resolution — 27 November 2026
 
 The audit code fixes, affected files, regression tests and open findings are tracked in [AUDIT_RESOLUTION.md](AUDIT_RESOLUTION.md). The production browser regression ran locally over HTTPS, verified upload through download and cookie-free sharing, and recorded 375–1440px screenshots and a wireframe capture. It uses a fixture runner with an archived real GLB. Separately, fresh live community TripoSR succeeded in 83.64 seconds.

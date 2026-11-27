@@ -190,7 +190,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
             </Link>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl font-semibold tracking-tight text-ink-primary sm:text-2xl">
+                <h1 className="break-words text-lg font-semibold tracking-tight text-ink-primary sm:text-2xl">
                   {model ? model.name : "Model Details"}
                 </h1>
                 {model ? (

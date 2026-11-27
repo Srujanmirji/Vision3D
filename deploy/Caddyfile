@@ -1,0 +1,21 @@
+# Replace vision3d-api.example.com with your API hostname. Caddy obtains and renews the TLS certificate.
+vision3d-api.example.com {
+	encode zstd gzip
+
+	reverse_proxy 127.0.0.1:8000 {
+		# Never trust a client-supplied value; the backend reads this only from TRUSTED_PROXY_IPS.
+		header_up X-Vision3D-Client-IP {remote_host}
+	}
+
+	# Keep upstream failures in the API's structured error shape.
+	handle_errors 502 503 504 {
+		header Content-Type application/json
+		header Cache-Control no-store
+		respond `{"error":{"code":"PROVIDER_UNAVAILABLE","message":"The Vision3D backend is unavailable."}}` {err.status_code}
+	}
+
+	log {
+		# Share tokens live in URL paths; do not write request logs.
+		output discard
+	}
+}

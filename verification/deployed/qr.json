@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-27T23:24+05:30",
+  "origin": "https://vision3d-sigma.vercel.app",
+  "backend": "local FastAPI behind a Cloudflare Quick Tunnel, community TripoSR Space",
+  "browser_generation": {"input": "verification/reconstruction/inputs/shoes.jpg", "status": "succeeded", "seconds": 89.7, "triangles": 63725, "appearance": "baked_texture"},
+  "qr": {"decoder": "Chrome BarcodeDetector on the dialog's QR image", "decoded_url": "https://vision3d-sigma.vercel.app/ar/T2cK…(32-char token, expired 23:54 IST)", "matches_displayed_link": true},
+  "qr_target_in_new_tab": {"model_viewer_loaded": true, "ar_modes": "webxr scene-viewer quick-look", "canActivateAR": false, "fallback_shown": true, "horizontal_overflow": false, "viewport_width": 1512},
+  "not_tested": ["scanning with a physical phone camera", "Quick Look / Scene Viewer / WebXR launch", "phone-width layout in this run (window resize did not apply)"]
+}

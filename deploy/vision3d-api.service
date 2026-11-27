@@ -1,0 +1,27 @@
+[Unit]
+Description=Vision3D FastAPI backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vision3d
+Group=vision3d
+WorkingDirectory=/opt/vision3d/backend
+EnvironmentFile=/etc/vision3d/backend.env
+# One process, one worker: SQLite, the job queue and the data-dir lock are process-local.
+ExecStart=/opt/vision3d/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-proxy-headers --no-access-log
+Restart=on-failure
+RestartSec=5
+# Let a running generation finish or be marked INTERRUPTED cleanly.
+TimeoutStopSec=30
+StateDirectory=vision3d
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/vision3d
+
+[Install]
+WantedBy=multi-user.target

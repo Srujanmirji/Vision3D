@@ -458,3 +458,10 @@ def test_health_distinguishes_operator_configuration_from_demo(tmp_path: Path, s
         assert health["providers"][0]["operator_configured"] == (space is not None)
         assert health["providers"][0]["verified"] == (space is None)
         assert health["poll_timeout_seconds"] == 1530
+
+
+def test_queue_and_rate_limits_read_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("QUEUE_LIMIT", "2")
+    monkeypatch.setenv("UPLOADS_PER_MINUTE", "3")
+    settings = Settings.from_env()
+    assert (settings.queue_limit, settings.uploads_per_minute) == (2, 3)

@@ -95,7 +95,7 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
       {/* Desktop Narrow Sidebar */}
       <aside
         aria-label="Primary navigation"
-        className="hidden lg:flex lg:w-[224px] lg:shrink-0 lg:flex-col border-r border-border-subtle bg-[#121214]/92 px-3.5 py-5"
+        className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-[224px] lg:shrink-0 lg:flex-col lg:overflow-y-auto border-r border-border-subtle bg-[#121214]/92 px-3.5 py-5"
       >
         <Link
           href="/"

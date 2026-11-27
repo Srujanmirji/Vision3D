@@ -100,6 +100,8 @@ class Settings:
             ),
             deadline=float(os.getenv("JOB_TIMEOUT_SECONDS", "300")),
             attempt_timeout=float(os.getenv("PROVIDER_TIMEOUT_SECONDS", "190")),
+            queue_limit=int(os.getenv("QUEUE_LIMIT", "5")),
+            uploads_per_minute=int(os.getenv("UPLOADS_PER_MINUTE", "8")),
             retention_days=int(os.getenv("RETENTION_DAYS", "7")),
             share_ttl=int(os.getenv("SHARE_TTL_SECONDS", "3600")),
         )
