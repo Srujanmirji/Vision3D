@@ -123,7 +123,7 @@ export default function LandingPage() {
               2D Image to Interactive 3D &amp; Mobile AR
             </Badge>
 
-            <h1 className="text-3xl font-semibold tracking-tight text-ink-primary sm:text-4xl lg:text-[42px] lg:leading-[1.12]">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink-primary sm:text-3xl lg:text-[34px] lg:leading-[1.18]">
               Single-photo <span className="text-copper">3D studio</span> built for
               fast inspection and AR.
             </h1>
@@ -194,11 +194,13 @@ export default function LandingPage() {
                   auto-rotate
                   auto-rotate-delay={0}
                   rotation-per-second="16deg"
-                  camera-orbit="35deg 75deg 108%"
+                  camera-orbit="35deg 72deg 105%"
                   field-of-view="34deg"
-                  shadow-intensity="1"
-                  shadow-softness="0.85"
-                  exposure="1.05"
+                  environment-image="neutral"
+                  tone-mapping="commerce"
+                  shadow-intensity="1.25"
+                  shadow-softness="0.82"
+                  exposure="1.08"
                   interaction-prompt="none"
                   touch-action="pan-y"
                   style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
