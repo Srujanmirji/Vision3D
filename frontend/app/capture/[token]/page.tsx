@@ -5,6 +5,7 @@ import { Camera, CheckCircle2, ImagePlus, Monitor, Send } from "lucide-react";
 import { formatUserError, getCaptureInfo, sendCapture } from "@/lib/api";
 import { DEFAULT_MAX_UPLOAD_BYTES, validateImageFile, type ValidatedImageInfo } from "@/lib/validation";
 import { PhotoTips } from "@/components/upload/PhotoTips";
+import { originalPhotoLimit } from "@/lib/uploadImage";
 import { AlertBanner, Button, Checkbox, Spinner } from "@/components/ui";
 
 type Stage = "checking" | "ready" | "sending" | "sent" | "closed";
@@ -54,7 +55,7 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
   async function choose(file?: File) {
     if (!file) return;
     setError(null);
-    const result = await validateImageFile(file, DEFAULT_MAX_UPLOAD_BYTES);
+    const result = await validateImageFile(file, originalPhotoLimit(DEFAULT_MAX_UPLOAD_BYTES));
     if (!result.ok) {
       setError(result.error.message);
       return;

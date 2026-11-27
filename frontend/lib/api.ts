@@ -1,3 +1,5 @@
+import { shrinkForUpload } from "./uploadImage";
+
 export type JobStatus = "queued" | "processing" | "succeeded" | "failed";
 
 export type ModelAppearance = "baked_texture" | "native_texture" | "shape_only";
@@ -248,11 +250,16 @@ function timedSignal(caller: AbortSignal | undefined | null, ms: number) {
   };
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+/** Uploads include the photo body, which can take much longer on a phone connection. */
+const UPLOAD_TIMEOUT_MS = 120_000;
+
 async function request<T>(
   path: string, init: RequestInit, consume: (response: Response) => Promise<T>,
+  timeoutMs = REQUEST_TIMEOUT_MS,
 ): Promise<T> {
   const caller = init.signal;
-  const { signal, dispose } = timedSignal(caller, 30000);
+  const { signal, dispose } = timedSignal(caller, timeoutMs);
   try {
     const response = await fetch(`${getApiBaseUrl()}${path}`, {
       credentials: "include", ...init, cache: "no-store", signal,
@@ -261,7 +268,14 @@ async function request<T>(
     return await consume(response);
   } catch (error) {
     checkAbort(caller);
-    if (signal.aborted) throw new Vision3DApiError("TIMEOUT", "The server did not respond in time.");
+    if (signal.aborted) {
+      throw new Vision3DApiError(
+        "TIMEOUT",
+        timeoutMs > REQUEST_TIMEOUT_MS
+          ? "The upload took too long. Check your connection and try again."
+          : "The server did not respond in time.",
+      );
+    }
     if (error instanceof Vision3DApiError) throw error;
     throw new Vision3DApiError("NETWORK_ERROR", "Cannot reach the Vision3D backend or read its response.");
   } finally {
@@ -269,10 +283,10 @@ async function request<T>(
   }
 }
 
-async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function requestJson<T>(path: string, init: RequestInit = {}, timeoutMs?: number): Promise<T> {
   return request(path, init, async (response) => (
     response.status === 204 ? undefined as T : (await response.json()) as T
-  ));
+  ), timeoutMs);
 }
 
 function privateModelPath(id: string): string {
@@ -307,7 +321,7 @@ export async function createJob(
   signal?: AbortSignal
 ): Promise<JobCreatedResponse> {
   const formData = new FormData();
-  formData.append("image", file);
+  formData.append("image", await shrinkForUpload(file));
   formData.append(
     "allow_external_processing",
     String(options.allow_external_processing)
@@ -323,7 +337,7 @@ export async function createJob(
     method: "POST",
     body: formData,
     signal,
-  });
+  }, UPLOAD_TIMEOUT_MS);
 }
 
 export async function getJobStatus(
@@ -436,11 +450,11 @@ export async function sendCapture(
   signal?: AbortSignal,
 ): Promise<CaptureInfo> {
   const formData = new FormData();
-  formData.append("image", file);
+  formData.append("image", await shrinkForUpload(file));
   formData.append("allow_external_processing", String(options.allow_external_processing));
   return requestJson<CaptureInfo>(`/v1/captures/${encodeURIComponent(token)}`, {
     method: "POST", body: formData, credentials: "omit", signal,
-  });
+  }, UPLOAD_TIMEOUT_MS);
 }
 
 export async function getSharedAsset(
