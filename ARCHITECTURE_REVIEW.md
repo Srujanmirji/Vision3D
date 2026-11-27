@@ -14,7 +14,7 @@ Checks re-run for this review: `tsc --noEmit` passed, `eslint .` passed with no 
 - `frontend/`, including `public/samples/sample-chair.glb`, which the `/ar/sample` route depends on
 - `verification/`
 
-Until they are committed, the links above to those paths will not resolve on GitHub. The check results above can be reproduced only from that working copy, and so can the `/ar/sample` step in the handoff.
+Commit 9eb7293 adds the reviewed frontend, `verification/phase0`, `verification/reconstruction` and most of those documents. Two documents are still missing: API.md and task.md. They were rewritten for later backend work after this review, and the versions reviewed here were never committed. This review's findings on the API contract describe that earlier version of API.md.
 
 ## Summary of findings
 
