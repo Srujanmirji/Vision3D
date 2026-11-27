@@ -1,15 +1,18 @@
 import asyncio
+import contextlib
 import json
 import logging
 import os
 import shutil
+import signal
 import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
 from .config import Settings
-from .providers import Provider
+from .mesh import finish_mesh
+from .providers import LOCAL_MESH_RESOLUTION, LOCAL_SCRIPTS, LOCAL_TEXTURE_RESOLUTION, Provider, local_env
 from .schemas import Failure, MeshInfo
 from .storage import Storage
 
@@ -60,6 +63,116 @@ async def stderr_tail(stream: asyncio.StreamReader) -> bytes:
     return tail
 
 
+async def run_step(args: list[str], env: dict[str, str]) -> None:
+    """One short local step (background removal); killed if the job is cancelled or times out."""
+    process = await asyncio.create_subprocess_exec(
+        *args, env=env, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+    )
+    try:
+        if await process.wait() != 0:
+            raise Failure("PROVIDER_UNAVAILABLE", "Local background removal failed.", 503)
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+
+
+class WarmTripoSR:
+    """One TripoSR process that keeps the model loaded between jobs (saves ~5 s each).
+
+    Jobs run one at a time (the queue gate), so it handles one request at a time. If a request is
+    cancelled or times out, its state is unknown: the process is killed and the next job starts a new one.
+    """
+
+    def __init__(self) -> None:
+        self.process: asyncio.subprocess.Process | None = None
+        self.home: Path | None = None
+        self.loop: asyncio.AbstractEventLoop | None = None
+
+    def forget_foreign(self) -> None:
+        """A process started by another event loop cannot be awaited here: kill it by PID."""
+        if self.process and self.loop is not asyncio.get_running_loop():
+            with contextlib.suppress(ProcessLookupError):
+                os.kill(self.process.pid, signal.SIGKILL)
+            self.process = None
+
+    async def start(self, home: Path) -> asyncio.subprocess.Process:
+        self.forget_foreign()
+        if self.process and self.process.returncode is None and self.home == home:
+            return self.process
+        await self.stop()
+        self.process = await asyncio.create_subprocess_exec(
+            str(home / "venv" / "bin" / "python"), str(LOCAL_SCRIPTS / "infer.py"), "--serve",
+            env=local_env(home),
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        self.home = home
+        self.loop = asyncio.get_running_loop()
+        assert self.process.stdout is not None
+        ready = await self.process.stdout.readline()
+        if not ready or not json.loads(ready).get("ready"):
+            await self.stop()
+            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR could not start.", 503)
+        return self.process
+
+    async def reconstruct(self, home: Path, source: Path, target: Path) -> None:
+        process = await self.start(home)
+        assert process.stdin is not None and process.stdout is not None
+        request = {
+            "input": str(source), "output": str(target),
+            "resolution": LOCAL_MESH_RESOLUTION, "texture": LOCAL_TEXTURE_RESOLUTION,
+        }
+        answered = False
+        try:
+            process.stdin.write((json.dumps(request) + "\n").encode())
+            await process.stdin.drain()
+            line = await process.stdout.readline()
+            answered = True
+        finally:
+            if not answered:
+                await self.stop()
+        if not line:
+            await self.stop()
+            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR stopped unexpectedly.", 503)
+        if not json.loads(line).get("ok"):
+            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR failed on this photo.", 503)
+
+    async def stop(self) -> None:
+        self.forget_foreign()
+        if self.process and self.process.returncode is None:
+            self.process.kill()
+            await self.process.wait()
+        self.process = None
+
+
+WARM = WarmTripoSR()
+
+
+async def local_runner(
+    provider: Provider,
+    folder: Path,
+    remove: bool,
+    config: Settings,
+    stage: Callable[[str], None],
+) -> MeshInfo:
+    """TripoSR on this machine: background removal per job, reconstruction in the warm process."""
+    home = Path(provider.space)
+    prepared = folder.parent / "input.png"
+    if remove:
+        stage("provider_preprocessing")
+        python = str(home / "venv" / "bin" / "python")
+        cutout = folder / "foreground.png"
+        await run_step([python, str(LOCAL_SCRIPTS / "prep.py"), str(prepared), str(cutout)], local_env(home))
+        prepared = cutout
+    stage("provider_running")
+    raw = folder / "raw.glb"
+    await WARM.reconstruct(home, prepared, raw)
+    stage("validating")
+    return await asyncio.to_thread(finish_mesh, raw, folder / "model.glb", config.max_model, False)
+
+
 async def subprocess_runner(
     provider: Provider,
     folder: Path,
@@ -67,6 +180,8 @@ async def subprocess_runner(
     config: Settings,
     stage: Callable[[str], None],
 ) -> MeshInfo:
+    if provider.kind == "local":
+        return await local_runner(provider, folder, remove, config, stage)
     env = dict(os.environ)
     env.pop("HF_TOKEN", None)
     if provider.use_token and config.hf_token:
@@ -235,3 +350,4 @@ class Jobs:
                 self.fail(key, "INTERRUPTED")
                 task.cancel()
         await asyncio.gather(*(task for _, task in active), return_exceptions=True)
+        await WARM.stop()

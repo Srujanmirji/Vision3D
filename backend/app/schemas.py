@@ -95,6 +95,10 @@ class Health(BaseModel):
     retention_days: int
     share_ttl_seconds: int
     poll_timeout_seconds: int
+    # True when a hosted provider is configured, so photos may leave this machine.
+    external_processing: bool = True
+    # Round-object mode (bottles, cans, jars): needs the local background-removal model.
+    round_mode: bool = False
 
 
 class CaptureSession(BaseModel):

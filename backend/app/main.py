@@ -9,7 +9,7 @@ import time
 from collections import OrderedDict, deque
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import Cookie, Depends, FastAPI, File, Form, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -44,6 +44,8 @@ from .schemas import (
 from .storage import Storage, utc
 
 COOKIE = "vision3d_session"
+Mode = Literal["auto", "round"]
+LOCAL_KINDS = ("local", "round")  # providers that keep photos on this machine
 GLB = "model/gltf-binary"
 DOWNLOAD: dict[int | str, dict[str, Any]] = {
     200: {"content": {GLB: {"schema": {"type": "string", "format": "binary"}}}},
@@ -114,7 +116,12 @@ def create_app(
 ) -> FastAPI:
     settings = config or Settings.from_env()
     providers = configured_providers(settings)
-    sends_photo_externally = any(p.kind != "local" for p in providers)
+    sends_photo_externally = any(p.kind not in LOCAL_KINDS for p in providers)
+    round_provider = (
+        Provider("round", "Round object (photo wrap)", str(settings.local_home), "round", True)
+        if settings.local_home
+        else None
+    )
     rate = UploadRate(settings.uploads_per_minute)
 
     @asynccontextmanager
@@ -255,6 +262,8 @@ def create_app(
             retention_days=settings.retention_days,
             share_ttl_seconds=settings.share_ttl,
             poll_timeout_seconds=math.ceil(settings.queue_timeout + settings.deadline + 30),
+            external_processing=sends_photo_externally,
+            round_mode=round_provider is not None,
         )
 
     @api.get("/health/live", tags=["Health"])
@@ -283,19 +292,28 @@ def create_app(
         remove_background: bool,
         provider: str | None = None,
         claim: Callable[[str], None] | None = None,
+        mode: Mode = "auto",
     ) -> str:
         """Validate, strip and queue one upload. Shared by desktop uploads and phone captures."""
         rate.check(upload_peer(request, settings.trusted_proxy_ips))
-        if not providers:
+        if mode == "round":
+            if round_provider is None:
+                raise Failure(
+                    "ROUND_MODE_UNAVAILABLE", "Round-object mode needs local processing on the server.", 422
+                )
+            chain: tuple[Provider, ...] = (round_provider,)
+        else:
+            chain = providers
+        if not chain:
             raise Failure("PROVIDER_UNAVAILABLE", "No generation provider is configured.", 503)
-        # Consent is needed whenever any provider in the chain is hosted (a fallback may be used).
-        if sends_photo_externally and not allow_external_processing:
+        # Consent is needed whenever a provider this job may use is hosted (a fallback counts).
+        if any(p.kind not in LOCAL_KINDS for p in chain) and not allow_external_processing:
             raise Failure(
                 "CONSENT_REQUIRED",
                 "This provider requires permission to send your photo to Hugging Face.",
                 403,
             )
-        if provider is not None and provider != providers[0].id:
+        if provider is not None and mode == "auto" and provider != providers[0].id:
             raise Failure("INVALID_REQUEST", "The requested primary provider is unavailable.", 422)
         queue = jobs(request)
         if len(queue.active) >= settings.queue_limit:
@@ -316,7 +334,7 @@ def create_app(
             if claim:
                 claim(job_id)
             store.new_job(job_id, key)
-            queue.enqueue(job_id, key, providers, remove_background)
+            queue.enqueue(job_id, key, chain, remove_background)
         except BaseException:
             shutil.rmtree(folder, ignore_errors=True)
             raise
@@ -335,8 +353,11 @@ def create_app(
         provider: Annotated[
             str | None, Form(description="Configured primary provider ID; fallback is automatic if enabled.")
         ] = None,
+        mode: Annotated[Mode, Form(description="auto: AI reconstruction; round: bottle/can/jar photo wrap.")] = "auto",
     ) -> JobCreated:
-        job_id = await start_job(request, key, image, allow_external_processing, remove_background, provider)
+        job_id = await start_job(
+            request, key, image, allow_external_processing, remove_background, provider, mode=mode
+        )
         return JobCreated(job_id=job_id, status="queued")
 
     @api.post("/v1/captures", tags=["Captures"], responses=api_errors(403, 503))
@@ -384,6 +405,7 @@ def create_app(
             bool, Form(description="Consent to send the stripped photo to Hugging Face.")
         ] = False,
         remove_background: Annotated[bool, Form(description="Run provider background removal.")] = True,
+        mode: Annotated[Mode, Form(description="auto: AI reconstruction; round: bottle/can/jar photo wrap.")] = "auto",
     ) -> CaptureInfo:
         """Public: the phone sends one photo; the job belongs to the desktop session that made the link."""
         response.headers["Cache-Control"] = "no-store"
@@ -399,7 +421,7 @@ def create_app(
                 raise Failure("CAPTURE_USED", "This link was already used or has expired.", 409)
 
         await start_job(
-            request, record["owner"], image, allow_external_processing, remove_background, claim=claim
+            request, record["owner"], image, allow_external_processing, remove_background, claim=claim, mode=mode
         )
         return CaptureInfo(expires_at=utc(record["expires"]), received=True)
 

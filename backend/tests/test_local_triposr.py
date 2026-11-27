@@ -1,8 +1,9 @@
 """Local TripoSR provider, with a fake TripoSR environment so no torch or GPU is needed."""
 
-import json
+import asyncio
 import os
 import stat
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,9 +14,10 @@ from PIL import Image
 from test_backend import fixture_runner, photo
 
 from app.config import Settings
+from app.jobs import WARM, local_runner
 from app.main import configured_providers, create_app
-from app.providers import invoke_local
-from app.schemas import Failure
+from app.providers import Provider
+from app.schemas import Failure, MeshInfo
 
 
 def textured_box(path: Path) -> None:
@@ -30,20 +32,35 @@ def textured_box(path: Path) -> None:
 
 
 def fake_home(tmp_path: Path, fail_step: str = "") -> Path:
-    """A LOCAL_TRIPOSR_HOME whose 'python' records each call and produces the expected files."""
+    """A LOCAL_TRIPOSR_HOME whose 'python' records each call and produces the expected files.
+    `infer.py --serve` runs a tiny real-Python server that answers like the real one."""
     home = tmp_path / "triposr-home"
     (home / "TripoSR").mkdir(parents=True)
     (home / "venv" / "bin").mkdir(parents=True)
     glb = tmp_path / "fixture.glb"
     textured_box(glb)
+    server = tmp_path / "fake_server.py"
+    server.write_text(f"""import json, os, shutil, sys
+with open({str(tmp_path / "calls.log")!r}, "a") as log:
+    log.write("serve|" + os.environ.get("HF_HUB_OFFLINE", "") + "|" + os.environ.get("HF_TOKEN", "none") + "\\n")
+print(json.dumps({{"ready": True}}), flush=True)
+for line in sys.stdin:
+    if {fail_step!r} == "hang":
+        import time; time.sleep(60)
+    job = json.loads(line)
+    ok = {fail_step!r} != "infer.py"
+    if ok:
+        shutil.copy({str(glb)!r}, job["output"])
+    print(json.dumps({{"ok": ok}}), flush=True)
+""")
     python = home / "venv" / "bin" / "python"
     python.write_text(f"""#!/bin/sh
 step=$(basename "$1")
+if [ "$2" = "--serve" ]; then exec {sys.executable} "{server}"; fi
 printf '%s|%s|%s|%s\\n' "$step" "$HF_HUB_OFFLINE" "${{HF_TOKEN:-none}}" "$TRIPOSR_CODE" >> "{tmp_path}/calls.log"
 [ "$step" = "{fail_step}" ] && exit 1
 case "$step" in
   prep.py) cp "$2" "$3" ;;
-  infer.py) cp "{glb}" "$3" ;;
 esac
 """)
     python.chmod(python.stat().st_mode | stat.S_IEXEC)
@@ -62,45 +79,61 @@ def test_missing_local_install_fails_at_startup(tmp_path: Path) -> None:
         Settings(data=tmp_path, local_home=tmp_path / "nowhere")
 
 
+async def run_jobs(home: Path, tmp_path: Path, count: int = 1, remove: bool = True) -> list[MeshInfo]:
+    """Run jobs one after another in one event loop, as the backend does, then stop the warm process."""
+    provider = Provider("triposr-local", "local", str(home), "local", True)
+    settings = Settings(data=tmp_path / "data")
+    results = []
+    try:
+        for index in range(count):
+            folder = tmp_path / f"job-{index}" / "0-0"
+            folder.mkdir(parents=True)
+            Image.new("RGB", (32, 32), "white").save(folder.parent / "input.png")
+            results.append(await local_runner(provider, folder, remove, settings, lambda _stage: None))
+    finally:
+        await WARM.stop()
+    return results
+
+
 def test_local_pipeline_runs_offline_without_token_and_validates(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("HF_TOKEN", "secret-token")
     home = fake_home(tmp_path)
-    folder = tmp_path / "job"
-    folder.mkdir()
-    image = tmp_path / "input.png"
-    Image.new("RGB", (32, 32), "white").save(image)
-
-    invoke_local(home, image, folder, remove=True, limit=10_000_000)
-
+    infos = asyncio.run(run_jobs(home, tmp_path, count=2))
+    assert [i.appearance for i in infos] == ["native_texture", "native_texture"]
     calls = (tmp_path / "calls.log").read_text().splitlines()
-    assert calls == [f"prep.py|1|none|{home / 'TripoSR'}", f"infer.py|1|none|{home / 'TripoSR'}"]
-    messages = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
-    info = next(m["info"] for m in messages if "info" in m)
-    assert info["appearance"] == "native_texture"
-    assert (folder / "model.glb").is_file()
+    assert calls.count("serve|1|none") == 1  # model loaded once for both jobs, offline, no token
+    assert calls.count(f"prep.py|1|none|{home / 'TripoSR'}") == 2
 
 
 def test_local_pipeline_skips_background_removal_when_off(tmp_path: Path) -> None:
-    home = fake_home(tmp_path)
-    folder = tmp_path / "job"
-    folder.mkdir()
-    image = tmp_path / "input.png"
-    Image.new("RGB", (32, 32), "white").save(image)
-    invoke_local(home, image, folder, remove=False, limit=10_000_000)
-    assert [c.split("|")[0] for c in (tmp_path / "calls.log").read_text().splitlines()] == ["infer.py"]
+    asyncio.run(run_jobs(fake_home(tmp_path), tmp_path, remove=False))
+    assert not any(c.startswith("prep.py") for c in (tmp_path / "calls.log").read_text().splitlines())
 
 
-def test_local_step_failure_is_reported_as_provider_unavailable(tmp_path: Path) -> None:
-    home = fake_home(tmp_path, fail_step="infer.py")
-    folder = tmp_path / "job"
-    folder.mkdir()
-    image = tmp_path / "input.png"
-    Image.new("RGB", (32, 32), "white").save(image)
-    with pytest.raises(Failure) as failure:
-        invoke_local(home, image, folder, remove=True, limit=10_000_000)
-    assert failure.value.error.code == "PROVIDER_UNAVAILABLE"
+def test_local_failures_are_reported_as_provider_unavailable(tmp_path: Path) -> None:
+    for step in ("prep.py", "infer.py"):
+        home = fake_home(tmp_path / step, fail_step=step)
+        with pytest.raises(Failure) as failure:
+            asyncio.run(run_jobs(home, tmp_path / step))
+        assert failure.value.error.code == "PROVIDER_UNAVAILABLE"
+
+
+def test_timeout_kills_a_hung_triposr_process(tmp_path: Path) -> None:
+    home = fake_home(tmp_path, fail_step="hang")
+    provider = Provider("triposr-local", "local", str(home), "local", True)
+    folder = tmp_path / "job" / "0-0"
+    folder.mkdir(parents=True)
+    Image.new("RGB", (32, 32), "white").save(folder.parent / "input.png")
+
+    async def scenario() -> int:
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(2):
+                await local_runner(provider, folder, False, Settings(data=tmp_path / "d"), lambda _s: None)
+        return 0 if WARM.process is None else 1
+
+    assert asyncio.run(scenario()) == 0  # the stuck process was killed, the next job starts fresh
 
 
 def test_local_only_setup_does_not_ask_for_hugging_face_consent(tmp_path: Path) -> None:

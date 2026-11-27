@@ -2,11 +2,12 @@
 
 import { use, useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle2, ImagePlus, Monitor, Send } from "lucide-react";
-import { formatUserError, getCaptureInfo, sendCapture } from "@/lib/api";
+import { checkHealth, formatUserError, getCaptureInfo, sendCapture } from "@/lib/api";
 import { DEFAULT_MAX_UPLOAD_BYTES, validateImageFile, type ValidatedImageInfo } from "@/lib/validation";
 import { PhotoTips } from "@/components/upload/PhotoTips";
+import { friendlyError } from "@/lib/errorCopy";
 import { originalPhotoLimit } from "@/lib/uploadImage";
-import { AlertBanner, Button, Checkbox, Spinner } from "@/components/ui";
+import { AlertBanner, Button, Checkbox, CopperSwitch, Spinner } from "@/components/ui";
 
 type Stage = "checking" | "ready" | "sending" | "sent" | "closed";
 
@@ -22,6 +23,12 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
   const [closedReason, setClosedReason] = useState("");
   const [photo, setPhoto] = useState<ValidatedImageInfo | null>(null);
   const [consent, setConsent] = useState(false);
+  // Unknown counts as required, so consent is never skipped by accident.
+  const [externalProcessing, setExternalProcessing] = useState(true);
+  const [roundModeAvailable, setRoundModeAvailable] = useState(false);
+  const [roundMode, setRoundMode] = useState(false);
+  // Round-object mode always runs on the server's own machine, so it never needs consent.
+  const consentRequired = externalProcessing && !roundMode;
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,6 +55,17 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
     return () => controller.abort();
   }, [token]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    checkHealth(controller.signal)
+      .then((health) => {
+        setExternalProcessing(health.external_processing !== false);
+        setRoundModeAvailable(health.round_mode === true);
+      })
+      .catch(() => {}); // keep asking for consent if the check fails
+    return () => controller.abort();
+  }, []);
+
   useEffect(() => () => {
     if (photo) URL.revokeObjectURL(photo.previewUrl);
   }, [photo]);
@@ -64,19 +82,20 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
   }
 
   async function send() {
-    if (!photo || !consent) return;
+    if (!photo || (consentRequired && !consent)) return;
     setStage("sending");
     setError(null);
     try {
-      await sendCapture(token, photo.file, { allow_external_processing: true });
+      await sendCapture(token, photo.file, { allow_external_processing: consent, mode: roundMode ? "round" : "auto" });
       setStage("sent");
     } catch (err) {
-      const { code, message } = formatUserError(err);
-      if (code === "CAPTURE_USED" || code === "EXPIRED") {
-        setClosedReason(message);
+      const failure = formatUserError(err);
+      if (failure.code === "CAPTURE_USED" || failure.code === "EXPIRED") {
+        setClosedReason(failure.message);
         setStage("closed");
       } else {
-        setError(message);
+        const friendly = friendlyError(failure);
+        setError(`${friendly.title}. ${friendly.message}`);
         setStage("ready");
       }
     }
@@ -169,13 +188,41 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
 
             {photo && (
               <>
-                <Checkbox
-                  label="Send this photo (location and camera data removed) to the hosted 3D AI provider. Hidden sides are inferred, not measured."
-                  checked={consent}
-                  onCheckedChange={setConsent}
-                  disabled={stage === "sending"}
-                />
-                <Button variant="primary" size="lg" disabled={!consent} loading={stage === "sending"} onClick={() => void send()}>
+                {roundModeAvailable && (
+                  <div className="rounded-[12px] border border-border-subtle bg-panel px-3.5 py-3">
+                    <CopperSwitch
+                      id="phone-round-mode"
+                      label="Round object (bottle, can, jar)"
+                      labelClassName="text-sm font-medium text-ink-primary"
+                      checked={roundMode}
+                      disabled={stage === "sending"}
+                      onCheckedChange={setRoundMode}
+                    />
+                    <p className="mt-1.5 text-xs text-ink-secondary">
+                      Wraps your photo onto a smooth round shape, so labels stay sharp.
+                    </p>
+                  </div>
+                )}
+                {consentRequired ? (
+                  <Checkbox
+                    label="Send this photo (location and camera data removed) to the hosted 3D AI provider. Hidden sides are inferred, not measured."
+                    checked={consent}
+                    onCheckedChange={setConsent}
+                    disabled={stage === "sending"}
+                  />
+                ) : (
+                  <p className="text-xs text-ink-secondary">
+                    Your photo is processed on the Vision3D server only (location data removed). Hidden sides are
+                    inferred, not measured.
+                  </p>
+                )}
+                <Button
+                  variant="primary"
+                  size="lg"
+                  disabled={consentRequired && !consent}
+                  loading={stage === "sending"}
+                  onClick={() => void send()}
+                >
                   <Send className="h-4 w-4" />
                   {stage === "sending" ? "Sending…" : "Send to Computer"}
                 </Button>

@@ -99,7 +99,7 @@ describe("Phone capture page", () => {
     fireEvent.click(sendButton);
 
     expect(await screen.findByRole("heading", { name: "Photo sent" })).toBeInTheDocument();
-    expect(api.sendCapture).toHaveBeenCalledWith("tok123", file, { allow_external_processing: true });
+    expect(api.sendCapture).toHaveBeenCalledWith("tok123", file, { allow_external_processing: true, mode: "auto" });
   });
 
   it("explains an already-used link", async () => {

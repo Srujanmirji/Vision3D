@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-28",
+  "origin": "https://vision3d-sigma.vercel.app",
+  "health": {
+    "status": "ok",
+    "providers": [
+      {
+        "id": "triposr-local",
+        "label": "TripoSR on this computer",
+        "verified": true,
+        "operator_configured": false,
+        "supports_background_removal": true
+      }
+    ],
+    "fallback_provider": {
+      "id": "triposr",
+      "label": "TripoSR community demo",
+      "verified": true,
+      "operator_configured": false,
+      "supports_background_removal": true
+    },
+    "max_upload_bytes": 10000000,
+    "retention_days": 7,
+    "share_ttl_seconds": 3600,
+    "poll_timeout_seconds": 1530,
+    "external_processing": true,
+    "round_mode": true
+  },
+  "runs": [
+    {
+      "mode": "auto",
+      "provider": "triposr-local",
+      "status": "succeeded",
+      "seconds": 26.1,
+      "triangles": 63718,
+      "bytes": 3922096,
+      "appearance": "native_texture"
+    },
+    {
+      "mode": "auto",
+      "provider": "triposr-local",
+      "status": "succeeded",
+      "seconds": 20.2,
+      "triangles": 63718,
+      "bytes": 3922096,
+      "appearance": "native_texture"
+    },
+    {
+      "mode": "round",
+      "provider": "round",
+      "status": "succeeded",
+      "seconds": 3.2,
+      "triangles": 40960,
+      "bytes": 1314976,
+      "appearance": "native_texture"
+    }
+  ]
+}

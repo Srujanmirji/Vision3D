@@ -229,7 +229,8 @@ describe("ModelViewport states", () => {
     );
 
     expect(screen.getByText("PROVIDER_UNAVAILABLE")).toBeInTheDocument();
-    expect(screen.getByText("Provider returned 503.")).toBeInTheDocument();
+    expect(screen.getByText("The 3D generator is unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/check that the Vision3D computer is on/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Retry Generation/i })).toBeInTheDocument();
   });
 });
