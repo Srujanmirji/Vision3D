@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-27",
+  "browser": "Google Chrome (headless, Playwright) against the local Next.js app; API responses stubbed",
+  "input_glb": "verification/backend-live/shoes/model.glb (real TripoSR output, baked texture, 63,725 triangles)",
+  "usdz_bytes": 6506431,
+  "conversion_seconds": 0.35,
+  "page_errors": 0,
+  "usdchecker_arkit": "Success",
+  "contents": ["model.usda", "geometries/Geometry_12.usda", "textures/Texture_20_false.png"],
+  "not_tested": "Opening the downloaded .usdz on a physical iPhone or iPad"
+}

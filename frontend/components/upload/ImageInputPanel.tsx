@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Camera, ImagePlus, Sparkles, Upload, X } from "lucide-react";
 import { CameraCaptureDialog } from "./CameraCaptureDialog";
+import { PhotoTips } from "./PhotoTips";
 import type { ProviderCapability } from "@/lib/api";
 import {
   DEFAULT_MAX_UPLOAD_BYTES,
@@ -232,6 +233,8 @@ export function ImageInputPanel({
             {uploadedImage.warning}
           </AlertBanner>
         ) : null}
+
+        <PhotoTips />
       </div>
 
       <hr className="my-5 border-border-subtle/80" />
