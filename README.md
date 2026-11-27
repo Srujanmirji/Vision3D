@@ -77,7 +77,7 @@ In short:
   - Set `VISION3D_BACKEND_ORIGIN`, `NEXT_PUBLIC_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL=/api` and `ENABLE_EXPERIMENTAL_COREPACK=1`, then run `vercel deploy --prod`.
   - Redeploy after changing any of these variables, because they're used at build time.
 - **Backend: needs an always-on machine with a persistent disk.** Generation takes 1.5–2 minutes and models are kept on disk, so Vercel Functions and Render's free tier don't fit. There are two options:
-  - **Demo (current):** run FastAPI on a laptop behind a free Cloudflare Quick Tunnel. The tunnel URL changes on every restart, and each new URL means updating `VISION3D_BACKEND_ORIGIN` and redeploying.
+  - **Demo (current):** run FastAPI on a laptop behind a free Cloudflare Quick Tunnel. The tunnel URL changes on every restart, and each new URL means updating `VISION3D_BACKEND_ORIGIN` and redeploying. To run it on a client's Mac with no commands after setup (auto-start, crash restart, stay awake), follow [CLIENT_MAC_GUIDE.md](CLIENT_MAC_GUIDE.md).
   - **Durable:** a Linux VM such as Oracle Cloud Always Free, using the systemd units and Caddyfile in `deploy/`. Caddy provides HTTPS. This setup is prepared but not yet tried on a server.
 
 Check a deployment end to end. This makes a real generation request:
