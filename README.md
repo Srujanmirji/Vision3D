@@ -56,6 +56,8 @@ Open http://localhost:3000. The frontend reaches the backend through its same-or
 corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm build
 ```
 
+The same checks run automatically on every pull request (GitHub Actions CI). A scheduled uptime check alerts by email when the deployed site or API is down; see [DEPLOYMENT.md](DEPLOYMENT.md#ci-and-uptime-alerts).
+
 Live provider tests are opt-in because they send a public test photo to Hugging Face:
 
 ```sh

@@ -155,6 +155,18 @@ For physical acceptance, generate a separate model and open View in AR on deskto
 
 Back up `/var/lib/vision3d` as a unit, including SQLite, models and the session signing key, to a restricted off-host destination. Stop the API during filesystem backups/restores, after the queue drains. If restarted mid-generation, the API marks queued and processing jobs as interrupted and removes their temporary inputs. The frontend can submit a new request. Published models, sessions and retained history survive restarts. Roll back the frontend to its prior Vercel deployment and the backend to its prior code after a failed release check. Verify readiness and upload/share again after rollback.
 
+## CI and uptime alerts
+
+- **CI** (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`:
+  - backend: ruff, strict mypy and pytest (live provider tests stay skipped)
+  - frontend: lint, typecheck, Vitest and `next build`
+- **Uptime** (`.github/workflows/uptime.yml`) runs every 30 minutes on `main`. It checks `<HEALTH_URL>/` and `<HEALTH_URL>/api/health/ready`, trying three times before failing.
+  - **How it alerts:** a failed run is the alert. GitHub emails the account that last edited the schedule (Settings → Notifications → Actions controls this).
+  - **Set it up:** `gh variable set HEALTH_URL --body https://your-project.vercel.app`. Run it once by hand from the Actions tab (Uptime → Run workflow).
+  - **Pause it:** while the laptop backend is intentionally off, run `gh variable delete HEALTH_URL`, otherwise every check fails and emails you.
+  - **Delays:** GitHub can delay scheduled runs by several minutes, and disables schedules after 60 days without repository activity.
+  - **Faster alternative:** UptimeRobot's free plan, with a 5-minute HTTP monitor on `/api/health/ready`, needs its own account.
+
 ## Repeatable local setup
 
 Use Node.js 24 with Corepack, Python 3.13, and a POSIX shell on macOS or Linux. From a clean checkout:

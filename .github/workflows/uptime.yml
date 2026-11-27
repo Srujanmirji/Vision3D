@@ -1,0 +1,40 @@
+name: Uptime
+
+# Checks the deployed app every 30 minutes. A failed run is the alert: GitHub
+# emails the account that last changed this schedule (default notification settings).
+# Set the repository variable HEALTH_URL to the public origin, e.g. https://your-app.vercel.app.
+# With HEALTH_URL unset the check is skipped, so forks and paused deployments stay quiet.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  health:
+    if: ${{ vars.HEALTH_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Frontend and backend are both up
+        env:
+          ORIGIN: ${{ vars.HEALTH_URL }}
+        run: |
+          set -eu
+          check() {
+            # Three tries, so one slow response through the tunnel is not an alert.
+            for attempt in 1 2 3; do
+              if curl --fail --silent --show-error --max-time 20 "$1" > /dev/null; then
+                echo "ok   $1"
+                return 0
+              fi
+              sleep 10
+            done
+            echo "::error::$1 failed 3 times"
+            return 1
+          }
+          check "$ORIGIN/"
+          # Readiness covers the API, SQLite, storage and provider configuration.
+          check "$ORIGIN/api/health/ready"
