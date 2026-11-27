@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Layers, Settings } from "lucide-react";
 import type { ReactNode } from "react";
+import { Badge } from "@/components/ui";
 
 interface NavItem {
   href: string;
@@ -36,8 +37,8 @@ const NAV_ITEMS: NavItem[] = [
 function Vision3DMark() {
   return (
     <svg
-      width="26"
-      height="26"
+      width="24"
+      height="24"
       viewBox="0 0 28 28"
       fill="none"
       aria-hidden="true"
@@ -70,32 +71,46 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
 
   const isActive = (item: NavItem) => {
     if (item.href === "/create") {
-      return pathname === "/" || pathname.startsWith("/create");
+      return pathname.startsWith("/create");
     }
     return item.matchPrefixes.some((prefix) => pathname.startsWith(prefix));
   };
+
+  const statusTone =
+    backendOnline === true
+      ? "success"
+      : backendOnline === false
+      ? "copper"
+      : "neutral";
+
+  const statusText =
+    backendOnline === true
+      ? "Connected"
+      : backendOnline === false
+      ? "Offline"
+      : "Checking";
 
   return (
     <div className="studio-ambient-bg min-h-dvh flex flex-col lg:flex-row">
       {/* Desktop Narrow Sidebar */}
       <aside
         aria-label="Primary navigation"
-        className="hidden lg:flex lg:w-[228px] lg:shrink-0 lg:flex-col border-r border-border-subtle/80 bg-[#121214]/90 px-4 py-6"
+        className="hidden lg:flex lg:w-[224px] lg:shrink-0 lg:flex-col border-r border-border-subtle bg-[#121214]/92 px-3.5 py-5"
       >
         <Link
-          href="/create"
-          className="flex items-center gap-2.5 px-2 mb-8 rounded-lg focus-visible:outline-2"
+          href="/"
+          className="flex items-center gap-2.5 px-2 mb-7 rounded-[8px]"
         >
           <Vision3DMark />
-          <span className="text-[19px] font-semibold tracking-tight text-ink-primary">
+          <span className="text-[17px] font-semibold tracking-tight text-ink-primary">
             Vision3D
           </span>
-          <span className="ml-auto rounded-md border border-border-subtle bg-raised px-2 py-0.5 text-[11px] font-medium text-ink-secondary">
+          <span className="ml-auto rounded-[6px] border border-border-subtle bg-raised px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-ink-secondary">
             Studio
           </span>
         </Link>
 
-        <nav className="flex flex-col gap-1.5" aria-label="Workspace">
+        <nav className="flex flex-col gap-1" aria-label="Workspace">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item);
             const Icon = item.icon;
@@ -104,14 +119,14 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] font-medium transition-colors ${
                   active
                     ? "bg-copper/14 text-ink-primary border border-copper/25"
                     : "text-ink-secondary border border-transparent hover:bg-raised/70 hover:text-ink-primary"
                 }`}
               >
                 <Icon
-                  className={`h-[18px] w-[18px] shrink-0 ${
+                  className={`h-[17px] w-[17px] shrink-0 ${
                     active ? "text-copper" : "text-ink-secondary"
                   }`}
                   strokeWidth={1.75}
@@ -122,88 +137,79 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
           })}
         </nav>
 
-        <div className="mt-auto pt-6">
-          <div className="rounded-2xl border border-border-subtle bg-panel/85 p-3.5">
+        <div className="mt-auto pt-5">
+          <div className="rounded-[12px] border border-border-subtle bg-panel/90 p-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-ink-secondary">
+              <span className="text-[11px] font-medium text-ink-secondary">
                 Backend API
               </span>
-              <span
-                className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                  backendOnline === true
-                    ? "text-emerald-400"
-                    : backendOnline === false
-                    ? "text-copper"
-                    : "text-ink-muted"
-                }`}
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    backendOnline === true
-                      ? "bg-emerald-400"
-                      : backendOnline === false
-                      ? "bg-copper"
-                      : "bg-ink-muted"
-                  }`}
-                />
-                {backendOnline === true
-                  ? "Connected"
-                  : backendOnline === false
-                  ? "Offline"
-                  : "Checking"}
-              </span>
+              <Badge tone={statusTone} dot>
+                {statusText}
+              </Badge>
             </div>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
+            <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
               {backendOnline === true
-                ? "Connected to server-side inference API."
-                : "Start the FastAPI backend to submit real 2D-to-3D jobs."}
+                ? "Server-side inference API reachable via /api."
+                : "Start FastAPI on port 8000 for live 3D generation."}
             </p>
           </div>
         </div>
       </aside>
 
-      {/* Mobile Top Header */}
-      <header className="flex lg:hidden items-center justify-between border-b border-border-subtle bg-[#121214]/95 px-4 py-3 sticky top-0 z-30">
-        <Link href="/create" className="flex items-center gap-2">
+      {/* Tablet & Mobile Top Navigation Header */}
+      <header className="flex lg:hidden items-center justify-between gap-4 border-b border-border-subtle bg-[#121214]/95 backdrop-blur-md px-4 py-3 sticky top-0 z-30">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <Vision3DMark />
-          <span className="text-base font-semibold tracking-tight text-ink-primary">
+          <span className="text-[15px] font-semibold tracking-tight text-ink-primary">
             Vision3D
           </span>
         </Link>
 
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-panel px-2.5 py-1 text-[11px] font-medium ${
-            backendOnline === true
-              ? "text-emerald-400"
-              : backendOnline === false
-              ? "text-copper"
-              : "text-ink-muted"
-          }`}
+        {/* Tablet inline nav tabs (md..lg) */}
+        <nav
+          aria-label="Tablet navigation"
+          className="hidden md:flex items-center gap-1 rounded-[10px] border border-border-subtle bg-panel p-1"
         >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              backendOnline === true
-                ? "bg-emerald-400"
-                : backendOnline === false
-                ? "bg-copper"
-                : "bg-ink-muted"
-            }`}
-          />
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`inline-flex items-center gap-2 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                  active
+                    ? "bg-copper/15 text-ink-primary"
+                    : "text-ink-secondary hover:text-ink-primary"
+                }`}
+              >
+                <Icon
+                  className={`h-3.5 w-3.5 ${active ? "text-copper" : ""}`}
+                  strokeWidth={1.75}
+                />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <Badge tone={statusTone} dot>
           {backendOnline === true
             ? "API Ready"
             : backendOnline === false
             ? "API Offline"
             : "Checking"}
-        </span>
+        </Badge>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 pb-20 lg:pb-0">{children}</main>
+      <main className="flex-1 min-w-0 pb-24 md:pb-0">{children}</main>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation (< md) with safe-area padding */}
       <nav
         aria-label="Mobile navigation"
-        className="fixed bottom-0 inset-x-0 z-30 flex lg:hidden items-center justify-around border-t border-border-subtle bg-[#121214]/95 backdrop-blur-md px-2 py-1.5"
+        className="fixed bottom-0 inset-x-0 z-30 flex md:hidden items-center justify-around border-t border-border-subtle bg-[#121214]/95 backdrop-blur-md px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       >
         {NAV_ITEMS.map((item) => {
           const active = isActive(item);
@@ -213,11 +219,17 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-[44px] min-w-[80px] flex-col items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                active ? "text-copper bg-copper/10" : "text-ink-secondary"
+              className={`relative flex min-h-[48px] min-w-[88px] flex-col items-center justify-center gap-1 rounded-[10px] px-3 py-1.5 text-[11px] font-medium transition-colors ${
+                active ? "text-copper bg-copper/12" : "text-ink-secondary"
               }`}
             >
-              <Icon className="h-5 w-5" strokeWidth={1.75} />
+              {active ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0 h-0.5 w-7 rounded-full bg-copper"
+                />
+              ) : null}
+              <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
               <span>{item.label}</span>
             </Link>
           );

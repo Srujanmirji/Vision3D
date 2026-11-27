@@ -1,0 +1,149 @@
+{
+  "jobId": "49d7456f81285d8722339d054b9a3f8b",
+  "cancelId": "83ede3414ee5e0f4b06ce7f020774635",
+  "assetId": "7693e35e761d33c22a7ea631aade1357",
+  "bytes": 2608380,
+  "sha256": "23a626f7bc8c28d328e45b54473e9c3feed86fdae61cccf44dd3bb6e23c569f7",
+  "warnings": 0,
+  "finalStatus": {
+    "job_id": "49d7456f81285d8722339d054b9a3f8b",
+    "status": "succeeded",
+    "stage": "complete",
+    "progress": null,
+    "error": null,
+    "model_id": "7693e35e761d33c22a7ea631aade1357",
+    "provider": "triposr",
+    "created_at": "2026-11-27T15:34:51.682010+00:00",
+    "updated_at": "2026-11-27T15:36:34.882704+00:00"
+  },
+  "metadata": {
+    "vertices": 50017,
+    "triangles": 63725,
+    "bounds_extent": [
+      0.7942490577697754,
+      0.7134257555007935,
+      0.47463399171829224
+    ],
+    "appearance": "baked_texture",
+    "byte_size": 2608380,
+    "id": "7693e35e761d33c22a7ea631aade1357",
+    "name": "Model 7693e35e",
+    "provider": "triposr",
+    "glb_url": "http://localhost:8000/v1/models/7693e35e761d33c22a7ea631aade1357/glb",
+    "usdz_url": null,
+    "created_at": "2026-11-27T15:36:34.882704+00:00",
+    "is_sample": false
+  },
+  "events": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/jobs/49d7456f81285d8722339d054b9a3f8b",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models/7693e35e761d33c22a7ea631aade1357",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models/7693e35e761d33c22a7ea631aade1357/glb",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models/7693e35e761d33c22a7ea631aade1357/glb",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models/7693e35e761d33c22a7ea631aade1357",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models/7693e35e761d33c22a7ea631aade1357",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/jobs",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/jobs/83ede3414ee5e0f4b06ce7f020774635",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/jobs/83ede3414ee5e0f4b06ce7f020774635",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/models",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/jobs",
+      "status": 200
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "source": "Chromium test camera feed made from the public sneaker photo",
+  "rearCameraConstraint": "ideal environment",
+  "tracksStoppedAfterCapture": true,
+  "capturedFile": "camera-photo.jpg",
+  "submitted": 202,
+  "preprocessedDimensions": [
+    512,
+    342
+  ],
+  "jobId": "368a7a073db9c8fc965e974d477b9114",
+  "status": "succeeded",
+  "provider": "triposr",
+  "modelId": "bc9be5868605040e0a03bb56f75a4c6e",
+  "seconds": 104.89,
+  "model": {
+    "vertices": 49414,
+    "triangles": 63136,
+    "bounds_extent": [
+      0.7915658950805664,
+      0.7120707035064697,
+      0.4688722491264343
+    ],
+    "appearance": "baked_texture",
+    "byte_size": 2598656
+  },
+  "physicalPhone": false,
+  "validatedGlb": {
+    "errors": 0,
+    "warnings": 0,
+    "sha256": "cadaacade9bfa25865604548ffabca6d47795850762a3589d43448882dee0f34"
+  }
+}

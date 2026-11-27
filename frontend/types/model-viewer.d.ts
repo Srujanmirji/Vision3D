@@ -12,11 +12,16 @@ export interface ModelViewerElement extends HTMLElement {
   cameraTarget: string;
   fieldOfView: string;
   shadowIntensity?: string;
+  shadowSoftness?: string;
   exposure?: string;
+  environmentImage?: string;
+  toneMapping?: string;
   canActivateAR?: boolean;
+  loaded?: boolean;
   activateAR?: () => Promise<void>;
   getCameraOrbit?: () => { theta: number; phi: number; radius: number };
   getCameraTarget?: () => { x: number; y: number; z: number };
+  getDimensions?: () => { x: number; y: number; z: number };
   resetTurntableRotation?: (theta?: number) => void;
   jumpCameraToGoal?: () => void;
 }
@@ -32,6 +37,8 @@ declare module "react" {
           ar?: boolean;
           "ar-modes"?: string;
           "ar-scale"?: string;
+          "ar-placement"?: "floor" | "wall";
+          "ar-usdz-max-texture-size"?: string;
           "camera-controls"?: boolean;
           "auto-rotate"?: boolean;
           "auto-rotate-delay"?: string | number;
@@ -41,10 +48,12 @@ declare module "react" {
           "min-camera-orbit"?: string;
           "max-camera-orbit"?: string;
           "field-of-view"?: string;
+          "interpolation-decay"?: string | number;
           "shadow-intensity"?: string;
           "shadow-softness"?: string;
           exposure?: string;
           "environment-image"?: string;
+          "tone-mapping"?: string;
           "touch-action"?: string;
           "interaction-prompt"?: string;
           loading?: string;
