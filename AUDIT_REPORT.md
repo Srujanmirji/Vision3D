@@ -67,11 +67,10 @@ Every successful live run used `AleenDG/3DGenTripoSR` (`COMMUNITY` in `providers
 
 **Fix:** Replace it with a small helper: create an `AbortController` and abort it from either source signal with `addEventListener("abort", …)`. Add a unit test that deletes `AbortSignal.any` and calls `getSharedAsset`.
 
-**Status: fixed in the working copy after the audit, not yet committed.**
-- `eitherSignal()` in `lib/api.ts` replaces both `AbortSignal.any` calls.
-- `__tests__/abort-compat.test.ts` removes `AbortSignal.any`, then checks that a shared asset loads and that a caller abort still cancels the request. Both tests failed before the change and pass after it.
-- The full suite passes 38 of 38, with tsc and eslint clean.
-- `AbortSignal.timeout` is still required, so the minimum is iOS Safari 16.
+**Status: fixed after the audit.**
+- `timedSignal()` in `lib/api.ts` replaces both `AbortSignal.any` calls and `AbortSignal.timeout` with an `AbortController` and `setTimeout`, disposed after each request.
+- `__tests__/abort-compat.test.ts` removes both APIs, then checks that a shared asset loads and that a caller abort still cancels the request. Both tests failed before the change and pass after it.
+- The full suite passes 38 of 38, with tsc, eslint and `next build` clean.
 - Not verified on a real older iPhone.
 
 ### H2. Queue wait counts against the job deadline
@@ -200,4 +199,4 @@ Items still correctly unchecked in task.md:
 1. Physical-device AR over a public HTTPS origin (C1).
 2. An owned TripoSR Space, verified live (C2).
 3. Committing the backend and current frontend to version control (H3).
-4. ~~Fixing `AbortSignal.any` (H1)~~ Fixed in the working copy; still to be committed.
+4. ~~Fixing `AbortSignal.any` (H1)~~ Fixed.

@@ -37,11 +37,10 @@ A full code, security and QA audit is recorded in [AUDIT_REPORT.md](AUDIT_REPORT
 - The `postcss` advisories need a `next` upgrade.
 - No CSP, `nosniff` or frame headers are set.
 
-**H1 fixed after the audit (uncommitted).**
-- `eitherSignal()` in `frontend/lib/api.ts` replaces `AbortSignal.any`.
-- `frontend/__tests__/abort-compat.test.ts` reproduces the missing API. It failed before the change and passes after it.
-- Frontend: 38 of 38 tests pass, with tsc and eslint clean.
-- The minimum browser is now iOS Safari 16, which `AbortSignal.timeout` needs.
+**H1 fixed after the audit.**
+- `timedSignal()` in `frontend/lib/api.ts` replaces both `AbortSignal.any` and `AbortSignal.timeout`, using an `AbortController` and `setTimeout`. Its listeners and timers are cleaned up after each request.
+- `frontend/__tests__/abort-compat.test.ts` deletes both APIs before running. It failed before the change and passes after it.
+- Re-checked: frontend 38 of 38 tests, tsc, eslint and `next build` pass; backend 21 tests pass with 3 skipped, and ruff and mypy are clean.
 - Not checked on a physical older iPhone.
 
 **Next steps, in order:**
