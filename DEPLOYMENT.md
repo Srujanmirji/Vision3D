@@ -130,6 +130,8 @@ LOCAL_TRIPOSR_HOME=~/vision3d-triposr  # plus the usual variables
 
 ## Demo backend on a laptop (Quick Tunnel)
 
+To run this unattended on a Mac (one start command, auto-start at login, crash restart, stay awake on power, and a named-tunnel option for a stable URL), use `scripts/start-mac.sh` and `scripts/install-mac-autostart.sh`; see [CLIENT_MAC_GUIDE.md](CLIENT_MAC_GUIDE.md). The manual steps below show what those scripts do.
+
 This is the zero-cost option used for the live test on 27 November 2026. Vercel serves the frontend, and the FastAPI backend runs on the presenter's Mac behind a Cloudflare Quick Tunnel. It is suitable for a demo, not for durable hosting:
 - The laptop must stay awake and online.
 - The tunnel hostname changes on every start, and each change needs a Vercel redeploy.
