@@ -1,0 +1,11 @@
+
+Validation Result with no explicit variants set
+Success!
+Archive:  /private/tmp/claude-501/-Users-srujanmirji-Downloads-Vision3D/fac4f41c-3f8b-48f7-9c65-943cf0ba0666/scratchpad/shoes.usdz
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     2471  11-27-2026 23:06   model.usda
+  5314410  11-27-2026 23:06   geometries/Geometry_12.usda
+  1189002  11-27-2026 23:06   textures/Texture_20_false.png
+---------                     -------
+  6505883                     3 files

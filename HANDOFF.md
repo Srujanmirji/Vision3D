@@ -1,5 +1,60 @@
 # Vision3D engineering handoff
 
+## Phone-to-desktop photo capture — 27 November 2026
+
+On a computer, **Use Phone** next to Browse Files and Take Photo opens a QR code; the button shows from tablet width up. Scanning it opens `/capture/<token>` on the phone. There you take a photo or pick one from the gallery, see the photo tips, tick consent and tap **Send to Computer**. The computer then switches to the normal generation progress through `/create?job=<id>`, and the model appears there.
+
+**Backend:**
+- A `captures` table stores hashed tokens, the owner session, the expiry and the `job_id`.
+- There are four `/v1/captures` endpoints (see [API.md](API.md)).
+- Desktop uploads and phone uploads now share one `start_job` helper, so validation can't drift apart.
+
+**Frontend:**
+- `PhoneCaptureDialog.tsx`: the QR dialog, which polls every 2 s and offers a fresh code when one expires.
+- `app/capture/[token]/page.tsx`: the phone page.
+- New `lib/api.ts` client functions.
+- `/capture/:token` gets no-store, no-referrer, noindex and camera-permission headers.
+
+**Verified:**
+- Backend: 24 tests (2 new: single use, desktop-only job ownership, consent and origin checks, expiry, missing public origin), ruff and mypy pass.
+- Frontend: 49 tests (6 new), tsc, eslint and `next build` pass.
+- End to end through a public Quick Tunnel, using the real API with the archived-GLB fixture runner:
+  - a desktop Chrome QR decoded to the capture URL
+  - a separate phone-profile Chrome with no cookies sent a photo
+  - the desktop switched to the job and showed the finished model
+  - reusing the link was blocked
+  - no page errors on either side
+
+[evidence](verification/phone-capture)
+
+**Not verified:**
+- Scanning with a physical phone and the phone's real camera.
+- A live AI run on a phone-sent photo.
+- The live Vercel site doesn't have this until this branch is merged and redeployed.
+
+**Known limitation:** the phone page always uses background removal (the backend default). It doesn't copy the desktop's toggle.
+
+## Photo guidance and USDZ download — 27 November 2026
+
+**Photo guidance:** `frontend/components/upload/PhotoTips.tsx` adds a "For the best 3D result" checklist under the upload area in `ImageInputPanel`. It covers:
+- one object, fully in frame
+- a plain, contrasting background
+- soft, even light
+- a 3/4 angle from slightly above
+- avoiding glass, shiny or see-through objects and busy scenes
+
+**USDZ download:** the export dialog now has **Download USDZ** for generated models.
+- `frontend/lib/usdz.ts` loads the GLB and converts it in the browser with three.js's `USDZExporter`. That's the converter model-viewer uses for iPhone Quick Look. It needs no backend change and no new dependency.
+- Conversion errors show in the dialog and can be retried.
+- If the backend ever returns a `usdz_url`, the existing direct link is used instead.
+
+**Verified:**
+- Headless Chrome against the local app, with API responses stubbed, converted a real baked-texture TripoSR model (63,725 triangles) in 0.35 s. The resulting 6.5 MB USDZ passed `usdchecker --arkit` with its texture embedded. [evidence](verification/usdz-export)
+- The tips render at 1280 and 375 px without horizontal overflow.
+- Frontend: 43 tests (Node conversion test, dialog success and failure, tips), tsc, eslint and `next build` pass.
+
+**Not verified:** opening the downloaded `.usdz` on a physical iPhone or iPad. The live Vercel site doesn't have these changes until it's redeployed.
+
 ## Production deployment — 27 November 2026
 
 **Live:** https://vision3d-sigma.vercel.app on Vercel Hobby (project `vision3d`). The backend is FastAPI on the presenter's Mac, exposed through a Cloudflare Quick Tunnel, using the community TripoSR Space. No paid service was enabled. Exact steps are in [DEPLOYMENT.md](DEPLOYMENT.md).

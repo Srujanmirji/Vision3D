@@ -10,7 +10,21 @@ import {
   type ModelAsset,
 } from "@/lib/api";
 import { formatBytes } from "@/lib/validation";
+import { glbToUsdz } from "@/lib/usdz";
 import { AlertBanner, Badge, Button, Dialog } from "@/components/ui";
+
+function saveBlob(blob: Blob, filename: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+}
+
+type UsdzState = "idle" | "converting" | "done";
 
 export interface ExportDialogProps {
   open: boolean;
@@ -23,6 +37,7 @@ export function ExportDialog({ open, onClose, model }: ExportDialogProps) {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [usdzState, setUsdzState] = useState<UsdzState>("idle");
   const requestRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -30,6 +45,7 @@ export function ExportDialog({ open, onClose, model }: ExportDialogProps) {
     setCopiedUrl(false);
     setDownloading(false);
     setDownloadError(null);
+    setUsdzState("idle");
     return () => requestRef.current?.abort();
   }, [open, model?.id]);
 
@@ -59,19 +75,32 @@ export function ExportDialog({ open, onClose, model }: ExportDialogProps) {
     try {
       const blob = await downloadModel(model, controller.signal);
       if (controller.signal.aborted) return;
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `${safeFilename}.glb`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      saveBlob(blob, `${safeFilename}.glb`);
       setDownloaded(true);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
     } catch (err) {
       if (!controller.signal.aborted) setDownloadError(formatUserError(err).message);
     } finally {
       if (!controller.signal.aborted) setDownloading(false);
+    }
+  };
+
+  const handleDownloadUsdz = async () => {
+    const controller = new AbortController();
+    requestRef.current?.abort();
+    requestRef.current = controller;
+    setUsdzState("converting");
+    setDownloadError(null);
+    try {
+      const glb = await downloadModel(model, controller.signal);
+      if (controller.signal.aborted) return;
+      const usdz = await glbToUsdz(glb);
+      if (controller.signal.aborted) return;
+      saveBlob(usdz, `${safeFilename}.usdz`);
+      setUsdzState("done");
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      setUsdzState("idle");
+      setDownloadError(`USDZ conversion failed. ${formatUserError(err).message}`);
     }
   };
 
@@ -203,14 +232,38 @@ export function ExportDialog({ open, onClose, model }: ExportDialogProps) {
           </a>
         </div>
       ) : (
-        <AlertBanner tone="info" className="mt-3">
-          <span className="inline-flex items-center gap-1 text-ink-secondary">
-            <Info className="hidden" />
-            Export format is binary glTF (.glb). Separate USDZ, OBJ, and STL
-            conversions are not enabled on this server.
-          </span>
-        </AlertBanner>
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-[10px] border border-border-subtle bg-obsidian/50 px-3.5 py-2.5">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-ink-primary">Apple USDZ</p>
+            <p className="text-[11px] text-ink-secondary">
+              For iPhone and iPad Quick Look. Converted in your browser from the GLB.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="md"
+            className="shrink-0 whitespace-nowrap"
+            loading={usdzState === "converting"}
+            onClick={() => void handleDownloadUsdz()}
+          >
+            {usdzState === "done" ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                <span>USDZ Saved</span>
+              </>
+            ) : (
+              <>
+                <Download className="h-3.5 w-3.5 text-copper" />
+                <span>{usdzState === "converting" ? "Converting…" : "Download USDZ"}</span>
+              </>
+            )}
+          </Button>
+        </div>
       )}
+      <p className="mt-3 inline-flex items-start gap-1.5 text-[11px] text-ink-secondary">
+        <Info aria-hidden className="mt-px h-3.5 w-3.5 shrink-0" />
+        OBJ and STL export are not available.
+      </p>
     </Dialog>
   );
 }

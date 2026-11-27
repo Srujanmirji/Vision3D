@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterator
 from contextlib import closing
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -465,3 +466,80 @@ def test_queue_and_rate_limits_read_from_environment(monkeypatch: pytest.MonkeyP
     monkeypatch.setenv("UPLOADS_PER_MINUTE", "3")
     settings = Settings.from_env()
     assert (settings.queue_limit, settings.uploads_per_minute) == (2, 3)
+
+
+def test_phone_capture_creates_one_job_in_the_desktop_session(tmp_path: Path) -> None:
+    origin = "https://vision.example.com"
+    config = Settings(data=tmp_path, community_demo=True, public_app=origin)
+    with TestClient(create_app(config, fixture_runner), base_url=origin) as client:
+        created = client.post("/v1/captures", headers={"Origin": origin})
+        assert created.status_code == 200, created.text
+        token = created.json()["token"]
+        assert created.json()["capture_url"] == f"{origin}/capture/{token}"
+        desktop_cookies = dict(client.cookies)
+
+        def as_phone(method: str, path: str, **kwargs: Any) -> Any:
+            """A request without the desktop's session cookie, as the phone would send it."""
+            client.cookies.clear()
+            try:
+                return client.request(method, path, **kwargs)
+            finally:
+                client.cookies.clear()
+                client.cookies.update(desktop_cookies)
+
+        def send(consent: bool = True, sender_origin: str = origin) -> Any:
+            return as_phone(
+                "POST",
+                f"/v1/captures/{token}",
+                files={"image": ("photo.jpg", photo(), "image/jpeg")},
+                data={"allow_external_processing": str(consent)},
+                headers={"Origin": sender_origin},
+            )
+
+        # Before the phone sends anything, the desktop sees no job and the phone sees a live link.
+        assert client.get(f"/v1/captures/{token}/job").json() == {"job_id": None}
+        info = as_phone("GET", f"/v1/captures/{token}")
+        assert info.status_code == 200 and info.json()["received"] is False
+        assert info.headers["cache-control"] == "no-store"
+
+        # The same validation as a desktop upload applies, and a failed attempt does not use up the link.
+        assert send(consent=False).json()["error"]["code"] == "CONSENT_REQUIRED"
+        assert send(sender_origin="https://evil.example").status_code == 403
+        assert client.get(f"/v1/captures/{token}/job").json() == {"job_id": None}
+
+        sent = send()
+        assert sent.status_code == 202, sent.text
+        assert "job_id" not in sent.json()  # the phone never learns the desktop's job ID
+
+        again = send()  # single use
+        assert again.status_code == 409 and again.json()["error"]["code"] == "CAPTURE_USED"
+
+        # The job belongs to the desktop session, not the phone.
+        job_id = client.get(f"/v1/captures/{token}/job").json()["job_id"]
+        assert job_id
+        assert terminal(client, job_id)["status"] == "succeeded"
+        assert as_phone("GET", f"/v1/jobs/{job_id}").status_code == 404
+        assert as_phone("GET", f"/v1/captures/{token}/job").status_code == 404
+        assert as_phone("GET", f"/v1/captures/{token}").json()["received"] is True
+
+
+def test_phone_capture_expiry_unknown_tokens_and_missing_public_origin(tmp_path: Path) -> None:
+    origin = "https://vision.example.com"
+    config = Settings(data=tmp_path, community_demo=True, public_app=origin)
+    with TestClient(create_app(config, fixture_runner), base_url=origin) as client:
+        assert client.get("/v1/captures/not-a-token").status_code == 404
+        token = client.post("/v1/captures", headers={"Origin": origin}).json()["token"]
+        with closing(sqlite3.connect(tmp_path / "vision3d.sqlite3")) as db, db:
+            db.execute("UPDATE captures SET expires = ?", (time.time() - 1,))
+        expired = client.get(f"/v1/captures/{token}")
+        assert expired.status_code == 410 and expired.json()["error"]["code"] == "EXPIRED"
+        upload = client.post(
+            f"/v1/captures/{token}",
+            files={"image": ("photo.jpg", photo(), "image/jpeg")},
+            data={"allow_external_processing": "true"},
+            headers={"Origin": origin},
+        )
+        assert upload.status_code == 410
+
+    with TestClient(create_app(Settings(data=tmp_path / "local", community_demo=True), fixture_runner)) as local:
+        assert local.post("/v1/captures").json()["error"]["code"] == "CAPTURE_UNAVAILABLE"

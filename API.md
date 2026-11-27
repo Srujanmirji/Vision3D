@@ -12,6 +12,10 @@
 | GET | /v1/share/{token} | read-only asset metadata |
 | GET / HEAD | /v1/share/{token}/glb | expiring cookie-free GLB, Range support, optional download=true |
 | DELETE | /v1/models/{id} | revoke shares and delete assets |
+| POST | /v1/captures | desktop session: start a single-use, 10-minute phone-capture link (`token`, `capture_url`, `expires_at`) |
+| GET | /v1/captures/{token} | public: link status (`expires_at`, `received`); 404 unknown, 410 expired |
+| POST | /v1/captures/{token} | public: the phone's one photo (multipart, consent required); 202, then 409 `CAPTURE_USED` |
+| GET | /v1/captures/{token}/job | desktop owner only: `job_id` once the phone has sent, else `null` |
 | GET | /health | provider configuration and upload limits |
 | GET | /health/live | process liveness |
 | GET | /health/ready | store and provider configuration readiness |
@@ -28,3 +32,11 @@ Use only `job_id`, `error: {code, message}`, and `{models: [...]}`. `GET /v1/job
 Uploads accept `remove_background` where supported and require `allow_external_processing=true` for hosted inference. The service strips metadata and caps dimensions before forwarding the image. Queue wait and execution have independent deadlines. A job that exceeds its queue wait returns `QUEUE_TIMEOUT`. Execution covers provider attempts and model processing. `/health` advertises the browser polling budget. Percentage remains null. TripoSR color baking produces an embedded base-color map derived from inferred vertex colors. Optional Hunyuan shape-only fallback is available only in explicit geometry-demo mode and is labeled in the model metadata. The backend does not return a USDZ URL for current generated assets. For Quick Look, Model Viewer converts the shared GLB to USDZ on the phone.
 
 The server retries transient transport failures once within the same deadline and can switch to an explicitly enabled fallback. A new user retry is a new upload because source images are removed after terminal completion. Backend job stages reflect local work and provider-reported queue/running events. The upload limit applies to decoded JPEG, PNG and WebP inputs, and an independent request-body bound covers multipart overhead. Model metadata includes the publication provider, triangle and vertex counts, extents in model units, byte size and appearance. Shared metadata also includes appearance. Readiness checks configuration and local storage, without promising upstream capacity.
+
+## Phone capture
+
+A desktop session can start a phone-capture link and show it as a QR code. The phone opens `/capture/{token}` and sends one photo without any session cookie.
+- **Validation:** the photo goes through the same checks as `POST /v1/jobs`: consent, rate limit, size and decode limits, metadata stripping and the queue checks.
+- **Ownership:** the resulting job belongs to the desktop session that created the link. The phone never receives the job ID.
+- **Lifetime:** links last 10 minutes and are stored as hashes. They are claimed atomically, so only one upload succeeds. A rejected attempt, such as one without consent, does not use the link up.
+- **Requirement:** like sharing, phone capture needs `PUBLIC_APP_URL`. Without it the server returns `CAPTURE_UNAVAILABLE`.

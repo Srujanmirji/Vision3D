@@ -1,6 +1,6 @@
 # Vision3D
 
-Upload or capture a photo of one object. Vision3D turns it into a textured 3D model (GLB) that you can rotate 360°, download, and open on a phone in AR through a QR code.
+Upload or capture a photo of one object. Vision3D turns it into a textured 3D model (GLB) that you can rotate 360°, download as GLB or USDZ (for iPhone and iPad), and open on a phone in AR through a QR code. The upload panel shows tips for taking a photo that reconstructs well. On a computer, **Use Phone** shows a QR code: take the photo on your phone and the model is generated on the computer.
 
 The hidden sides are inferred by the AI, not measured, and sizes are estimates.
 

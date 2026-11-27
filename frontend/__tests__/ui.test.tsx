@@ -77,7 +77,7 @@ describe("LandingPage and ExportDialog", () => {
     expect(screen.getByText(".glb (glTF 2.0)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download GLB/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/Separate USDZ, OBJ, and STL conversions are not enabled/i)
+      screen.getByText(/OBJ and STL export are not available/i)
     ).toBeInTheDocument();
   });
 });
@@ -99,6 +99,7 @@ describe("ImageInputPanel honesty, consent, and capabilities", () => {
         onAllowExternalProcessingChange={vi.fn()}
         isGenerating={false}
         onGenerate={vi.fn()}
+        onPhoneJob={vi.fn()}
         fileInputRef={fileRef}
       />
     );
@@ -136,6 +137,7 @@ describe("ImageInputPanel honesty, consent, and capabilities", () => {
         onAllowExternalProcessingChange={vi.fn()}
         isGenerating={false}
         onGenerate={vi.fn()}
+        onPhoneJob={vi.fn()}
         fileInputRef={fileRef}
       />
     );

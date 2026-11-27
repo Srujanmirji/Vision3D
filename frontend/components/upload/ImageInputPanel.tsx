@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, ImagePlus, Sparkles, Upload, X } from "lucide-react";
+import { Camera, ImagePlus, Smartphone, Sparkles, Upload, X } from "lucide-react";
 import { CameraCaptureDialog } from "./CameraCaptureDialog";
+import { PhotoTips } from "./PhotoTips";
+import { PhoneCaptureDialog } from "./PhoneCaptureDialog";
 import type { ProviderCapability } from "@/lib/api";
 import {
   DEFAULT_MAX_UPLOAD_BYTES,
@@ -33,6 +35,8 @@ interface ImageInputPanelProps {
   isGenerating: boolean;
   generationBlocked?: boolean;
   onGenerate: () => void;
+  /** A photo sent from a phone has started this job in the current session. */
+  onPhoneJob: (jobId: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -51,10 +55,12 @@ export function ImageInputPanel({
   isGenerating,
   generationBlocked = false,
   onGenerate,
+  onPhoneJob,
   fileInputRef,
 }: ImageInputPanelProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [phoneOpen, setPhoneOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -216,6 +222,16 @@ export function ImageInputPanel({
                   <Camera className="h-3.5 w-3.5 text-ink-secondary" />
                   Take Photo
                 </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="hidden md:inline-flex"
+                  disabled={isGenerating}
+                  onClick={() => setPhoneOpen(true)}
+                >
+                  <Smartphone className="h-3.5 w-3.5 text-ink-secondary" />
+                  Use Phone
+                </Button>
               </div>
             </div>
           )}
@@ -232,6 +248,8 @@ export function ImageInputPanel({
             {uploadedImage.warning}
           </AlertBanner>
         ) : null}
+
+        <PhotoTips />
       </div>
 
       <hr className="my-5 border-border-subtle/80" />
@@ -327,6 +345,14 @@ export function ImageInputPanel({
           onNativeCamera={() => { cameraInputRef.current?.click(); setCameraOpen(false); }}
         />
       )}
+      <PhoneCaptureDialog
+        open={phoneOpen}
+        onClose={() => setPhoneOpen(false)}
+        onJob={(jobId) => {
+          setPhoneOpen(false);
+          onPhoneJob(jobId);
+        }}
+      />
     </aside>
   );
 }

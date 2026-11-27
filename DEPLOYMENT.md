@@ -104,7 +104,7 @@ On a shared Caddy host, import a separate site configuration instead of replacin
 
 3. For an independently testable preview, give it its own public canonical origin and isolated backend. Vercel deployment protection must allow a cookie-free guest to fetch the share page and its GLB. Provider tokens, SQLite and model files stay on the backend host.
 
-The API accepts browser mutations from the configured frontend origin. Owner operations use a Secure, HttpOnly session cookie. Read-only assets use expiring, revocable URLs. Shared GLBs return `model/gltf-binary`, support GET, HEAD and byte ranges, and have public asset CORS with no-store caching. Model Viewer generates a `model/vnd.usdz+zip` Blob for Quick Look on supported iPhones. There is currently no HTTP USDZ download endpoint.
+The API accepts browser mutations from the configured frontend origin. Owner operations use a Secure, HttpOnly session cookie. Read-only assets use expiring, revocable URLs. Shared GLBs return `model/gltf-binary`, support GET, HEAD and byte ranges, and have public asset CORS with no-store caching. Model Viewer generates a `model/vnd.usdz+zip` Blob for Quick Look on supported iPhones. There is no HTTP USDZ endpoint. The export dialog's **Download USDZ** button runs the same three.js converter in the user's browser, so no server MIME setup is needed for USDZ.
 
 ## Demo backend on a laptop (Quick Tunnel)
 

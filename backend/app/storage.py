@@ -13,6 +13,9 @@ from typing import Any
 from .config import Settings
 from .schemas import Job, MeshInfo, Model
 
+CAPTURE_TTL = 600  # seconds a phone-capture QR stays usable
+CAPTURE_GRACE = 600  # keep used rows a little longer so the desktop can still read the job ID
+
 
 def utc(epoch: float) -> str:
     return datetime.fromtimestamp(epoch, UTC).isoformat()
@@ -51,6 +54,9 @@ class Storage:
             CREATE TABLE IF NOT EXISTS shares (
                 hash TEXT PRIMARY KEY, model_id TEXT NOT NULL REFERENCES models(id) ON DELETE CASCADE,
                 expires REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS captures (
+                hash TEXT PRIMARY KEY, owner TEXT NOT NULL, expires REAL NOT NULL, job_id TEXT
             );
             CREATE INDEX IF NOT EXISTS jobs_owner_created ON jobs(owner, created);
             CREATE INDEX IF NOT EXISTS models_owner_created ON models(owner, created);
@@ -94,6 +100,7 @@ class Storage:
                 "DELETE FROM models WHERE created < ? RETURNING id", (cutoff,)
             ).fetchall()
             self.db.execute("DELETE FROM shares WHERE expires <= ?", (now,))
+            self.db.execute("DELETE FROM captures WHERE expires <= ?", (now - CAPTURE_GRACE,))
         for row in models:
             self.path(row["id"]).unlink(missing_ok=True)
 
@@ -238,6 +245,31 @@ class Storage:
             (digest(token),),
         ).fetchone()
         return dict(row) if row else None
+
+
+    def new_capture(self, owner: str) -> tuple[str, float]:
+        token = secrets.token_urlsafe(24)
+        expires = time.time() + CAPTURE_TTL
+        with self.db:
+            self.db.execute(
+                "INSERT INTO captures(hash,owner,expires) VALUES(?,?,?)", (digest(token), owner, expires)
+            )
+        return token, expires
+
+    def capture(self, token: str) -> dict[str, Any] | None:
+        row = self.db.execute(
+            "SELECT owner, expires, job_id FROM captures WHERE hash=?", (digest(token),)
+        ).fetchone()
+        return dict(row) if row else None
+
+    def claim_capture(self, token: str, job_id: str) -> bool:
+        """Bind the one phone upload to this capture link. False if expired or already used."""
+        with self.db:
+            result = self.db.execute(
+                "UPDATE captures SET job_id=? WHERE hash=? AND job_id IS NULL AND expires>?",
+                (job_id, digest(token), time.time()),
+            )
+        return result.rowcount == 1
 
 
 def digest(token: str) -> str:
