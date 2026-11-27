@@ -8,6 +8,14 @@ Severity scale: **Critical** blocks the MVP acceptance demo. **High** is likely 
 
 Checks re-run for this review: `tsc --noEmit` passed, `eslint .` passed with no findings, and `vitest run` passed 13 of 13 tests. No provider calls, device tests or AR tests were run.
 
+**Where the reviewed sources are.** This review covers the local working copy as of 27 November 2026, not the tree committed to this repository. When this review was committed, `main` held only `README.md`. These files were reviewed and the checks were run against them, but they were still uncommitted:
+
+- the project documents: REQUIREMENTS, ARCHITECTURE, API, DATA, DEPLOYMENT, DESIGN, AR, AI_INTEGRATION, AI_RESEARCH, TESTING and task
+- `frontend/`, including `public/samples/sample-chair.glb`, which the `/ar/sample` route depends on
+- `verification/`
+
+Until they are committed, the links above to those paths will not resolve on GitHub. The check results above can be reproduced only from that working copy, and so can the `/ar/sample` step in the handoff.
+
 ## Summary of findings
 
 | # | Area | Finding | Severity |
