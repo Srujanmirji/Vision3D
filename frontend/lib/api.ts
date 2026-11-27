@@ -59,6 +59,10 @@ export interface HealthResponse {
   retention_days?: number;
   share_ttl_seconds?: number;
   poll_timeout_seconds?: number;
+  /** False when generation runs only on the server's own machine; consent is then not needed. */
+  external_processing?: boolean;
+  /** Round-object mode is available (needs local processing on the server). */
+  round_mode?: boolean;
 }
 
 export interface JobCreatedResponse {
@@ -129,10 +133,14 @@ export interface SharedAssetResponse {
   is_sample?: boolean;
 }
 
+/** auto: AI reconstruction. round: bottle/can/jar built from the silhouette with the photo wrapped on. */
+export type GenerationMode = "auto" | "round";
+
 export interface CreateJobOptions {
   allow_external_processing: boolean;
   provider?: string;
   remove_background?: boolean;
+  mode?: GenerationMode;
 }
 
 export function getApiBaseUrl(): string {
@@ -332,6 +340,9 @@ export async function createJob(
   if (typeof options.remove_background === "boolean") {
     formData.append("remove_background", String(options.remove_background));
   }
+  if (options.mode === "round") {
+    formData.append("mode", "round");
+  }
 
   return requestJson<JobCreatedResponse>("/v1/jobs", {
     method: "POST",
@@ -446,12 +457,13 @@ export async function getCaptureInfo(token: string, signal?: AbortSignal): Promi
 export async function sendCapture(
   token: string,
   file: File,
-  options: { allow_external_processing: boolean },
+  options: { allow_external_processing: boolean; mode?: GenerationMode },
   signal?: AbortSignal,
 ): Promise<CaptureInfo> {
   const formData = new FormData();
   formData.append("image", await shrinkForUpload(file));
   formData.append("allow_external_processing", String(options.allow_external_processing));
+  if (options.mode === "round") formData.append("mode", "round");
   return requestJson<CaptureInfo>(`/v1/captures/${encodeURIComponent(token)}`, {
     method: "POST", body: formData, credentials: "omit", signal,
   }, UPLOAD_TIMEOUT_MS);

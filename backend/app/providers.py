@@ -11,10 +11,11 @@ from urllib.parse import quote, urlsplit
 
 import httpx
 
+from .lathe import build_round_object
 from .mesh import finish_mesh
 from .schemas import Failure
 
-Kind = Literal["triposr", "hunyuan", "local"]
+Kind = Literal["triposr", "hunyuan", "local", "round"]
 LOCAL_SCRIPTS = Path(__file__).resolve().parents[1] / "local_triposr"
 LOCAL_MESH_RESOLUTION = 256  # 384 is smoother but exceeds the 100k-triangle phone budget
 LOCAL_TEXTURE_RESOLUTION = 2048
@@ -84,34 +85,30 @@ def run_child(args: list[str], env: dict[str, str]) -> None:
         signal.signal(signal.SIGTERM, previous)
 
 
-def invoke_local(home: Path, image: Path, folder: Path, remove: bool, limit: int) -> None:
-    """TripoSR on this machine: background removal and inference run in the TripoSR environment."""
-    python = str(home / "venv" / "bin" / "python")
+def local_env(home: Path) -> dict[str, str]:
     env = {k: v for k, v in os.environ.items() if k != "HF_TOKEN"}
     # Models are downloaded by setup-local-triposr.sh; never fetch during a job.
     env.update(TRIPOSR_CODE=str(home / "TripoSR"), HF_HUB_OFFLINE="1", PYTORCH_ENABLE_MPS_FALLBACK="1")
-    prepared = image
-    if remove:
-        send(stage="provider_preprocessing")
-        prepared = folder / "foreground.png"
-        run_child([python, str(LOCAL_SCRIPTS / "prep.py"), str(image), str(prepared)], env)
+    return env
+
+
+def invoke_round(home: Path, image: Path, folder: Path, limit: int) -> None:
+    """Round-object mode: cut the object out, then spin its silhouette and wrap the photo on it."""
+    python = str(home / "venv" / "bin" / "python")
+    send(stage="provider_preprocessing")
+    cutout = folder / "cutout.png"
+    run_child([python, str(LOCAL_SCRIPTS / "prep.py"), str(image), str(cutout), "--cutout"], local_env(home))
     send(stage="provider_running")
     raw = folder / "raw.glb"
-    run_child(
-        [
-            python, str(LOCAL_SCRIPTS / "infer.py"), str(prepared), str(raw),
-            str(LOCAL_MESH_RESOLUTION), str(LOCAL_TEXTURE_RESOLUTION),
-        ],
-        env,
-    )
+    build_round_object(cutout, raw)
     send(stage="validating")
     info = finish_mesh(raw, folder / "model.glb", limit, allow_shape=False)
     send(info=info.model_dump())
 
 
 def invoke(kind: Kind, space: str, image: Path, folder: Path, remove: bool, limit: int) -> None:
-    if kind == "local":
-        invoke_local(Path(space), image, folder, remove, limit)
+    if kind == "round":
+        invoke_round(Path(space), image, folder, limit)
         return
     # Gradio imports and credentials are isolated to this short-lived worker.
     os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
@@ -187,7 +184,7 @@ def invoke(kind: Kind, space: str, image: Path, folder: Path, remove: bool, limi
 def main() -> None:
     kind, space, filename, folder, remove, limit = sys.argv[1:]
     try:
-        if kind not in ("triposr", "hunyuan", "local"):
+        if kind not in ("triposr", "hunyuan", "round"):
             raise ValueError("Unknown provider kind")
         invoke(cast(Kind, kind), space, Path(filename), Path(folder), remove == "1", int(limit))
     except Failure as exc:

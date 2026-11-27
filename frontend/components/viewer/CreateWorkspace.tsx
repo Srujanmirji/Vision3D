@@ -55,12 +55,17 @@ export function CreateWorkspace() {
   const [selectedProvider, setSelectedProvider] = useState("");
   const [removeBackground, setRemoveBackground] = useState(true);
   const [allowExternalProcessing, setAllowExternalProcessing] = useState(false);
+  const [roundMode, setRoundMode] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
   const [arDialogOpen, setArDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const verifiedProviders = (health?.providers ?? []).filter((p) => p.verified);
+  // Unknown (health not loaded yet) counts as required, so consent is never skipped by accident.
+  // Round-object mode always runs on the server's own machine.
+  const consentRequired = health?.external_processing !== false && !roundMode;
+  const hasConsent = !consentRequired || allowExternalProcessing;
 
   useEffect(() => {
     const prefs = loadViewerPreferences();
@@ -223,7 +228,7 @@ export function CreateWorkspace() {
   }
 
   async function handleGenerate() {
-    if (!uploadedImage || !allowExternalProcessing || stage === "processing" || retryJobId) return;
+    if (!uploadedImage || !hasConsent || stage === "processing" || retryJobId) return;
     const signal = startRequest();
     setError(null);
     setActiveModel(null);
@@ -233,9 +238,10 @@ export function CreateWorkspace() {
     try {
       const provider = verifiedProviders.find((p) => p.id === selectedProvider);
       const job = await createJob(uploadedImage.file, {
-        allow_external_processing: true,
+        allow_external_processing: allowExternalProcessing,
         provider: provider?.id,
         remove_background: provider?.supports_background_removal ? removeBackground : undefined,
+        mode: roundMode ? "round" : "auto",
       }, signal);
       if (signal.aborted) return;
       router.replace(`/create?job=${encodeURIComponent(job.job_id)}`);
@@ -252,7 +258,7 @@ export function CreateWorkspace() {
     router.replace(`/create?job=${encodeURIComponent(jobId)}`);
   }, [router]);
 
-  const mayRetryUpload = Boolean(uploadedImage && allowExternalProcessing);
+  const mayRetryUpload = Boolean(uploadedImage && hasConsent);
   const retryLabel = retryJobId ? "Check Job Status" : mayRetryUpload ? "Retry Generation"
     : requestedModelId ? "Retry Loading Model" : "Choose Image";
 
@@ -308,6 +314,10 @@ export function CreateWorkspace() {
             removeBackground={removeBackground}
             onRemoveBackgroundChange={setRemoveBackground}
             allowExternalProcessing={allowExternalProcessing}
+            consentRequired={consentRequired}
+            roundModeAvailable={health?.round_mode === true}
+            roundMode={roundMode}
+            onRoundModeChange={setRoundMode}
             onAllowExternalProcessingChange={setAllowExternalProcessing}
             maxUploadBytes={health?.max_upload_bytes}
             isGenerating={stage === "processing"}

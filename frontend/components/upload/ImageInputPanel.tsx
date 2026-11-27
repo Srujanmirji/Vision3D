@@ -31,6 +31,12 @@ interface ImageInputPanelProps {
   removeBackground: boolean;
   onRemoveBackgroundChange: (enabled: boolean) => void;
   allowExternalProcessing: boolean;
+  /** False when the server generates on its own machine only; the consent checkbox is then hidden. */
+  consentRequired?: boolean;
+  /** Offer round-object mode (bottles, cans, jars). */
+  roundModeAvailable?: boolean;
+  roundMode?: boolean;
+  onRoundModeChange?: (enabled: boolean) => void;
   onAllowExternalProcessingChange: (allowed: boolean) => void;
   maxUploadBytes?: number;
   isGenerating: boolean;
@@ -51,6 +57,10 @@ export function ImageInputPanel({
   removeBackground,
   onRemoveBackgroundChange,
   allowExternalProcessing,
+  consentRequired = true,
+  roundModeAvailable = false,
+  roundMode = false,
+  onRoundModeChange,
   onAllowExternalProcessingChange,
   maxUploadBytes = DEFAULT_MAX_UPLOAD_BYTES,
   isGenerating,
@@ -284,7 +294,24 @@ export function ImageInputPanel({
           </div>
         )}
 
-        {showBgRemovalToggle && (
+        {roundModeAvailable && onRoundModeChange && (
+          <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
+            <CopperSwitch
+              id="round-mode-switch"
+              label="Round object (bottle, can, jar)"
+              labelClassName="text-xs font-medium text-ink-primary"
+              checked={roundMode}
+              disabled={isGenerating}
+              onCheckedChange={onRoundModeChange}
+            />
+            <p className="mt-1.5 text-[11px] leading-relaxed text-ink-secondary">
+              Wraps your photo onto a smooth round shape, so labels stay sharp. Best for
+              upright round products shot from the front.
+            </p>
+          </div>
+        )}
+
+        {showBgRemovalToggle && !roundMode && (
           <div className="flex items-center justify-between rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
             <CopperSwitch
               id="bg-removal-switch"
@@ -307,21 +334,28 @@ export function ImageInputPanel({
           </div>
         )}
 
-        {/* Required external processing consent per API.md & HANDOFF.md */}
-        <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-3">
-          <Checkbox
-            id="external-processing-consent"
-            checked={allowExternalProcessing}
-            disabled={isGenerating}
-            onCheckedChange={onAllowExternalProcessingChange}
-            label={
-              <span>
-                Allow server-side upload (EXIF stripped) to the hosted 3D inference
-                provider. Hidden surfaces are inferred, not measured.
-              </span>
-            }
-          />
-        </div>
+        {consentRequired ? (
+          /* Photos may reach a hosted provider (a configured fallback): ask first. */
+          <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-3">
+            <Checkbox
+              id="external-processing-consent"
+              checked={allowExternalProcessing}
+              disabled={isGenerating}
+              onCheckedChange={onAllowExternalProcessingChange}
+              label={
+                <span>
+                  Allow server-side upload (EXIF stripped) to the hosted 3D inference
+                  provider. Hidden surfaces are inferred, not measured.
+                </span>
+              }
+            />
+          </div>
+        ) : (
+          <p className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-3 text-[11px] leading-relaxed text-ink-secondary">
+            Your photo is processed on this server only (location data removed). Hidden
+            surfaces are inferred, not measured.
+          </p>
+        )}
       </div>
 
       {/* Primary CTA */}
@@ -330,7 +364,7 @@ export function ImageInputPanel({
           variant="primary"
           size="lg"
           loading={isGenerating}
-          disabled={!uploadedImage || !allowExternalProcessing || isGenerating || generationBlocked}
+          disabled={!uploadedImage || (consentRequired && !allowExternalProcessing) || isGenerating || generationBlocked}
           onClick={onGenerate}
           className="w-full"
         >

@@ -40,3 +40,15 @@ A desktop session can start a phone-capture link and show it as a QR code. The p
 - **Ownership:** the resulting job belongs to the desktop session that created the link. The phone never receives the job ID.
 - **Lifetime:** links last 10 minutes and are stored as hashes. They are claimed atomically, so only one upload succeeds. A rejected attempt, such as one without consent, does not use the link up.
 - **Requirement:** like sharing, phone capture needs `PUBLIC_APP_URL`. Without it the server returns `CAPTURE_UNAVAILABLE`.
+
+## Generation mode
+
+`POST /v1/jobs` and `POST /v1/captures/{token}` accept an optional `mode` form field:
+- `auto` (default): AI reconstruction through the provider chain.
+- `round`: for bottles, cans and jars. The object is cut out, its silhouette is spun into a round mesh, and the photo is wrapped on as the texture.
+  - Needs local processing (`LOCAL_TRIPOSR_HOME`); without it the server returns `422 ROUND_MODE_UNAVAILABLE`.
+  - Never leaves the machine, so consent is not required.
+
+`GET /health` reports:
+- `round_mode`: whether round mode is available.
+- `external_processing`: whether any provider is hosted. When it is `false`, the UI hides the consent checkbox.

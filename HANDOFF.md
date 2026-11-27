@@ -1,5 +1,37 @@
 # Vision3D engineering handoff
 
+## Polish, round-object mode and warm TripoSR — 28 November 2026
+
+**Polish:**
+- **Consent:** `/health` reports `external_processing`. The PC panel and phone page show the consent checkbox only when a hosted provider could receive the photo. Otherwise they show a "processed on this server only" note. Consent stays required until health is known.
+- **Elapsed time:** the generating view shows "Elapsed m:ss", counted from the job's server start time (`ElapsedTime.tsx`).
+- **Friendly errors:** `lib/errorCopy.ts` turns codes into plain advice (e.g. QUEUE_FULL becomes "Vision3D is busy…"). The code stays visible. Photo-specific errors keep the server's detail.
+
+**Round-object mode** (`backend/app/lathe.py`): for bottles, cans and jars.
+- **Shape:** u2net cut-out, then the width at every row (median and moving-average smoothed), with a fitted axis so a tilted photo comes out upright. The profile is spun into 128 × 160 segments.
+- **Texture:** the front ±50° is the photo itself, sampled where each surface point appears, so labels stay sharp. It blends into each row's own colour by 75°, so the back has no mirrored text.
+- **API:** the `mode=round` form field on uploads and phone captures. `/health.round_mode` controls the switch.
+- **Privacy:** it needs `LOCAL_TRIPOSR_HOME` and never sends the photo out, so no consent is needed.
+
+**Warm TripoSR:** `infer.py --serve` keeps the model loaded. `jobs.WarmTripoSR` holds one process.
+- It is killed on cancel or timeout, which a test with a hung fake process covers, and restarted on the next job.
+- It is stopped on shutdown. A process from another event loop is killed by PID.
+- Background removal stays a per-job step (OpenMP clash).
+
+**Verified live through https://vision3d-sigma.vercel.app:**
+- **Normal mode:** 26.1 s for a cold first job, then **20.2 s** with the model already loaded.
+- **Round mode:** your bottle photo took **3.2 s** without consent: 40,960 triangles, 1.3 MB.
+
+[Renders and UI screenshots](verification/round-mode) · [run data](verification/local-triposr/live-warm-and-round.json)
+
+**Tests:**
+- Backend: 35 (5 new: lathe proportions and colours, empty cut-out, round pipeline, round API and consent, hung-process timeout).
+- Frontend: 62 (7 new).
+- Ruff, mypy, tsc and eslint pass.
+- Real Chrome checked the round switch, consent hiding, the `mode=round` upload and the timer.
+
+**Limits:** round mode suits upright round objects shot from the front. The back is plain colour, not real. Non-round objects should use normal mode. The frontend changes need this PR merged before the live site shows them; the backend is already running this branch.
+
 ## Local TripoSR provider — 28 November 2026
 
 Generation now runs on the Mac's GPU when `LOCAL_TRIPOSR_HOME` is set. The community Space becomes an automatic fallback if it is enabled.

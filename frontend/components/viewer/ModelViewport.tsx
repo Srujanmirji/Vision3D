@@ -37,6 +37,8 @@ import {
   Spinner,
   Tooltip,
 } from "@/components/ui";
+import { friendlyError } from "@/lib/errorCopy";
+import { ElapsedTime } from "./ElapsedTime";
 import { InteractiveModelCanvas } from "./InteractiveModelCanvas";
 import {
   CAMERA_PRESETS,
@@ -439,9 +441,7 @@ export function ModelViewport({
               value={null}
               className="mt-4"
             />
-            <p className="mt-2 text-[11px] text-ink-muted">
-              Progress is reported by stage.
-            </p>
+            <ElapsedTime key={jobStatus?.job_id ?? "pending"} since={jobStatus?.created_at} />
             {jobStatus?.job_id &&
             (jobStatus.status === "queued" || jobStatus.status === "processing") ? (
               <Button
@@ -461,8 +461,8 @@ export function ModelViewport({
         {stage === "error" && error && (
           <ErrorState
             code={error.code}
-            title="3D generation did not complete"
-            message={error.message}
+            title={friendlyError(error).title}
+            message={friendlyError(error).message}
             actions={
               <>
                 <Button variant="primary" size="md" onClick={onRetry}>
