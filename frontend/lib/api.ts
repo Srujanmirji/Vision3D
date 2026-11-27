@@ -19,6 +19,8 @@ export type ApiErrorCode =
   | "JOB_FINISHED"
   | "NOT_FOUND"
   | "EXPIRED"
+  | "CAPTURE_USED"
+  | "CAPTURE_UNAVAILABLE"
   | "NETWORK_ERROR"
   | "UNKNOWN_ERROR";
 
@@ -96,6 +98,17 @@ export interface ModelAsset {
 
 export interface ModelListResponse {
   models: ModelAsset[];
+}
+
+export interface CaptureSession {
+  token: string;
+  capture_url: string;
+  expires_at: string;
+}
+
+export interface CaptureInfo {
+  expires_at: string;
+  received: boolean;
 }
 
 export interface ShareResponse {
@@ -393,6 +406,41 @@ export async function createShareLink(
       signal,
     }
   );
+}
+
+/** Desktop: start a phone-capture link owned by this session. */
+export async function createCapture(signal?: AbortSignal): Promise<CaptureSession> {
+  return requestJson<CaptureSession>("/v1/captures", { method: "POST", signal });
+}
+
+/** Desktop: the job ID once the phone has sent its photo, otherwise null. */
+export async function getCaptureJob(token: string, signal?: AbortSignal): Promise<string | null> {
+  const result = await requestJson<{ job_id: string | null }>(
+    `/v1/captures/${encodeURIComponent(token)}/job`, { method: "GET", signal },
+  );
+  return result.job_id;
+}
+
+/** Phone: check the capture link. Sends no session cookie. */
+export async function getCaptureInfo(token: string, signal?: AbortSignal): Promise<CaptureInfo> {
+  return requestJson<CaptureInfo>(`/v1/captures/${encodeURIComponent(token)}`, {
+    method: "GET", credentials: "omit", signal,
+  });
+}
+
+/** Phone: send the one photo for this link. Sends no session cookie. */
+export async function sendCapture(
+  token: string,
+  file: File,
+  options: { allow_external_processing: boolean },
+  signal?: AbortSignal,
+): Promise<CaptureInfo> {
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("allow_external_processing", String(options.allow_external_processing));
+  return requestJson<CaptureInfo>(`/v1/captures/${encodeURIComponent(token)}`, {
+    method: "POST", body: formData, credentials: "omit", signal,
+  });
 }
 
 export async function getSharedAsset(

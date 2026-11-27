@@ -42,7 +42,7 @@ describe("ExportDialog USDZ download", () => {
       ...(await importOriginal<typeof import("@/lib/usdz")>()),
       glbToUsdz,
     }));
-    const createUrl = vi.fn((_blob: Blob) => "blob:usdz");
+    const createUrl = vi.fn<(blob: Blob) => string>(() => "blob:usdz");
     Object.assign(URL, { createObjectURL: createUrl, revokeObjectURL: vi.fn() });
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     const { ExportDialog } = await import("@/components/export-dialog/ExportDialog");

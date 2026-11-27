@@ -1,5 +1,39 @@
 # Vision3D engineering handoff
 
+## Phone-to-desktop photo capture — 27 November 2026
+
+On a computer, **Use Phone** next to Browse Files and Take Photo opens a QR code; the button shows from tablet width up. Scanning it opens `/capture/<token>` on the phone. There you take a photo or pick one from the gallery, see the photo tips, tick consent and tap **Send to Computer**. The computer then switches to the normal generation progress through `/create?job=<id>`, and the model appears there.
+
+**Backend:**
+- A `captures` table stores hashed tokens, the owner session, the expiry and the `job_id`.
+- There are four `/v1/captures` endpoints (see [API.md](API.md)).
+- Desktop uploads and phone uploads now share one `start_job` helper, so validation can't drift apart.
+
+**Frontend:**
+- `PhoneCaptureDialog.tsx`: the QR dialog, which polls every 2 s and offers a fresh code when one expires.
+- `app/capture/[token]/page.tsx`: the phone page.
+- New `lib/api.ts` client functions.
+- `/capture/:token` gets no-store, no-referrer, noindex and camera-permission headers.
+
+**Verified:**
+- Backend: 24 tests (2 new: single use, desktop-only job ownership, consent and origin checks, expiry, missing public origin), ruff and mypy pass.
+- Frontend: 49 tests (6 new), tsc, eslint and `next build` pass.
+- End to end through a public Quick Tunnel, using the real API with the archived-GLB fixture runner:
+  - a desktop Chrome QR decoded to the capture URL
+  - a separate phone-profile Chrome with no cookies sent a photo
+  - the desktop switched to the job and showed the finished model
+  - reusing the link was blocked
+  - no page errors on either side
+
+[evidence](verification/phone-capture)
+
+**Not verified:**
+- Scanning with a physical phone and the phone's real camera.
+- A live AI run on a phone-sent photo.
+- The live Vercel site doesn't have this until this branch is merged and redeployed.
+
+**Known limitation:** the phone page always uses background removal (the backend default). It doesn't copy the desktop's toggle.
+
 ## Photo guidance and USDZ download — 27 November 2026
 
 **Photo guidance:** `frontend/components/upload/PhotoTips.tsx` adds a "For the best 3D result" checklist under the upload area in `ImageInputPanel`. It covers:

@@ -246,6 +246,12 @@ export function CreateWorkspace() {
     }
   }
 
+  const handlePhoneJob = useCallback((jobId: string) => {
+    setActiveModel(null);
+    setSuccessNotice(null);
+    router.replace(`/create?job=${encodeURIComponent(jobId)}`);
+  }, [router]);
+
   const mayRetryUpload = Boolean(uploadedImage && allowExternalProcessing);
   const retryLabel = retryJobId ? "Check Job Status" : mayRetryUpload ? "Retry Generation"
     : requestedModelId ? "Retry Loading Model" : "Choose Image";
@@ -294,6 +300,7 @@ export function CreateWorkspace() {
           <ImageInputPanel
             uploadedImage={uploadedImage}
             onImageValidated={handleImageValidated}
+            onPhoneJob={handlePhoneJob}
             onClearImage={handleClearImage}
             verifiedProviders={verifiedProviders}
             selectedProvider={selectedProvider}

@@ -7,7 +7,7 @@ import shutil
 import sqlite3
 import time
 from collections import OrderedDict, deque
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
@@ -25,6 +25,9 @@ from .middleware import UploadBodyLimit
 from .providers import COMMUNITY, HUNYUAN, Provider
 from .schemas import (
     Capability,
+    CaptureInfo,
+    CaptureJob,
+    CaptureSession,
     Error,
     ErrorResponse,
     Failure,
@@ -167,11 +170,10 @@ def create_app(
 
     @api.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, _: RequestValidationError) -> JSONResponse:
-        code = (
-            "INVALID_IMAGE"
-            if request.url.path == "/v1/jobs" and request.method == "POST"
-            else "INVALID_REQUEST"
+        upload = request.method == "POST" and (
+            request.url.path == "/v1/jobs" or request.url.path.startswith("/v1/captures/")
         )
+        code = "INVALID_IMAGE" if upload else "INVALID_REQUEST"
         return error_response(422, code, "The request fields are missing or invalid.")
 
     @api.exception_handler(HTTPException)
@@ -265,19 +267,21 @@ def create_app(
             )
         return {"status": "ok"}
 
-    @api.post("/v1/jobs", status_code=202, tags=["Jobs"], responses=api_errors(400, 403, 413, 422, 429, 503))
-    async def submit(
+    def check_origin(request: Request) -> None:
+        origin = request.headers.get("origin")
+        if origin and origin != allowed_origin:
+            raise Failure("ORIGIN_FORBIDDEN", "This origin cannot modify Vision3D data.", 403)
+
+    async def start_job(
         request: Request,
-        key: Owner,
-        image: Annotated[UploadFile, File(description="One JPEG, PNG or WebP image.")],
-        allow_external_processing: Annotated[
-            bool, Form(description="Consent to send the stripped photo to Hugging Face.")
-        ] = False,
-        remove_background: Annotated[bool, Form(description="Run provider background removal.")] = True,
-        provider: Annotated[
-            str | None, Form(description="Configured primary provider ID; fallback is automatic if enabled.")
-        ] = None,
-    ) -> JobCreated:
+        key: str,
+        image: UploadFile,
+        allow_external_processing: bool,
+        remove_background: bool,
+        provider: str | None = None,
+        claim: Callable[[str], None] | None = None,
+    ) -> str:
+        """Validate, strip and queue one upload. Shared by desktop uploads and phone captures."""
         rate.check(upload_peer(request, settings.trusted_proxy_ips))
         if not providers:
             raise Failure("PROVIDER_UNAVAILABLE", "No generation provider is configured.", 503)
@@ -305,13 +309,103 @@ def create_app(
             await run_in_threadpool(prepare_image, raw, folder / "input.png")
             if len(queue.active) >= settings.queue_limit:
                 raise Failure("QUEUE_FULL", "The generation queue is full.", 429)
+            if claim:
+                claim(job_id)
             store.new_job(job_id, key)
             queue.enqueue(job_id, key, providers, remove_background)
         except BaseException:
             shutil.rmtree(folder, ignore_errors=True)
             raise
         event("job_queued", job_id=job_id)
+        return job_id
+
+    @api.post("/v1/jobs", status_code=202, tags=["Jobs"], responses=api_errors(400, 403, 413, 422, 429, 503))
+    async def submit(
+        request: Request,
+        key: Owner,
+        image: Annotated[UploadFile, File(description="One JPEG, PNG or WebP image.")],
+        allow_external_processing: Annotated[
+            bool, Form(description="Consent to send the stripped photo to Hugging Face.")
+        ] = False,
+        remove_background: Annotated[bool, Form(description="Run provider background removal.")] = True,
+        provider: Annotated[
+            str | None, Form(description="Configured primary provider ID; fallback is automatic if enabled.")
+        ] = None,
+    ) -> JobCreated:
+        job_id = await start_job(request, key, image, allow_external_processing, remove_background, provider)
         return JobCreated(job_id=job_id, status="queued")
+
+    @api.post("/v1/captures", tags=["Captures"], responses=api_errors(403, 503))
+    async def create_capture(request: Request, key: Owner) -> CaptureSession:
+        """Start a phone-capture link for this desktop session."""
+        if not settings.public_app:
+            raise Failure(
+                "CAPTURE_UNAVAILABLE", "Phone capture requires a configured public HTTPS origin.", 503
+            )
+        token, expires = storage(request).new_capture(key)
+        return CaptureSession(
+            token=token,
+            capture_url=f"{settings.public_app.rstrip('/')}/capture/{token}",
+            expires_at=utc(expires),
+        )
+
+    def require_capture(request: Request, token: str) -> dict[str, Any]:
+        if record := storage(request).capture(token):
+            return record
+        raise Failure("NOT_FOUND", "Capture link not found.", 404)
+
+    @api.get("/v1/captures/{token}", tags=["Captures"], responses=api_errors(404, 410))
+    async def capture_info(request: Request, token: str, response: Response) -> CaptureInfo:
+        """Public: lets the phone check the link before taking a photo."""
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        record = require_capture(request, token)
+        received = record["job_id"] is not None
+        if not received and record["expires"] <= time.time():
+            raise Failure("EXPIRED", "This capture link expired. Scan a new code on your computer.", 410)
+        return CaptureInfo(expires_at=utc(record["expires"]), received=received)
+
+    @api.post(
+        "/v1/captures/{token}",
+        status_code=202,
+        tags=["Captures"],
+        responses=api_errors(403, 404, 409, 410, 413, 422, 429, 503),
+    )
+    async def capture_upload(
+        request: Request,
+        token: str,
+        response: Response,
+        image: Annotated[UploadFile, File(description="One JPEG, PNG or WebP image.")],
+        allow_external_processing: Annotated[
+            bool, Form(description="Consent to send the stripped photo to Hugging Face.")
+        ] = False,
+        remove_background: Annotated[bool, Form(description="Run provider background removal.")] = True,
+    ) -> CaptureInfo:
+        """Public: the phone sends one photo; the job belongs to the desktop session that made the link."""
+        response.headers["Cache-Control"] = "no-store"
+        check_origin(request)
+        record = require_capture(request, token)
+        if record["job_id"] is not None:
+            raise Failure("CAPTURE_USED", "A photo was already sent with this link.", 409)
+        if record["expires"] <= time.time():
+            raise Failure("EXPIRED", "This capture link expired. Scan a new code on your computer.", 410)
+
+        def claim(job_id: str) -> None:
+            if not storage(request).claim_capture(token, job_id):
+                raise Failure("CAPTURE_USED", "This link was already used or has expired.", 409)
+
+        await start_job(
+            request, record["owner"], image, allow_external_processing, remove_background, claim=claim
+        )
+        return CaptureInfo(expires_at=utc(record["expires"]), received=True)
+
+    @api.get("/v1/captures/{token}/job", tags=["Captures"], responses=api_errors(404))
+    async def capture_job(request: Request, token: str, key: Owner) -> CaptureJob:
+        """Desktop only: returns the job ID once the phone has sent its photo."""
+        record = storage(request).capture(token)
+        if not record or record["owner"] != key:
+            raise Failure("NOT_FOUND", "Capture link not found.", 404)
+        return CaptureJob(job_id=record["job_id"])
 
     @api.get("/v1/jobs", tags=["Jobs"], responses=api_errors(422))
     async def history(request: Request, key: Owner, limit: Limit = 50, offset: Offset = 0) -> History:

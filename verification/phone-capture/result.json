@@ -1,0 +1,43 @@
+{
+  "origin": "https://toddler-eclipse-stress-health.trycloudflare.com",
+  "steps": [
+    {
+      "name": "desktop_qr_decoded",
+      "t": 1795801436518,
+      "url": "https://toddler-eclipse-stress-health.trycloudflare.com/capture/<token>"
+    },
+    {
+      "name": "phone_page_ready",
+      "t": 1795801438656,
+      "cookiesBeforeSend": 0
+    },
+    {
+      "name": "phone_sent",
+      "t": 1795801439442
+    },
+    {
+      "name": "desktop_switched_to_job",
+      "t": 1795801440996,
+      "url": "https://toddler-eclipse-stress-health.trycloudflare.com/create?job=<id>"
+    },
+    {
+      "name": "desktop_model_ready",
+      "t": 1795801441787
+    },
+    {
+      "name": "phone_reuse_blocked",
+      "t": 1795801442706
+    }
+  ],
+  "pageErrors": {
+    "desktop": [],
+    "phone": []
+  },
+  "date": "2026-11-27",
+  "setup": "Local production build of feat/phone-capture behind a temporary Cloudflare Quick Tunnel (public HTTPS); real FastAPI with the archived-GLB fixture runner instead of the AI provider; desktop = Chrome 1280x860, phone = separate Chrome context with the iPhone 13 profile and no shared cookies",
+  "not_tested": [
+    "scanning with a physical phone camera",
+    "taking the photo with a real phone camera (gallery upload of a test photo was used)",
+    "live AI generation for a phone-sent photo"
+  ]
+}

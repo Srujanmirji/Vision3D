@@ -95,3 +95,18 @@ class Health(BaseModel):
     retention_days: int
     share_ttl_seconds: int
     poll_timeout_seconds: int
+
+
+class CaptureSession(BaseModel):
+    token: str
+    capture_url: str
+    expires_at: str
+
+
+class CaptureInfo(BaseModel):
+    expires_at: str
+    received: bool
+
+
+class CaptureJob(BaseModel):
+    job_id: str | None = None

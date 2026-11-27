@@ -99,6 +99,7 @@ describe("ImageInputPanel honesty, consent, and capabilities", () => {
         onAllowExternalProcessingChange={vi.fn()}
         isGenerating={false}
         onGenerate={vi.fn()}
+        onPhoneJob={vi.fn()}
         fileInputRef={fileRef}
       />
     );
@@ -136,6 +137,7 @@ describe("ImageInputPanel honesty, consent, and capabilities", () => {
         onAllowExternalProcessingChange={vi.fn()}
         isGenerating={false}
         onGenerate={vi.fn()}
+        onPhoneJob={vi.fn()}
         fileInputRef={fileRef}
       />
     );

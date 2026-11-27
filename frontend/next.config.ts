@@ -60,6 +60,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/capture/:token",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "Permissions-Policy", value: "camera=(self), microphone=()" },
+        ],
+      },
+      {
         source: "/create",
         headers: [
           { key: "Permissions-Policy", value: "camera=(self), microphone=()" },
