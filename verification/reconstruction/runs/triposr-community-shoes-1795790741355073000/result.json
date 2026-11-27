@@ -1,0 +1,15 @@
+{
+  "space": "AleenDG/3DGenTripoSR",
+  "input": "shoes.jpg",
+  "input_sha256": "877129f1c5868fc1228c13f3a7c2b8efef770dfb7c3498caa6111ce1abe201b4",
+  "started_at": "2026-11-27T20:15:41.355601+05:30",
+  "steps": [
+    {
+      "endpoint": "/preprocess",
+      "seconds": 1.03
+    }
+  ],
+  "meshes": [],
+  "error": "TypeError: httpx.Client() got multiple values for keyword argument 'timeout'",
+  "seconds": 3.21
+}

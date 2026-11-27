@@ -1,0 +1,19 @@
+{
+  "space": "TencentARC/InstantMesh",
+  "input": "furniture.jpg",
+  "input_sha256": "d50da739d76668c17887d1345c6c262bcad1c8acd309d58797e59242f0cc6d87",
+  "started_at": "2026-11-27T20:15:41.355562+05:30",
+  "steps": [
+    {
+      "endpoint": "/preprocess",
+      "seconds": 3.93
+    },
+    {
+      "endpoint": "/generate_mvs",
+      "seconds": 2.64
+    }
+  ],
+  "meshes": [],
+  "error": "AppError: You have exceeded your ZeroGPU quota (60s requested vs. 45s left). Try again in 23:59:56. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens",
+  "seconds": 9.55
+}

@@ -1,0 +1,31 @@
+{
+  "tested_at": "2026-11-27T13:25:16.063411+00:00",
+  "provider": "stabilityai/stable-fast-3d",
+  "image": "chair.png",
+  "source": "https://huggingface.co/spaces/stabilityai/stable-fast-3d/resolve/main/demo_files/examples/chair1.png",
+  "sample": true,
+  "sha256": "2503c12a74419d91a4c6c9f1affc48fee6e2b8b9091956ca6211e91ada57b5bf",
+  "steps": [
+    {
+      "endpoint": "/requires_bg_remove",
+      "seconds": 3.93,
+      "result": [
+        {
+          "visible": true,
+          "value": "/Users/srujanmirji/Downloads/Vision3D/verification/phase0/downloads/caed248e1a913bf173a9009bb065bb842072e05b2e96f2e447092cff0f1c03a2/image.webp",
+          "__type__": "update"
+        },
+        {
+          "visible": false,
+          "__type__": "update"
+        }
+      ]
+    },
+    {
+      "endpoint": "/run_button",
+      "seconds": 3.17,
+      "error_type": "AppError",
+      "error": "The upstream Gradio app has raised an exception but has not enabled verbose error reporting. To enable, set show_error=True in launch()."
+    }
+  ]
+}

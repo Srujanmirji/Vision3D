@@ -1,0 +1,19 @@
+{
+  "space": "stabilityai/stable-fast-3d",
+  "input": "furniture.jpg",
+  "input_sha256": "d50da739d76668c17887d1345c6c262bcad1c8acd309d58797e59242f0cc6d87",
+  "started_at": "2026-11-27T20:15:44.571977+05:30",
+  "steps": [
+    {
+      "endpoint": "/requires_bg_remove",
+      "seconds": 2.66
+    },
+    {
+      "endpoint": "/run_button",
+      "seconds": 2.6
+    }
+  ],
+  "meshes": [],
+  "error": "AppError: The upstream Gradio app has raised an exception but has not enabled verbose error reporting. To enable, set show_error=True in launch().",
+  "seconds": 7.64
+}

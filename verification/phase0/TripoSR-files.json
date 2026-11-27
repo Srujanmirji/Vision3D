@@ -1,0 +1,290 @@
+[
+  {
+    "type": "directory",
+    "oid": "29922b7cf92b1233a640c84a4e840789225d5886",
+    "size": 0,
+    "path": "examples"
+  },
+  {
+    "type": "directory",
+    "oid": "8ce8b439b8361ff2e41c44a53493f22d9ce2fb4c",
+    "size": 0,
+    "path": "tsr"
+  },
+  {
+    "type": "directory",
+    "oid": "67e4cf0ab1bb5b0475dbae1d27b29fe572803422",
+    "size": 0,
+    "path": "tsr/__pycache__"
+  },
+  {
+    "type": "directory",
+    "oid": "6f5ecdbb822bf063b146a89fca12f119f1605d9a",
+    "size": 0,
+    "path": "tsr/models"
+  },
+  {
+    "type": "directory",
+    "oid": "ac663942186edeacb9f02681cee28a6cfb699c9e",
+    "size": 0,
+    "path": "tsr/models/__pycache__"
+  },
+  {
+    "type": "directory",
+    "oid": "2c57fb531f7673a4be6cf76f5d9a921f2f2186cd",
+    "size": 0,
+    "path": "tsr/models/tokenizers"
+  },
+  {
+    "type": "directory",
+    "oid": "5ea28ae22d23bf3bd211fbfbbfa92bd6bd4920e6",
+    "size": 0,
+    "path": "tsr/models/tokenizers/__pycache__"
+  },
+  {
+    "type": "directory",
+    "oid": "a615e01e17d124d81380f766351e1847c83bdc80",
+    "size": 0,
+    "path": "tsr/models/transformer"
+  },
+  {
+    "type": "directory",
+    "oid": "9553aeea3c89c378791a69ea28b30e8c54a9e438",
+    "size": 0,
+    "path": "tsr/models/transformer/__pycache__"
+  },
+  {
+    "type": "file",
+    "oid": "5d7f077bd6e1a90e4cb8544726b05f855a1e0d13",
+    "size": 1561,
+    "path": ".gitattributes"
+  },
+  {
+    "type": "file",
+    "oid": "73a7808dee60f254271c2a2e61364c9a4679842b",
+    "size": 262,
+    "path": "README.md"
+  },
+  {
+    "type": "file",
+    "oid": "51f8a2144740fdf9c318dba8dd95b1fc3a7b9f61",
+    "size": 7438,
+    "path": "app.py"
+  },
+  {
+    "type": "file",
+    "oid": "a0b83623bd3e8528385869ca5370eb5fc886b6f5",
+    "size": 132060,
+    "path": "examples/captured_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "a7812c95b549d96ed0495ca85af88441d3f9d457",
+    "size": 5664,
+    "path": "examples/chair_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "5b0164267efdcd7aa67dc4993ba0f28f05b75d62",
+    "size": 8558,
+    "path": "examples/flamingo_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "7e5b467a5bf2c52c67e34ae55457cd7940884fe9",
+    "size": 11526,
+    "path": "examples/hamburger_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "c3bd936b078a421f12321f12fc72a45936dac1f3",
+    "size": 22716,
+    "path": "examples/horse_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "1d8d71b4417299de911fedfe7a89118eefd7103a",
+    "size": 122394,
+    "path": "examples/iso_house.webp"
+  },
+  {
+    "type": "file",
+    "oid": "548a0862bbedf4fca1bd243021703481e81443b5",
+    "size": 54400,
+    "path": "examples/marble_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "a860e1cfe4e28a9cae59239e851cead16193e4b8",
+    "size": 14604,
+    "path": "examples/police_woman_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "e749c683447d9d51dd17671a87c406ac8abba6ba",
+    "size": 31964,
+    "path": "examples/poly_fox.webp"
+  },
+  {
+    "type": "file",
+    "oid": "ffe480ebfe0216b8701aa35e29152ac778ca7c57",
+    "size": 9674,
+    "path": "examples/robot_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "b6f13c13498eceba7583a95ef7b7a087f84fc73d",
+    "size": 12780,
+    "path": "examples/teapot.webp"
+  },
+  {
+    "type": "file",
+    "oid": "489d048b5af2d805cb1ae41eef18a2d8abcb35aa",
+    "size": 29602,
+    "path": "examples/tiger_girl.webp"
+  },
+  {
+    "type": "file",
+    "oid": "333d17406c01cfd93b0d7790926db6519bd2df4c",
+    "size": 24160,
+    "path": "examples/unicorn_p.webp"
+  },
+  {
+    "type": "file",
+    "oid": "56996fbbe8e48416f72c4c9300b2c61434d7ebe4",
+    "size": 174,
+    "path": "requirements.txt"
+  },
+  {
+    "type": "file",
+    "oid": "e959f300ee2347d00c603bd99f9bd867dadf4499",
+    "size": 5408,
+    "path": "tsr/__pycache__/system.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "4fcac64634b0d8e7f5f48ece0f9bd046ca3bedbb",
+    "size": 13820,
+    "path": "tsr/__pycache__/utils.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "cf99205bb6f64375040f3c92d02df1f48695385c",
+    "size": 1477,
+    "path": "tsr/models/__pycache__/camera.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "5858895751ab820d26e557b5e9dfebc41679cae1",
+    "size": 2035,
+    "path": "tsr/models/__pycache__/isosurface.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "f165c9fdb535e8888a8ab3393c6f6b8d7deb9065",
+    "size": 5294,
+    "path": "tsr/models/__pycache__/nerf_renderer.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "9681517e0c22f29e8b5bc02aaf2a29f06087e554",
+    "size": 3422,
+    "path": "tsr/models/__pycache__/network_utils.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "39c8389b5562f5ebb787ef85bcfff56d85aa51db",
+    "size": 1679,
+    "path": "tsr/models/isosurface.py"
+  },
+  {
+    "type": "file",
+    "oid": "b2d3e652c423e62c4e54fdf7c0751602f51b107b",
+    "size": 5680,
+    "path": "tsr/models/nerf_renderer.py"
+  },
+  {
+    "type": "file",
+    "oid": "3844f533bf3b6c9afce6de3857255ee08125b1ba",
+    "size": 3480,
+    "path": "tsr/models/network_utils.py"
+  },
+  {
+    "type": "file",
+    "oid": "a492f56dc156938d3250d77f5c182ab05e1655ea",
+    "size": 18599,
+    "path": "tsr/models/tokenizers/__pycache__/dino.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "06d33036639d982296542f5d441f991d3e01ddb0",
+    "size": 2420,
+    "path": "tsr/models/tokenizers/__pycache__/image.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "31191fd86c3d1668aefd27059738590dc066cf7b",
+    "size": 1755,
+    "path": "tsr/models/tokenizers/__pycache__/triplane.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "34a092e7170c87da53363822af554c78e5f8083f",
+    "size": 2144,
+    "path": "tsr/models/tokenizers/image.py"
+  },
+  {
+    "type": "file",
+    "oid": "ecdd7fd2201c974bb70b18a90a633287b814886f",
+    "size": 1237,
+    "path": "tsr/models/tokenizers/triplane.py"
+  },
+  {
+    "type": "file",
+    "oid": "02bf1262175cdbe2bb9651042c247f53c2ab0e91",
+    "size": 15290,
+    "path": "tsr/models/transformer/__pycache__/attention.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "8c2f3d2a8c487f237c94433bd8aaafd26afb8ce0",
+    "size": 9959,
+    "path": "tsr/models/transformer/__pycache__/basic_transformer_block.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "39cb242f767c41c73138dda36700ef1554bbf31f",
+    "size": 7474,
+    "path": "tsr/models/transformer/__pycache__/transformer_1d.cpython-310.pyc"
+  },
+  {
+    "type": "file",
+    "oid": "eb873231e3ad195a7fef3a2c4ef217be3056cd4e",
+    "size": 25166,
+    "path": "tsr/models/transformer/attention.py"
+  },
+  {
+    "type": "file",
+    "oid": "a55ea6189c9e1da2f86f6d0957ae30f26fefff0a",
+    "size": 12337,
+    "path": "tsr/models/transformer/basic_transformer_block.py"
+  },
+  {
+    "type": "file",
+    "oid": "7546232c5126a6622f1fd701ba36f9d4b53b9178",
+    "size": 10115,
+    "path": "tsr/models/transformer/transformer_1d.py"
+  },
+  {
+    "type": "file",
+    "oid": "de5ae6ef75afd3bbbe0bdfacc7258a8c51409cc5",
+    "size": 6516,
+    "path": "tsr/system.py"
+  },
+  {
+    "type": "file",
+    "oid": "6a1b59aef75d02d39b29222d300fe9241bb11444",
+    "size": 15576,
+    "path": "tsr/utils.py"
+  }
+]

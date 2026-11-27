@@ -1,0 +1,20 @@
+{
+  "space": "tencent/Hunyuan3D-2",
+  "input": "furniture.jpg",
+  "input_sha256": "d50da739d76668c17887d1345c6c262bcad1c8acd309d58797e59242f0cc6d87",
+  "started_at": "2026-11-27T20:16:56.342961+05:30",
+  "steps": [
+    {
+      "endpoint": "/shape_generation",
+      "seconds": 15.99
+    }
+  ],
+  "meshes": [
+    {
+      "file": "mesh-0.glb",
+      "bytes": 7094676,
+      "sha256": "4f0695e6a74f139e66c487042a8454f7743dae721ee555fe2b4dc14e28e15761"
+    }
+  ],
+  "seconds": 18.96
+}

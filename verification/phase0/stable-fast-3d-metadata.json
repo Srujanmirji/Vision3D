@@ -1,0 +1,272 @@
+{
+  "_id": "669785de300c3e35648df1c1",
+  "id": "stabilityai/stable-fast-3d",
+  "sdk": "gradio",
+  "likes": 1237,
+  "tags": [
+    "gradio",
+    "region:us"
+  ],
+  "private": false,
+  "author": "stabilityai",
+  "sha": "1b61bd1c9156e6b303a829cc9a816a66ed91b3ee",
+  "lastModified": "2026-05-23T21:22:29.000Z",
+  "cardData": {
+    "title": "Stable Fast 3D",
+    "emoji": "\ud83c\udfae",
+    "colorFrom": "purple",
+    "colorTo": "indigo",
+    "sdk": "gradio",
+    "sdk_version": "4.41.0",
+    "python_version": "3.10.13",
+    "app_file": "gradio_app.py",
+    "pinned": false,
+    "models": [
+      "stabilityai/stable-fast-3d"
+    ],
+    "license": "other",
+    "license_name": "stabilityai-ai-community",
+    "license_link": "LICENSE.md"
+  },
+  "subdomain": "stabilityai-stable-fast-3d",
+  "gated": false,
+  "disabled": false,
+  "host": "https://stabilityai-stable-fast-3d.hf.space",
+  "models": [
+    "stabilityai/stable-fast-3d"
+  ],
+  "region": "us",
+  "visibility": "public",
+  "siblings": [
+    {
+      "rfilename": ".gitattributes"
+    },
+    {
+      "rfilename": ".gitignore"
+    },
+    {
+      "rfilename": ".pre-commit-config.yaml"
+    },
+    {
+      "rfilename": "LICENSE.md"
+    },
+    {
+      "rfilename": "README.md"
+    },
+    {
+      "rfilename": "__init__.py"
+    },
+    {
+      "rfilename": "demo_files/comp.gif"
+    },
+    {
+      "rfilename": "demo_files/examples/animal_character.png"
+    },
+    {
+      "rfilename": "demo_files/examples/animal_character_2.png"
+    },
+    {
+      "rfilename": "demo_files/examples/axe.png"
+    },
+    {
+      "rfilename": "demo_files/examples/chair1.png"
+    },
+    {
+      "rfilename": "demo_files/examples/character1.png"
+    },
+    {
+      "rfilename": "demo_files/examples/otter_samurai.png"
+    },
+    {
+      "rfilename": "demo_files/examples/raccoon_wizard.png"
+    },
+    {
+      "rfilename": "demo_files/examples/stylized-rocks.png"
+    },
+    {
+      "rfilename": "demo_files/examples/tree.png"
+    },
+    {
+      "rfilename": "demo_files/hdri/abandoned_tiled_room_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/hdri/metro_noord_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/hdri/neon_photostudio_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/hdri/peppermint_powerplant_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/hdri/rainforest_trail_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/hdri/studio_small_08_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/hdri/urban_alley_01_1k.hdr"
+    },
+    {
+      "rfilename": "demo_files/scatterplot.jpg"
+    },
+    {
+      "rfilename": "demo_files/teaser.gif"
+    },
+    {
+      "rfilename": "demo_files/workflows/sf3d_example.json"
+    },
+    {
+      "rfilename": "gradio_app.py"
+    },
+    {
+      "rfilename": "load/tets/160_tets.npz"
+    },
+    {
+      "rfilename": "requirements.txt"
+    },
+    {
+      "rfilename": "ruff.toml"
+    },
+    {
+      "rfilename": "run.py"
+    },
+    {
+      "rfilename": "sf3d/box_uv_unwrap.py"
+    },
+    {
+      "rfilename": "sf3d/models/camera.py"
+    },
+    {
+      "rfilename": "sf3d/models/global_estimator/multi_head_estimator.py"
+    },
+    {
+      "rfilename": "sf3d/models/image_estimator/clip_based_estimator.py"
+    },
+    {
+      "rfilename": "sf3d/models/isosurface.py"
+    },
+    {
+      "rfilename": "sf3d/models/mesh.py"
+    },
+    {
+      "rfilename": "sf3d/models/network.py"
+    },
+    {
+      "rfilename": "sf3d/models/tokenizers/dinov2.py"
+    },
+    {
+      "rfilename": "sf3d/models/tokenizers/image.py"
+    },
+    {
+      "rfilename": "sf3d/models/tokenizers/triplane.py"
+    },
+    {
+      "rfilename": "sf3d/models/transformers/attention.py"
+    },
+    {
+      "rfilename": "sf3d/models/transformers/backbone.py"
+    },
+    {
+      "rfilename": "sf3d/models/utils.py"
+    },
+    {
+      "rfilename": "sf3d/system.py"
+    },
+    {
+      "rfilename": "sf3d/texture_baker.py"
+    },
+    {
+      "rfilename": "sf3d/texture_baker.slang"
+    },
+    {
+      "rfilename": "sf3d/utils.py"
+    },
+    {
+      "rfilename": "texture_baker/README.md"
+    },
+    {
+      "rfilename": "texture_baker/requirements.txt"
+    },
+    {
+      "rfilename": "texture_baker/setup.py"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/__init__.py"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/baker.py"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/csrc/baker.cpp"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/csrc/baker.h"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/csrc/baker_kernel.cu"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/csrc/baker_kernel.metal"
+    },
+    {
+      "rfilename": "texture_baker/texture_baker/csrc/baker_kernel.mm"
+    },
+    {
+      "rfilename": "uv_unwrapper/README.md"
+    },
+    {
+      "rfilename": "uv_unwrapper/requirements.txt"
+    },
+    {
+      "rfilename": "uv_unwrapper/setup.py"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/__init__.py"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/csrc/bvh.cpp"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/csrc/bvh.h"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/csrc/common.h"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/csrc/intersect.cpp"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/csrc/intersect.h"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/csrc/unwrapper.cpp"
+    },
+    {
+      "rfilename": "uv_unwrapper/uv_unwrapper/unwrap.py"
+    }
+  ],
+  "createdAt": "2024-07-17T08:50:38.000Z",
+  "usedStorage": 26534581,
+  "runtime": {
+    "stage": "RUNNING",
+    "hardware": {
+      "current": "zero-a10g",
+      "requested": "zero-a10g"
+    },
+    "gcTimeout": 172800,
+    "replicas": {
+      "current": 4,
+      "requested": 4
+    },
+    "devMode": false,
+    "domains": [
+      {
+        "domain": "stabilityai-stable-fast-3d.hf.space",
+        "stage": "READY"
+      }
+    ],
+    "sha": "da5709055c2e0e08983d1a8b98172db008a91609",
+    "pySpacesVersion": "0.50.2"
+  }
+}

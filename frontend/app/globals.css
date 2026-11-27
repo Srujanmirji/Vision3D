@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --bg-obsidian: #101011;
+  --bg-panel: #19191B;
+  --bg-raised: #232326;
+  --bg-viewport: #131315;
+  --border-subtle: #343437;
+  --border-strong: #454549;
+  --text-primary: #F5F3F0;
+  --text-secondary: #A6A3A0;
+  --text-muted: #7C7976;
+  --accent-copper: #F79448;
+  --accent-copper-hover: #FBA25E;
+  --accent-copper-pressed: #D87532;
+  --text-on-copper: #14110F;
+  --radius-panel: 20px;
+  --radius-card: 16px;
+  --radius-control: 12px;
+}
+
+@theme inline {
+  --color-obsidian: var(--bg-obsidian);
+  --color-panel: var(--bg-panel);
+  --color-raised: var(--bg-raised);
+  --color-viewport: var(--bg-viewport);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-ink-primary: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-muted: var(--text-muted);
+  --color-copper: var(--accent-copper);
+  --color-copper-hover: var(--accent-copper-hover);
+  --color-copper-pressed: var(--accent-copper-pressed);
+  --color-ink-on-copper: var(--text-on-copper);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+html,
+body {
+  background-color: var(--bg-obsidian);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle studio warmth matching design-reference.png without excessive gradients or glow */
+.studio-ambient-bg {
+  background-color: var(--bg-obsidian);
+  background-image:
+    radial-gradient(640px 360px at 72% -4%, rgba(247, 148, 72, 0.11), transparent 70%),
+    radial-gradient(440px 420px at 6% 96%, rgba(216, 117, 50, 0.08), transparent 72%);
+}
+
+/* Focus visibility */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-copper);
+  outline-offset: 2px;
+}
+
+/* Native <dialog> scroll containment & modal styling (modern-web-guidance: dialog) */
+dialog.v3d-dialog {
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  max-width: min(460px, calc(100vw - 32px));
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+}
+
+dialog.v3d-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.v3d-dialog::backdrop {
+  background-color: rgba(10, 10, 11, 0.72);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Native <progress> styling (modern-web-guidance: progress) */
+progress.v3d-progress {
+  appearance: none;
+  border: 0 solid;
+  overflow: clip;
+  container-type: inline-size;
+  --progress-bar-radius: 999px;
+  --progress-bar-indeterminate-size: 32%;
+  --progress-bar-indeterminate-animation-duration: 1.5s;
+  border-radius: var(--progress-bar-radius);
+  background: var(--bg-raised);
+  height: 6px;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  progress.v3d-progress {
+    --progress-bar-indeterminate-animation-duration: 10s;
+  }
+}
+
+progress.v3d-progress:dir(rtl) {
+  --progress-bar-indeterminate-animation: v3d-progress-indeterminate
+    var(--progress-bar-indeterminate-animation-duration) infinite linear reverse;
+}
+
+progress.v3d-progress:indeterminate {
+  --progress-bar-animation: var(
+    --progress-bar-indeterminate-animation,
+    v3d-progress-indeterminate var(--progress-bar-indeterminate-animation-duration) infinite linear
+  );
+}
+
+progress.v3d-progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress.v3d-progress::-webkit-progress-value {
+  background: var(--accent-copper);
+  border-radius: var(--progress-bar-radius);
+  transition: inline-size 0.3s ease;
+  animation: var(--progress-bar-animation, revert-rule);
+}
+
+progress.v3d-progress::-moz-progress-bar {
+  background: var(--accent-copper);
+  border-radius: var(--progress-bar-radius);
+  transition: inline-size 0.3s ease;
+  animation: var(--progress-bar-animation, revert-rule);
+}
+
+@keyframes v3d-progress-indeterminate {
+  from,
+  to {
+    inline-size: var(--progress-bar-indeterminate-size);
+    margin-right: auto;
+  }
+  from {
+    translate: -100%;
+  }
+  to {
+    translate: 100cqi;
+  }
+}
+
+/* Accessible toggle switch styling (modern-web-guidance: switch + dark copper pill) */
+input.v3d-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background-color: #323236;
+  border: 1px solid #454549;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent-copper);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+input.v3d-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background-color: #F5F3F0;
+  transition: transform 160ms ease;
+}
+
+input.v3d-switch:checked {
+  background-color: var(--accent-copper);
+  border-color: var(--accent-copper);
+}
+
+input.v3d-switch:checked::after {
+  transform: translateX(18px);
+}
+
+input.v3d-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+model-viewer {
+  --poster-color: transparent;
+  --progress-bar-color: #F79448;
+  --progress-bar-height: 3px;
+}

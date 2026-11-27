@@ -1,0 +1,19 @@
+{
+  "space": "microsoft/TRELLIS.2",
+  "input": "shoes.jpg",
+  "input_sha256": "877129f1c5868fc1228c13f3a7c2b8efef770dfb7c3498caa6111ce1abe201b4",
+  "started_at": "2026-11-27T20:15:51.913850+05:30",
+  "steps": [
+    {
+      "endpoint": "/start_session",
+      "seconds": 1.59
+    },
+    {
+      "endpoint": "/preprocess_image",
+      "seconds": 2.6
+    }
+  ],
+  "meshes": [],
+  "error": "AppError: You have exceeded your ZeroGPU quota (90s requested vs. 45s left). Try again in 23:59:47. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens",
+  "seconds": 7.11
+}
