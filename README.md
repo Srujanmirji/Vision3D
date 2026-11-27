@@ -12,7 +12,7 @@ The hidden sides are inferred by the AI, not measured, and sizes are estimates.
 |---|---|
 | Frontend | Next.js App Router, TypeScript, Tailwind CSS, Google model-viewer, Three.js (wireframe) |
 | Backend | FastAPI (Python 3.13), SQLite, local file storage, one in-process job queue |
-| AI generation | TripoSR on a Hugging Face Space through `gradio_client`. Vertex colours are baked into a texture on the server. |
+| AI generation | TripoSR running locally on the Mac's GPU (`scripts/setup-local-triposr.sh`), with the community Hugging Face Space as an optional fallback |
 | Hosting | Vercel Hobby (frontend), with `/api/*` proxied to the backend |
 
 No login and no billing. Each browser gets an anonymous session cookie, and models are private to that session until shared with an expiring link.
@@ -91,7 +91,7 @@ Keep provider tokens (`HF_TOKEN`) in the backend environment only, never in `NEX
 
 ## Current status and limits
 
-- **Generation:** works through the public URL, taking 90–130 s per photo in tests.
+- **Generation:** about 26–29 s per photo with local TripoSR on an Apple M5, through the public URL (90–130 s on the community Space).
 - **Sharing:** share links and the desktop QR handoff have been verified.
 - **Phones:** AR on real iPhone and Android devices (Quick Look, Scene Viewer and WebXR) is **not yet tested**. See [AR_DEVICE_TESTING.md](AR_DEVICE_TESTING.md).
 - **Provider:** generation depends on a community Hugging Face Space the project doesn't control. Hugging Face now needs a paid plan to create your own Gradio or Docker Space.

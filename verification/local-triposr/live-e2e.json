@@ -1,0 +1,66 @@
+{
+  "origin": "https://vision3d-sigma.vercel.app",
+  "started": "2026-11-28T00:19:58+0530",
+  "large_upload": {
+    "bytes": 20311474,
+    "status": 413,
+    "body": {
+      "error": {
+        "code": "INVALID_IMAGE",
+        "message": "The upload exceeds the size limit."
+      }
+    }
+  },
+  "submit": {
+    "status": 202,
+    "seconds": 0.67
+  },
+  "poll_errors": [
+    "ReadTimeout"
+  ],
+  "job": {
+    "status": "succeeded",
+    "stages": [
+      "provider_preprocessing",
+      "provider_running",
+      "complete"
+    ],
+    "error": null,
+    "seconds": 29.0
+  },
+  "model": {
+    "triangles": 63718,
+    "vertices": 49988,
+    "byte_size": 3922096,
+    "appearance": "native_texture",
+    "glb_url": "https://vision3d-sigma.vercel.app/api/v1/models/201e66e35a5d1e80eedaa7071a53d696/glb"
+  },
+  "share": {
+    "mobile_url": "https://vision3d-sigma.vercel.app/ar/NJEjw6G2hXi6XHb8TrQdBhflMcTaey5z",
+    "expires_at": "2026-11-27T19:50:35.359314+00:00"
+  },
+  "guest": {
+    "page_status": 200,
+    "page_headers": {
+      "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "referrer-policy": "no-referrer",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "glb_url": "https://vision3d-sigma.vercel.app/api/v1/share/NJEjw6G2hXi6XHb8TrQdBhflMcTaey5z/glb",
+    "glb_status": 200,
+    "glb_magic": "glTF",
+    "glb_bytes": 3922096,
+    "glb_headers": {
+      "content-type": "model/gltf-binary",
+      "cache-control": "private, no-store",
+      "access-control-allow-origin": "*",
+      "accept-ranges": null,
+      "x-vercel-cache": "MISS"
+    },
+    "head_status": 200,
+    "range_status": 206,
+    "content_range": "bytes 0-11/3922096",
+    "private_glb_without_cookie": 404
+  },
+  "after_delete_share_status": 404
+}

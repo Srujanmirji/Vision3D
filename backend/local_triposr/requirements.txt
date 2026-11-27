@@ -1,0 +1,19 @@
+# Separate environment for local TripoSR (not the backend's). Versions verified on Apple Silicon, 2026-11-28.
+torch==2.15.0
+# transformers 5.x renamed the ViT layers and cannot load TripoSR's weights.
+transformers==4.57.6
+omegaconf==2.4.0
+einops==0.8.2
+trimesh==5.2.2
+huggingface_hub==0.36.2
+pillow==13.0.0
+numpy==2.5.5
+rembg[cpu]==2.0.88
+onnxruntime==1.32.0
+moderngl==5.13.0
+xatlas==0.0.11
+# Build tools for torchmcubes (compiled from source in setup-local-triposr.sh).
+scikit-build-core
+pybind11==3.1.0
+cmake==4.4.5
+ninja==1.13.2

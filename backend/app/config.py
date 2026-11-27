@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 class Settings:
     data: Path = Path("data")
     primary_space: str | None = None
+    local_home: Path | None = None
     community_demo: bool = False
     shape_fallback: bool = False
     hf_token: str | None = None
@@ -37,6 +38,12 @@ class Settings:
             for value in (self.deadline, self.queue_timeout, self.attempt_timeout, self.prune_interval)
         ):
             raise ValueError("Backend time limits must be finite")
+        if self.local_home and not (
+            (self.local_home / "venv" / "bin" / "python").is_file() and (self.local_home / "TripoSR").is_dir()
+        ):
+            raise ValueError(
+                "LOCAL_TRIPOSR_HOME must contain venv/ and TripoSR/; run scripts/setup-local-triposr.sh"
+            )
         if self.primary_space and not re.fullmatch(r"[\w.-]+/[\w.-]+", self.primary_space, re.ASCII):
             raise ValueError("TRIPOSR_SPACE must be a Hugging Face Space ID")
         if self.public_app:
@@ -85,6 +92,7 @@ class Settings:
         return cls(
             data=Path(os.getenv("VISION3D_DATA_DIR", "data")),
             primary_space=os.getenv("TRIPOSR_SPACE") or None,
+            local_home=Path(os.environ["LOCAL_TRIPOSR_HOME"]).expanduser() if os.getenv("LOCAL_TRIPOSR_HOME") else None,
             community_demo=os.getenv("VISION3D_COMMUNITY_DEMO") == "1",
             shape_fallback=os.getenv("VISION3D_SHAPE_FALLBACK") == "1",
             hf_token=os.getenv("HF_TOKEN") or None,

@@ -110,6 +110,24 @@ On a shared Caddy host, import a separate site configuration instead of replacin
 
 The API accepts browser mutations from the configured frontend origin. Owner operations use a Secure, HttpOnly session cookie. Read-only assets use expiring, revocable URLs. Shared GLBs return `model/gltf-binary`, support GET, HEAD and byte ranges, and have public asset CORS with no-store caching. Model Viewer generates a `model/vnd.usdz+zip` Blob for Quick Look on supported iPhones. There is no HTTP USDZ endpoint. The export dialog's **Download USDZ** button runs the same three.js converter in the user's browser, so no server MIME setup is needed for USDZ.
 
+## Local TripoSR (recommended on a Mac)
+
+Run generation on the Mac itself instead of the community Hugging Face Space: about 26 s per photo on an Apple M5, versus 90–130 s on the community Space. The M1 Air hasn't been measured.
+- It needs no queue or quota, and photos stay on the machine unless the fallback is used.
+- The model is TripoSR (MIT) on the Apple GPU (MPS), with `u2net` (Apache-2.0) for background removal. rembg's newer default model is non-commercial and is not used.
+
+```sh
+sh scripts/setup-local-triposr.sh   # once: ~3 GB (code, PyTorch, models), compiles torchmcubes
+# then start the backend with:
+LOCAL_TRIPOSR_HOME=~/vision3d-triposr  # plus the usual variables
+```
+
+- **Pipeline:** each job runs `backend/local_triposr/prep.py`, then `infer.py`, in that separate environment. The output is a 256-resolution mesh with a 2048 px baked texture, about 64k triangles and 4 MB.
+- **Offline:** jobs run with `HF_HUB_OFFLINE=1`, and the setup script pre-downloads the models.
+- **Fallback:** with `VISION3D_COMMUNITY_DEMO=1` also set, the community Space is used if local generation fails. Users are then still asked for consent to send photos to Hugging Face. Without any hosted provider, no consent is required.
+- **Bad install:** if `LOCAL_TRIPOSR_HOME` is set but incomplete, the backend refuses to start and names the setup script.
+- **Pins:** the setup pins `transformers` 4.57. Version 5 cannot load TripoSR's weights.
+
 ## Demo backend on a laptop (Quick Tunnel)
 
 This is the zero-cost option used for the live test on 27 November 2026. Vercel serves the frontend, and the FastAPI backend runs on the presenter's Mac behind a Cloudflare Quick Tunnel. It is suitable for a demo, not for durable hosting:

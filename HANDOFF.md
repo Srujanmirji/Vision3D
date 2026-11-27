@@ -1,5 +1,34 @@
 # Vision3D engineering handoff
 
+## Local TripoSR provider — 28 November 2026
+
+Generation now runs on the Mac's GPU when `LOCAL_TRIPOSR_HOME` is set. The community Space becomes an automatic fallback if it is enabled.
+
+**Setup and pipeline:**
+- `scripts/setup-local-triposr.sh` installs a separate environment with pinned versions, the official TripoSR code at `107cefd`, a compiled `torchmcubes`, and both models.
+- `backend/local_triposr/prep.py` runs u2net background removal in its own process, because rembg and torch load two OpenMP runtimes.
+- `backend/local_triposr/infer.py` runs TripoSR on MPS, removes degenerate faces and bakes a 2048 px texture.
+
+**macOS fixes in `infer.py`:**
+- the marching-cubes volume goes to the CPU
+- the texture baker's query points go to the model device
+- the output is rotated to glTF Y-up, like TripoSR's demo
+
+**Backend:**
+- New `local` provider kind (`providers.invoke_local`). Child processes are killed on timeout or cancel, with no HF token and with offline Hugging Face.
+- Provider chain: local, then the hosted Space, then optional Hunyuan.
+- Consent is required only if a hosted provider is in the chain.
+
+**Verified:**
+- **Live:** a real sneaker through https://vision3d-sigma.vercel.app ran on `triposr-local` and succeeded in 29.0 s end to end (26.0 s in the backend), versus 127.6 s before. The result was 63,718 triangles, 3.9 MB, with a native texture. Share, range, cookie and delete checks passed ([evidence](verification/local-triposr)).
+- **Tests:** 6 new backend tests (30 total) use a fake TripoSR environment: order, startup check, offline and no-token env, skipping background removal, failure mapping, consent scope. Ruff and mypy pass.
+
+**Not verified:**
+- The client's M1 Air: speed, and memory with 8 GB.
+- Quality: same model as before. The baked texture is only slightly sharper (see the comparison renders), not photo-real.
+
+**Known gap:** the UI consent checkbox still mentions the hosted provider even when only local is configured.
+
 ## Phone upload timeout fix — 27 November 2026
 
 **Bug found on a real iPhone:** a 3024 × 4032 photo sent from `/capture/<token>` failed with "The server did not respond in time", and the photo never reached the backend.

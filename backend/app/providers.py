@@ -1,6 +1,7 @@
 import json
 import os
 import signal
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -13,7 +14,10 @@ import httpx
 from .mesh import finish_mesh
 from .schemas import Failure
 
-Kind = Literal["triposr", "hunyuan"]
+Kind = Literal["triposr", "hunyuan", "local"]
+LOCAL_SCRIPTS = Path(__file__).resolve().parents[1] / "local_triposr"
+LOCAL_MESH_RESOLUTION = 256  # 384 is smoother but exceeds the 100k-triangle phone budget
+LOCAL_TEXTURE_RESOLUTION = 2048
 COMMUNITY = "AleenDG/3DGenTripoSR"
 HUNYUAN = "tencent/Hunyuan3D-2"
 
@@ -64,7 +68,51 @@ def download(client: Any, data: dict[str, Any], output: Path, limit: int) -> Non
                 file.write(chunk)
 
 
+def run_child(args: list[str], env: dict[str, str]) -> None:
+    """Run one step of the local pipeline, and stop it if this worker is terminated (timeout/cancel)."""
+    child = subprocess.Popen(args, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def stop(_signum: int, _frame: Any) -> None:
+        child.kill()
+        raise SystemExit(143)
+
+    previous = signal.signal(signal.SIGTERM, stop)
+    try:
+        if child.wait() != 0:
+            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR failed.", 503)
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+def invoke_local(home: Path, image: Path, folder: Path, remove: bool, limit: int) -> None:
+    """TripoSR on this machine: background removal and inference run in the TripoSR environment."""
+    python = str(home / "venv" / "bin" / "python")
+    env = {k: v for k, v in os.environ.items() if k != "HF_TOKEN"}
+    # Models are downloaded by setup-local-triposr.sh; never fetch during a job.
+    env.update(TRIPOSR_CODE=str(home / "TripoSR"), HF_HUB_OFFLINE="1", PYTORCH_ENABLE_MPS_FALLBACK="1")
+    prepared = image
+    if remove:
+        send(stage="provider_preprocessing")
+        prepared = folder / "foreground.png"
+        run_child([python, str(LOCAL_SCRIPTS / "prep.py"), str(image), str(prepared)], env)
+    send(stage="provider_running")
+    raw = folder / "raw.glb"
+    run_child(
+        [
+            python, str(LOCAL_SCRIPTS / "infer.py"), str(prepared), str(raw),
+            str(LOCAL_MESH_RESOLUTION), str(LOCAL_TEXTURE_RESOLUTION),
+        ],
+        env,
+    )
+    send(stage="validating")
+    info = finish_mesh(raw, folder / "model.glb", limit, allow_shape=False)
+    send(info=info.model_dump())
+
+
 def invoke(kind: Kind, space: str, image: Path, folder: Path, remove: bool, limit: int) -> None:
+    if kind == "local":
+        invoke_local(Path(space), image, folder, remove, limit)
+        return
     # Gradio imports and credentials are isolated to this short-lived worker.
     os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
     from gradio_client import Client, handle_file  # type: ignore[import-untyped]
@@ -139,7 +187,7 @@ def invoke(kind: Kind, space: str, image: Path, folder: Path, remove: bool, limi
 def main() -> None:
     kind, space, filename, folder, remove, limit = sys.argv[1:]
     try:
-        if kind not in ("triposr", "hunyuan"):
+        if kind not in ("triposr", "hunyuan", "local"):
             raise ValueError("Unknown provider kind")
         invoke(cast(Kind, kind), space, Path(filename), Path(folder), remove == "1", int(limit))
     except Failure as exc:
