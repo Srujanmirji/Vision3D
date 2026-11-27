@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Camera, ImagePlus, Smartphone, Sparkles, Upload, X } from "lucide-react";
 import { CameraCaptureDialog } from "./CameraCaptureDialog";
 import { PhotoTips } from "./PhotoTips";
+import { originalPhotoLimit } from "@/lib/uploadImage";
 import { PhoneCaptureDialog } from "./PhoneCaptureDialog";
 import type { ProviderCapability } from "@/lib/api";
 import {
@@ -71,7 +72,7 @@ export function ImageInputPanel({
   const handleFile = async (file?: File) => {
     if (isGenerating || !file) return;
     setValidationError(null);
-    const result = await validateImageFile(file, maxUploadBytes);
+    const result = await validateImageFile(file, originalPhotoLimit(maxUploadBytes));
     if (!result.ok) {
       setValidationError(result.error.message);
       return;
@@ -118,7 +119,7 @@ export function ImageInputPanel({
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-ink-primary">Input Image</h2>
           <span className="text-[11px] text-ink-secondary">
-            JPEG, PNG, WebP · ≤ {formatBytes(maxUploadBytes)}
+            JPEG, PNG, WebP · ≤ {formatBytes(originalPhotoLimit(maxUploadBytes))}
           </span>
         </div>
 

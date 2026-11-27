@@ -1,5 +1,22 @@
 # Vision3D engineering handoff
 
+## Phone upload timeout fix — 27 November 2026
+
+**Bug found on a real iPhone:** a 3024 × 4032 photo sent from `/capture/<token>` failed with "The server did not respond in time", and the photo never reached the backend.
+- Every API request had a fixed 30 s limit, and the full-size photo (several MB) couldn't finish uploading over the phone → Vercel → tunnel path in that time.
+- Photos over 10 MB were also rejected in the browser before they could be shrunk.
+
+**Fix (`frontend/lib/uploadImage.ts`, `frontend/lib/api.ts`):**
+- Desktop and phone uploads are re-encoded in the browser to at most 2048 px, as JPEG (PNG keeps transparency). The backend reduces inputs to 1024 px anyway.
+- Re-encoding also drops EXIF location data on the device. The server still strips metadata as well.
+- Uploads get a 120 s limit, with an "upload took too long" message. Other requests keep 30 s.
+- The browser accepts originals up to 30 MB. The server's 10 MB limit applies to the shrunk upload.
+
+**Verified:**
+- Headless Chrome on the real `/create` page posted a 6.6 MB, 12 MP JPEG as a 1.8 MB, 1536 × 2048 JPEG with no EXIF, and an 11.8 MB photo as 1.9 MB.
+- 55 frontend tests (6 new), tsc, eslint and the build pass.
+- **Not yet re-tested on the iPhone.**
+
 ## Phone-to-desktop photo capture — 27 November 2026
 
 On a computer, **Use Phone** next to Browse Files and Take Photo opens a QR code; the button shows from tablet width up. Scanning it opens `/capture/<token>` on the phone. There you take a photo or pick one from the gallery, see the photo tips, tick consent and tap **Send to Computer**. The computer then switches to the normal generation progress through `/create?job=<id>`, and the model appears there.
