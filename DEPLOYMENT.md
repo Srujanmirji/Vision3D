@@ -1,0 +1,4 @@
+# Deployment
+Target zero cost within quotas, not guaranteed. Frontend: Vercel or equivalent HTTPS host. Backend/worker: free host if runtime and queue constraints allow; otherwise local demo via HTTPS tunnel. Storage: Supabase free tier if available. Verify current terms and quotas before deployment. Do not enable billing automatically.
+
+Environment examples: NEXT_PUBLIC_API_BASE_URL, PUBLIC_APP_URL, ALLOWED_ORIGINS, HF_TOKEN (optional), AI_PROVIDER, AI_SPACE_ID, DATABASE_URL, STORAGE_BUCKET, STORAGE credentials, SHARE_TTL_SECONDS. Keep secret values backend-only. Configure HTTPS, CORS, rate limits, cleanup and logs without sensitive image data. Validate deployed URLs on actual phone. Document startup and recovery steps. Free hosts may sleep or terminate jobs; use durable worker and persisted state or disclose demo limitations.

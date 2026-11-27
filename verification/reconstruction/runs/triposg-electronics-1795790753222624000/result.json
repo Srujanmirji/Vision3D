@@ -1,0 +1,19 @@
+{
+  "space": "VAST-AI/TripoSG",
+  "input": "electronics.jpg",
+  "input_sha256": "af29f0864f563f3f02c8fd2a444d5c59bfab9412fbf90b31832a2a49a702db4b",
+  "started_at": "2026-11-27T20:15:53.222876+05:30",
+  "steps": [
+    {
+      "endpoint": "/start_session",
+      "seconds": 1.58
+    },
+    {
+      "endpoint": "/run_segmentation",
+      "seconds": 2.68
+    }
+  ],
+  "meshes": [],
+  "error": "AppError: You have exceeded your ZeroGPU quota (60s requested vs. 45s left). Try again in 23:59:47. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens",
+  "seconds": 6.9
+}

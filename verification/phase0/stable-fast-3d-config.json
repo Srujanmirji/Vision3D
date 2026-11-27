@@ -1,0 +1,1369 @@
+{
+  "version": "4.41.0",
+  "mode": "blocks",
+  "app_id": 3028373710100397565,
+  "dev_mode": false,
+  "analytics_enabled": true,
+  "components": [
+    {
+      "id": 1,
+      "type": "state",
+      "props": {
+        "time_to_live": null,
+        "delete_callback": "<function State.__init__.<locals>.<lambda> at 0x7f43e259c8b0>",
+        "name": "state",
+        "_selectable": false
+      },
+      "skip_api": true,
+      "component_class_id": "52234f8c5f6f16893853acd5e503a8a8",
+      "key": null
+    },
+    {
+      "id": 2,
+      "type": "state",
+      "props": {
+        "time_to_live": null,
+        "delete_callback": "<function State.__init__.<locals>.<lambda> at 0x7f4459180280>",
+        "name": "state",
+        "_selectable": false
+      },
+      "skip_api": true,
+      "component_class_id": "52234f8c5f6f16893853acd5e503a8a8",
+      "key": null
+    },
+    {
+      "id": 3,
+      "type": "markdown",
+      "props": {
+        "value": "# SF3D: Stable Fast 3D Mesh Reconstruction with UV-unwrapping and Illumination Disentanglement\n\n**SF3D** is a state-of-the-art method for 3D mesh reconstruction from a single image.\nThis demo allows you to upload an image and generate a 3D mesh model from it.\n\n**Tips**\n1. If the image already has an alpha channel, you can skip the background removal step.\n2. You can adjust the foreground ratio to control the size of the foreground object. This can influence the shape\n3. You can select the remeshing option to control the mesh topology. This can introduce artifacts in the mesh on thin surfaces and should be turned off in such cases.\n4. You can upload your own HDR environment map to light the 3D model.",
+        "show_label": true,
+        "rtl": false,
+        "latex_delimiters": [
+          {
+            "left": "$$",
+            "right": "$$",
+            "display": true
+          }
+        ],
+        "visible": true,
+        "elem_classes": [],
+        "sanitize_html": true,
+        "line_breaks": false,
+        "header_links": false,
+        "show_copy_button": false,
+        "name": "markdown",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "0f35515b9a3362b42bb6721c836157a0",
+      "key": null,
+      "api_info": {
+        "type": "string"
+      },
+      "example_inputs": "# Hello!"
+    },
+    {
+      "id": 4,
+      "type": "row",
+      "props": {
+        "variant": "panel",
+        "visible": true,
+        "equal_height": true,
+        "show_progress": false,
+        "name": "row"
+      },
+      "skip_api": true,
+      "component_class_id": "b5cf3d15e2293fb5ccc071d7b8d69f64",
+      "key": null
+    },
+    {
+      "id": 5,
+      "type": "column",
+      "props": {
+        "scale": 1,
+        "min_width": 320,
+        "variant": "default",
+        "visible": true,
+        "show_progress": false,
+        "name": "column"
+      },
+      "skip_api": true,
+      "component_class_id": "214e3d6261b9edacc5d34ea4e8655821",
+      "key": null
+    },
+    {
+      "id": 6,
+      "type": "row",
+      "props": {
+        "variant": "default",
+        "visible": true,
+        "equal_height": true,
+        "show_progress": false,
+        "name": "row"
+      },
+      "skip_api": true,
+      "component_class_id": "b5cf3d15e2293fb5ccc071d7b8d69f64",
+      "key": null
+    },
+    {
+      "id": 7,
+      "type": "image",
+      "props": {
+        "streamable": false,
+        "format": "webp",
+        "image_mode": "RGBA",
+        "sources": [
+          "upload"
+        ],
+        "type": "pil",
+        "label": "Input Image",
+        "show_label": true,
+        "show_download_button": true,
+        "container": true,
+        "min_width": 160,
+        "visible": true,
+        "streaming": false,
+        "elem_classes": [],
+        "mirror_webcam": true,
+        "show_share_button": true,
+        "show_fullscreen_button": true,
+        "name": "image",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "e02a10e58bbfd8f31d34ac63d2888247",
+      "key": null,
+      "api_info": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size"
+          },
+          "orig_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Orig Name"
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mime Type"
+          },
+          "is_stream": {
+            "default": false,
+            "title": "Is Stream",
+            "type": "boolean"
+          },
+          "meta": {
+            "default": {
+              "_type": "gradio.FileData"
+            },
+            "title": "Meta",
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "FileData",
+        "type": "object"
+      },
+      "example_inputs": {
+        "path": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png",
+        "meta": {
+          "_type": "gradio.FileData"
+        },
+        "orig_name": "bus.png",
+        "url": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png"
+      }
+    },
+    {
+      "id": 8,
+      "type": "image",
+      "props": {
+        "streamable": false,
+        "format": "webp",
+        "image_mode": "RGB",
+        "sources": [
+          "upload",
+          "webcam",
+          "clipboard"
+        ],
+        "type": "pil",
+        "label": "Preview Background Removal",
+        "show_label": true,
+        "show_download_button": true,
+        "container": true,
+        "min_width": 160,
+        "interactive": false,
+        "visible": false,
+        "streaming": false,
+        "elem_classes": [],
+        "mirror_webcam": true,
+        "show_share_button": true,
+        "show_fullscreen_button": true,
+        "name": "image",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "e02a10e58bbfd8f31d34ac63d2888247",
+      "key": null,
+      "api_info": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size"
+          },
+          "orig_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Orig Name"
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mime Type"
+          },
+          "is_stream": {
+            "default": false,
+            "title": "Is Stream",
+            "type": "boolean"
+          },
+          "meta": {
+            "default": {
+              "_type": "gradio.FileData"
+            },
+            "title": "Meta",
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "FileData",
+        "type": "object"
+      },
+      "example_inputs": {
+        "path": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png",
+        "meta": {
+          "_type": "gradio.FileData"
+        },
+        "orig_name": "bus.png",
+        "url": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png"
+      }
+    },
+    {
+      "id": 9,
+      "type": "slider",
+      "props": {
+        "minimum": 0.5,
+        "maximum": 1.0,
+        "value": 0.85,
+        "step": 0.05,
+        "label": "Foreground Ratio",
+        "show_label": true,
+        "container": true,
+        "min_width": 160,
+        "visible": true,
+        "elem_classes": [],
+        "name": "slider",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "1bc15a255bbbd15b85b58706accd599f",
+      "key": null,
+      "api_info": {
+        "type": "number",
+        "description": "numeric value between 0.5 and 1.0"
+      },
+      "example_inputs": 0.5
+    },
+    {
+      "id": 10,
+      "type": "radio",
+      "props": {
+        "choices": [
+          [
+            "None",
+            "None"
+          ],
+          [
+            "Triangle",
+            "Triangle"
+          ],
+          [
+            "Quad",
+            "Quad"
+          ]
+        ],
+        "value": "None",
+        "type": "value",
+        "label": "Remeshing",
+        "show_label": true,
+        "container": true,
+        "min_width": 160,
+        "visible": true,
+        "elem_classes": [],
+        "name": "radio",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "f5aead314f9cd4ed6fa88ab959271083",
+      "key": null,
+      "api_info": {
+        "enum": [
+          "None",
+          "Triangle",
+          "Quad"
+        ],
+        "title": "Radio",
+        "type": "string"
+      },
+      "example_inputs": "None"
+    },
+    {
+      "id": 11,
+      "type": "slider",
+      "props": {
+        "minimum": -1,
+        "maximum": 20000,
+        "value": -1,
+        "step": 100,
+        "label": "Target Vertex Count",
+        "show_label": true,
+        "container": true,
+        "min_width": 160,
+        "visible": true,
+        "elem_classes": [],
+        "name": "slider",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "1bc15a255bbbd15b85b58706accd599f",
+      "key": null,
+      "api_info": {
+        "type": "number",
+        "description": "numeric value between -1 and 20000"
+      },
+      "example_inputs": -1
+    },
+    {
+      "id": 12,
+      "type": "slider",
+      "props": {
+        "minimum": 512,
+        "maximum": 2048,
+        "value": 1024,
+        "step": 256,
+        "label": "Texture Size",
+        "show_label": true,
+        "container": true,
+        "min_width": 160,
+        "visible": true,
+        "elem_classes": [],
+        "name": "slider",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "1bc15a255bbbd15b85b58706accd599f",
+      "key": null,
+      "api_info": {
+        "type": "number",
+        "description": "numeric value between 512 and 2048"
+      },
+      "example_inputs": 512
+    },
+    {
+      "id": 13,
+      "type": "button",
+      "props": {
+        "value": "Run",
+        "variant": "primary",
+        "visible": false,
+        "interactive": true,
+        "elem_classes": [],
+        "name": "button",
+        "_selectable": false
+      },
+      "skip_api": true,
+      "component_class_id": "43ff9969f0bf4553b77ca8dc5b4850bc",
+      "key": null
+    },
+    {
+      "id": 14,
+      "type": "form",
+      "props": {
+        "scale": 0,
+        "min_width": 0,
+        "name": "form"
+      },
+      "skip_api": true,
+      "component_class_id": "43cda85c6ff7a5dd8f83d29496b014ee",
+      "key": null
+    },
+    {
+      "id": 15,
+      "type": "column",
+      "props": {
+        "scale": 1,
+        "min_width": 320,
+        "variant": "default",
+        "visible": true,
+        "show_progress": false,
+        "name": "column"
+      },
+      "skip_api": true,
+      "component_class_id": "214e3d6261b9edacc5d34ea4e8655821",
+      "key": null
+    },
+    {
+      "id": 16,
+      "type": "litmodel3d",
+      "props": {
+        "tonemapping": "aces",
+        "exposure": 1.0,
+        "contrast": 1.0,
+        "clear_color": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "camera_position": [
+          null,
+          null,
+          null
+        ],
+        "zoom_speed": 1,
+        "pan_speed": 1,
+        "label": "3D Model",
+        "show_label": true,
+        "container": true,
+        "scale": 1.0,
+        "min_width": 160,
+        "visible": false,
+        "elem_classes": [],
+        "name": "litmodel3d",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "a0d9ff7c853169d9a909651a79af15a9",
+      "key": null,
+      "api_info": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size"
+          },
+          "orig_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Orig Name"
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mime Type"
+          },
+          "is_stream": {
+            "default": false,
+            "title": "Is Stream",
+            "type": "boolean"
+          },
+          "meta": {
+            "default": {
+              "_type": "gradio.FileData"
+            },
+            "title": "Meta",
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "FileData",
+        "type": "object"
+      },
+      "example_inputs": {
+        "path": "https://raw.githubusercontent.com/gradio-app/gradio/main/demo/model3D/files/Fox.gltf",
+        "meta": {
+          "_type": "gradio.FileData"
+        },
+        "orig_name": "Fox.gltf",
+        "url": "https://raw.githubusercontent.com/gradio-app/gradio/main/demo/model3D/files/Fox.gltf"
+      }
+    },
+    {
+      "id": 17,
+      "type": "column",
+      "props": {
+        "scale": 1.0,
+        "min_width": 320,
+        "variant": "default",
+        "visible": false,
+        "show_progress": false,
+        "name": "column"
+      },
+      "skip_api": true,
+      "component_class_id": "214e3d6261b9edacc5d34ea4e8655821",
+      "key": null
+    },
+    {
+      "id": 18,
+      "type": "markdown",
+      "props": {
+        "value": "## HDR Environment Map\n\nSelect an HDR environment map to light the 3D model. You can also upload your own HDR environment maps.",
+        "show_label": true,
+        "rtl": false,
+        "latex_delimiters": [
+          {
+            "left": "$$",
+            "right": "$$",
+            "display": true
+          }
+        ],
+        "visible": true,
+        "elem_classes": [],
+        "sanitize_html": true,
+        "line_breaks": false,
+        "header_links": false,
+        "show_copy_button": false,
+        "name": "markdown",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "0f35515b9a3362b42bb6721c836157a0",
+      "key": null,
+      "api_info": {
+        "type": "string"
+      },
+      "example_inputs": "# Hello!"
+    },
+    {
+      "id": 19,
+      "type": "row",
+      "props": {
+        "variant": "default",
+        "visible": true,
+        "equal_height": true,
+        "show_progress": false,
+        "name": "row"
+      },
+      "skip_api": true,
+      "component_class_id": "b5cf3d15e2293fb5ccc071d7b8d69f64",
+      "key": null
+    },
+    {
+      "id": 20,
+      "type": "file",
+      "props": {
+        "file_count": "single",
+        "file_types": [
+          ".hdr"
+        ],
+        "type": "filepath",
+        "label": "HDR Env Map",
+        "show_label": true,
+        "container": true,
+        "min_width": 160,
+        "visible": true,
+        "elem_classes": [],
+        "name": "file",
+        "_selectable": false
+      },
+      "skip_api": false,
+      "component_class_id": "fed677f4bbc735153dbb84b5ccf06aaa",
+      "key": null,
+      "api_info": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size"
+          },
+          "orig_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Orig Name"
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mime Type"
+          },
+          "is_stream": {
+            "default": false,
+            "title": "Is Stream",
+            "type": "boolean"
+          },
+          "meta": {
+            "default": {
+              "_type": "gradio.FileData"
+            },
+            "title": "Meta",
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "FileData",
+        "type": "object"
+      },
+      "example_inputs": {
+        "path": "https://github.com/gradio-app/gradio/raw/main/test/test_files/sample_file.pdf",
+        "meta": {
+          "_type": "gradio.FileData"
+        },
+        "orig_name": "sample_file.pdf",
+        "url": "https://github.com/gradio-app/gradio/raw/main/test/test_files/sample_file.pdf"
+      }
+    },
+    {
+      "id": 21,
+      "type": "dataset",
+      "props": {
+        "component_props": [
+          {
+            "file_count": "single",
+            "file_types": [
+              ".hdr"
+            ],
+            "type": "filepath",
+            "label": "HDR Env Map",
+            "show_label": true,
+            "container": true,
+            "scale": null,
+            "min_width": 160,
+            "height": null,
+            "interactive": null,
+            "visible": true,
+            "elem_id": null,
+            "elem_classes": [],
+            "key": null
+          }
+        ],
+        "samples": [
+          [
+            "abandoned_tiled_room_1k.hdr"
+          ],
+          [
+            "metro_noord_1k.hdr"
+          ],
+          [
+            "neon_photostudio_1k.hdr"
+          ],
+          [
+            "peppermint_powerplant_1k.hdr"
+          ],
+          [
+            "rainforest_trail_1k.hdr"
+          ],
+          [
+            "studio_small_08_1k.hdr"
+          ],
+          [
+            "urban_alley_01_1k.hdr"
+          ]
+        ],
+        "headers": [
+          "HDR Env Map"
+        ],
+        "type": "tuple",
+        "samples_per_page": 10,
+        "visible": true,
+        "elem_classes": [],
+        "container": true,
+        "min_width": 160,
+        "name": "dataset",
+        "_selectable": false,
+        "components": [
+          "file"
+        ],
+        "component_ids": [
+          20
+        ]
+      },
+      "skip_api": false,
+      "component_class_id": "c72c93119b395a3f608fa8223dcae838",
+      "key": null,
+      "api_info": {
+        "type": "integer",
+        "description": "index of selected example"
+      },
+      "example_inputs": 0
+    },
+    {
+      "id": 22,
+      "type": "dataset",
+      "props": {
+        "component_props": [
+          {
+            "format": "webp",
+            "height": null,
+            "width": null,
+            "image_mode": "RGBA",
+            "sources": [
+              "upload"
+            ],
+            "type": "pil",
+            "label": "Input Image",
+            "show_label": true,
+            "show_download_button": true,
+            "container": true,
+            "scale": null,
+            "min_width": 160,
+            "interactive": null,
+            "visible": true,
+            "streaming": false,
+            "elem_id": null,
+            "elem_classes": [],
+            "key": null,
+            "mirror_webcam": true,
+            "show_share_button": true,
+            "show_fullscreen_button": true
+          }
+        ],
+        "samples": [
+          [
+            {
+              "path": "/tmp/gradio/5949f60c651e71a41b7291197f91bb8be2c8861472765fc884e604e18b7806a0/animal_character.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/5949f60c651e71a41b7291197f91bb8be2c8861472765fc884e604e18b7806a0/animal_character.png",
+              "size": null,
+              "orig_name": "animal_character.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/ffc3f10c629afd64798d38dad2cc419eb343c7106149426f78634a91367bf031/animal_character_2.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/ffc3f10c629afd64798d38dad2cc419eb343c7106149426f78634a91367bf031/animal_character_2.png",
+              "size": null,
+              "orig_name": "animal_character_2.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/94be53862906806ac28367017cd9d794edf416df4d33c1bc223ef6f6eed3b39e/axe.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/94be53862906806ac28367017cd9d794edf416df4d33c1bc223ef6f6eed3b39e/axe.png",
+              "size": null,
+              "orig_name": "axe.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/2503c12a74419d91a4c6c9f1affc48fee6e2b8b9091956ca6211e91ada57b5bf/chair1.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/2503c12a74419d91a4c6c9f1affc48fee6e2b8b9091956ca6211e91ada57b5bf/chair1.png",
+              "size": null,
+              "orig_name": "chair1.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/39cccb99b31a614144a6d147f0e0a8d52b986d6e73587c6e697da07d0a7112f2/character1.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/39cccb99b31a614144a6d147f0e0a8d52b986d6e73587c6e697da07d0a7112f2/character1.png",
+              "size": null,
+              "orig_name": "character1.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/3f3c68fa49d43908f18087cde98aba486da814e938bd59909fcb70d996e9f77b/otter_samurai.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/3f3c68fa49d43908f18087cde98aba486da814e938bd59909fcb70d996e9f77b/otter_samurai.png",
+              "size": null,
+              "orig_name": "otter_samurai.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/32cc3850d9f48548882c7b148e508e8ab149bc4f363611e9739adcbd38e8b16d/raccoon_wizard.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/32cc3850d9f48548882c7b148e508e8ab149bc4f363611e9739adcbd38e8b16d/raccoon_wizard.png",
+              "size": null,
+              "orig_name": "raccoon_wizard.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/386c3be3a6f24ee52e13f130c1ebc02a1bc46eb2c0ebe90d79ce6f38751f0fc6/stylized-rocks.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/386c3be3a6f24ee52e13f130c1ebc02a1bc46eb2c0ebe90d79ce6f38751f0fc6/stylized-rocks.png",
+              "size": null,
+              "orig_name": "stylized-rocks.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ],
+          [
+            {
+              "path": "/tmp/gradio/b258278b4d85a75f9ea3f795d3692fc58304a1a3a7daf8935a9549107bfee170/tree.png",
+              "url": "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/b258278b4d85a75f9ea3f795d3692fc58304a1a3a7daf8935a9549107bfee170/tree.png",
+              "size": null,
+              "orig_name": "tree.png",
+              "mime_type": null,
+              "is_stream": false,
+              "meta": {
+                "_type": "gradio.FileData"
+              }
+            }
+          ]
+        ],
+        "headers": [
+          "Input Image"
+        ],
+        "type": "tuple",
+        "samples_per_page": 10,
+        "visible": true,
+        "elem_classes": [],
+        "container": true,
+        "min_width": 160,
+        "name": "dataset",
+        "_selectable": false,
+        "components": [
+          "image"
+        ],
+        "component_ids": [
+          7
+        ]
+      },
+      "skip_api": false,
+      "component_class_id": "c72c93119b395a3f608fa8223dcae838",
+      "key": null,
+      "api_info": {
+        "type": "integer",
+        "description": "index of selected example"
+      },
+      "example_inputs": 0
+    }
+  ],
+  "css": null,
+  "connect_heartbeat": true,
+  "js": null,
+  "head": null,
+  "title": "Gradio",
+  "space_id": "stabilityai/stable-fast-3d",
+  "enable_queue": true,
+  "show_error": false,
+  "show_api": true,
+  "is_colab": false,
+  "max_file_size": null,
+  "stylesheets": [
+    "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap",
+    "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap"
+  ],
+  "theme": "default",
+  "protocol": "sse_v3",
+  "body_css": {
+    "body_background_fill": "white",
+    "body_text_color": "#1f2937",
+    "body_background_fill_dark": "#0b0f19",
+    "body_text_color_dark": "#f3f4f6"
+  },
+  "fill_height": false,
+  "fill_width": false,
+  "theme_hash": "aa3cf5a76ff4ff3d05b407358c4a85aa7a55a3f5751b53d49cba0b8d49a6c148",
+  "layout": {
+    "id": 0,
+    "children": [
+      {
+        "id": 1
+      },
+      {
+        "id": 2
+      },
+      {
+        "id": 3
+      },
+      {
+        "id": 4,
+        "children": [
+          {
+            "id": 5,
+            "children": [
+              {
+                "id": 6,
+                "children": [
+                  {
+                    "id": 7
+                  },
+                  {
+                    "id": 8
+                  }
+                ]
+              },
+              {
+                "id": 14,
+                "children": [
+                  {
+                    "id": 9
+                  },
+                  {
+                    "id": 10
+                  },
+                  {
+                    "id": 11
+                  },
+                  {
+                    "id": 12
+                  }
+                ]
+              },
+              {
+                "id": 13
+              }
+            ]
+          },
+          {
+            "id": 15,
+            "children": [
+              {
+                "id": 16
+              },
+              {
+                "id": 17,
+                "children": [
+                  {
+                    "id": 18
+                  },
+                  {
+                    "id": 19,
+                    "children": [
+                      {
+                        "id": 20
+                      },
+                      {
+                        "id": 21
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 22
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "id": 0,
+      "targets": [
+        [
+          9,
+          "change"
+        ]
+      ],
+      "inputs": [
+        1,
+        9
+      ],
+      "outputs": [
+        2,
+        8
+      ],
+      "backend_fn": true,
+      "js": null,
+      "queue": true,
+      "api_name": "update_foreground_ratio",
+      "scroll_to_output": false,
+      "show_progress": "full",
+      "batch": false,
+      "max_batch_size": 4,
+      "cancels": [],
+      "types": {
+        "generator": false,
+        "cancel": false
+      },
+      "collects_event_data": false,
+      "trigger_after": null,
+      "trigger_only_on_success": false,
+      "trigger_mode": "always_last",
+      "show_api": true,
+      "zerogpu": false,
+      "rendered_in": null
+    },
+    {
+      "id": 1,
+      "targets": [
+        [
+          21,
+          "click"
+        ]
+      ],
+      "inputs": [
+        21
+      ],
+      "outputs": [
+        20
+      ],
+      "backend_fn": true,
+      "js": null,
+      "queue": false,
+      "api_name": "load_example",
+      "scroll_to_output": false,
+      "show_progress": "hidden",
+      "batch": false,
+      "max_batch_size": 4,
+      "cancels": [],
+      "types": {
+        "generator": false,
+        "cancel": false
+      },
+      "collects_event_data": false,
+      "trigger_after": null,
+      "trigger_only_on_success": false,
+      "trigger_mode": "once",
+      "show_api": false,
+      "zerogpu": false,
+      "rendered_in": null
+    },
+    {
+      "id": 2,
+      "targets": [
+        [
+          20,
+          "change"
+        ]
+      ],
+      "inputs": [
+        20
+      ],
+      "outputs": [
+        16
+      ],
+      "backend_fn": true,
+      "js": null,
+      "queue": true,
+      "api_name": "lambda",
+      "scroll_to_output": false,
+      "show_progress": "full",
+      "batch": false,
+      "max_batch_size": 4,
+      "cancels": [],
+      "types": {
+        "generator": false,
+        "cancel": false
+      },
+      "collects_event_data": false,
+      "trigger_after": null,
+      "trigger_only_on_success": false,
+      "trigger_mode": "always_last",
+      "show_api": true,
+      "zerogpu": false,
+      "rendered_in": null
+    },
+    {
+      "id": 3,
+      "targets": [
+        [
+          22,
+          "click"
+        ]
+      ],
+      "inputs": [
+        22
+      ],
+      "outputs": [
+        7
+      ],
+      "backend_fn": true,
+      "js": null,
+      "queue": false,
+      "api_name": "load_example_1",
+      "scroll_to_output": false,
+      "show_progress": "hidden",
+      "batch": false,
+      "max_batch_size": 4,
+      "cancels": [],
+      "types": {
+        "generator": false,
+        "cancel": false
+      },
+      "collects_event_data": false,
+      "trigger_after": null,
+      "trigger_only_on_success": false,
+      "trigger_mode": "once",
+      "show_api": false,
+      "zerogpu": false,
+      "rendered_in": null
+    },
+    {
+      "id": 4,
+      "targets": [
+        [
+          7,
+          "change"
+        ]
+      ],
+      "inputs": [
+        7,
+        9
+      ],
+      "outputs": [
+        13,
+        1,
+        2,
+        8,
+        16,
+        17
+      ],
+      "backend_fn": true,
+      "js": null,
+      "queue": true,
+      "api_name": "requires_bg_remove",
+      "scroll_to_output": false,
+      "show_progress": "full",
+      "batch": false,
+      "max_batch_size": 4,
+      "cancels": [],
+      "types": {
+        "generator": false,
+        "cancel": false
+      },
+      "collects_event_data": false,
+      "trigger_after": null,
+      "trigger_only_on_success": false,
+      "trigger_mode": "always_last",
+      "show_api": true,
+      "zerogpu": false,
+      "rendered_in": null
+    },
+    {
+      "id": 5,
+      "targets": [
+        [
+          13,
+          "click"
+        ]
+      ],
+      "inputs": [
+        13,
+        7,
+        2,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outputs": [
+        13,
+        1,
+        2,
+        8,
+        16,
+        17
+      ],
+      "backend_fn": true,
+      "js": null,
+      "queue": true,
+      "api_name": "run_button",
+      "scroll_to_output": false,
+      "show_progress": "full",
+      "batch": false,
+      "max_batch_size": 4,
+      "cancels": [],
+      "types": {
+        "generator": false,
+        "cancel": false
+      },
+      "collects_event_data": false,
+      "trigger_after": null,
+      "trigger_only_on_success": false,
+      "trigger_mode": "once",
+      "show_api": true,
+      "zerogpu": true,
+      "rendered_in": null
+    }
+  ],
+  "root": "https://stabilityai-stable-fast-3d.hf.space",
+  "username": null
+}

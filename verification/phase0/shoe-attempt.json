@@ -1,0 +1,32 @@
+{
+  "tested_at": "2026-11-27T13:26:15.211294+00:00",
+  "provider": "stabilityai/stable-fast-3d",
+  "image": "shoe.jpg",
+  "source": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=512&fit=max",
+  "sample": true,
+  "sha256": "c21f5003684f3c2d91c768760fdcd9d7da4cea2e8c0e49d8b38b34376d3ed3e4",
+  "steps": [
+    {
+      "endpoint": "/requires_bg_remove",
+      "seconds": 2.64,
+      "result": [
+        {
+          "visible": false,
+          "value": null,
+          "__type__": "update"
+        },
+        {
+          "visible": false,
+          "__type__": "update"
+        }
+      ]
+    },
+    {
+      "endpoint": "/run_button",
+      "seconds": 2.63,
+      "error_type": "AppError",
+      "error": "The upstream Gradio app has raised an exception but has not enabled verbose error reporting. To enable, set show_error=True in launch().",
+      "status": "StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 11, 27, 18, 56, 23, 18881), progress_data=None, log=None, type='status')"
+    }
+  ]
+}

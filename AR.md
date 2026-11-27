@@ -1,0 +1,6 @@
+# Mobile camera and AR
+Use `<input type="file" accept="image/*" capture="environment">` for photo capture; offer normal file picker too. For a custom live camera preview use getUserMedia over HTTPS with explicit permission and stop tracks on exit. Neither is required for native AR.
+
+Desktop View in AR opens a QR dialog containing HTTPS /ar/{token}. Mobile scans QR using its camera and opens the model page. Render model-viewer with camera-controls, ar, ar-modes="webxr scene-viewer quick-look", src pointing to GLB and ios-src to USDZ when available. Quick Look may generate USDZ automatically for supported models; test and provide explicit USDZ if needed. AR launch requires a user tap. Native AR handles camera permission, tracking, floor placement and gestures. Native UI is OS-controlled; do not promise custom controls inside it.
+
+Use reachable HTTPS asset URLs, correct MIME types (model/gltf-binary, model/vnd.usdz+zip), sufficient expiry and CORS. Native viewers must fetch without custom auth headers. Do not encode localhost in QR. For development use an HTTPS tunnel or deployed preview; verify phone can reach assets. Detect unsupported AR and show interactive 3D fallback. Model size is estimated; allow scaling and avoid claiming measured dimensions. Test Safari on iPhone and Chrome on ARCore-capable Android. No phone camera streaming or WebRTC needed.

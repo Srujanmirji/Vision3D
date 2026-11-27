@@ -1,0 +1,4 @@
+{
+  "type": "ValueError",
+  "message": "The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this."
+}

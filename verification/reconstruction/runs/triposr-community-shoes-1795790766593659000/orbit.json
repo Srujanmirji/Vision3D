@@ -1,0 +1,59 @@
+{
+  "browser": "158.0.8127.88",
+  "shots": [
+    {
+      "angle": 0,
+      "readback": 0,
+      "filename": "orbit-0.png",
+      "sha256": "035d99eeecd506baca4e1f0795846c07d922edf66cbb3840478a4062aa12e153"
+    },
+    {
+      "angle": 45,
+      "readback": 45,
+      "filename": "orbit-45.png",
+      "sha256": "3251dbce68b9a73df55a1247d2342dcb7ee04f103e21711ebe9040aace4fe70d"
+    },
+    {
+      "angle": 90,
+      "readback": 90,
+      "filename": "orbit-90.png",
+      "sha256": "c637a96b10fa10031e8d781e1fa5a973ebe013e2685fb7025994e68cde74e247"
+    },
+    {
+      "angle": 135,
+      "readback": 135,
+      "filename": "orbit-135.png",
+      "sha256": "ab1111e5a31a8e17de334319ff0138084ff006272d666f67f56dac64fffb472f"
+    },
+    {
+      "angle": 180,
+      "readback": 180,
+      "filename": "orbit-180.png",
+      "sha256": "027308a9f3313ee2632273ae8ced27584c0c89cf251c7178fb4554286e49e8a7"
+    },
+    {
+      "angle": 225,
+      "readback": 225,
+      "filename": "orbit-225.png",
+      "sha256": "d6d60ab76fe2f7f60f6f76f49a20d687870109baf6822df8f06e6c2f767875bc"
+    },
+    {
+      "angle": 270,
+      "readback": 270,
+      "filename": "orbit-270.png",
+      "sha256": "e9f2a3d52de93fa2b76d14b39a7302ce009deffde1f1117d5e7f37865dc2c0c5"
+    },
+    {
+      "angle": 315,
+      "readback": 315,
+      "filename": "orbit-315.png",
+      "sha256": "f8e57430b9ae8fe73d3385b32b0da4c0dbe5a07b70a91ea398bd98bcc0598aed"
+    },
+    {
+      "angle": 360,
+      "readback": 360,
+      "filename": "orbit-360.png",
+      "sha256": "87ff5d524790a9169fe20530fe23eef93ceb11cfaf8c79f745e1215026802136"
+    }
+  ]
+}

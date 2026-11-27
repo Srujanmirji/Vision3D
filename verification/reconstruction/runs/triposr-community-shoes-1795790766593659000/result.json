@@ -1,0 +1,29 @@
+{
+  "space": "AleenDG/3DGenTripoSR",
+  "input": "shoes.jpg",
+  "input_sha256": "877129f1c5868fc1228c13f3a7c2b8efef770dfb7c3498caa6111ce1abe201b4",
+  "started_at": "2026-11-27T20:16:06.593795+05:30",
+  "steps": [
+    {
+      "endpoint": "/preprocess",
+      "seconds": 6.26
+    },
+    {
+      "endpoint": "/generate",
+      "seconds": 131.6
+    }
+  ],
+  "meshes": [
+    {
+      "file": "mesh-0.obj",
+      "bytes": 3425914,
+      "sha256": "11c97913d2ea5d30b77ac5c54dd5d7ba56a411d7eba60d90e7a3e2b7231d5f4a"
+    },
+    {
+      "file": "mesh-1.glb",
+      "bytes": 1276848,
+      "sha256": "7fcf85e1c0677105dd8a535df204de24864ce348db1225b310427a66c6c10eca"
+    }
+  ],
+  "seconds": 139.99
+}

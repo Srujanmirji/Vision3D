@@ -1,0 +1,36 @@
+{
+  "space": "stabilityai/stable-point-aware-3d",
+  "hub_http": 200,
+  "runtime": {
+    "stage": "BUILD_ERROR",
+    "hardware": {
+      "current": null,
+      "requested": "l4x1"
+    },
+    "gcTimeout": 86400,
+    "errorMessage": "Job failed with exit code: 1. Reason: cache miss: [run 2/2] LINK COPY --from=pipfreeze --link /pipfreeze/ /pipfreeze/\ncache miss: [run 1/2] COPY --link ./ /app\ncache miss: [pipfreeze 2/2] RUN pip freeze > /pipfreeze/freeze.txt\ncache miss: [run 1/2] LINK COPY --link ./ /app\ncache miss: [base 8/8] RUN mkdir -p /home/user && ( [ -e /home/user/app ] || ln -s /app/ /home/user/app ) || true\ncache miss: [base 7/8] RUN --mount=target=/tmp/requirements.txt,source=requirements.txt     pip install --no-cache-dir -r /tmp/requirements.txt     gradio[oauth]==4.43.0     \"uvicorn>=0.14.0\" \"websockets>=10.4\"     spaces\ncache miss: [pipfreeze 1/2] RUN mkdir -p /pipfreeze\ncache miss: [run 2/2] COPY --from=pipfreeze --link /pipfreeze/ /pipfreeze/\n{\"total\":26,\"completed\":20,\"user_total\":15,\"user_cached\":6,\"user_completed\":9,\"user_cacheable\":14,\"from\":1,\"miss\":8,\"client_duration_ms\":41785}\n",
+    "replicas": {
+      "requested": 4
+    },
+    "devMode": false,
+    "domains": [
+      {
+        "domain": "stabilityai-stable-point-aware-3d.hf.space",
+        "stage": "READY"
+      }
+    ]
+  },
+  "host": "https://stabilityai-stable-point-aware-3d.hf.space",
+  "cardData": {
+    "title": "Stable Point-Aware 3D",
+    "emoji": "\u26a1",
+    "colorFrom": "yellow",
+    "colorTo": "yellow",
+    "sdk": "gradio",
+    "sdk_version": "4.43.0",
+    "app_file": "gradio_app.py",
+    "pinned": false
+  },
+  "sha": "981f20868211097b5b980d7e2474400627f9e1ea",
+  "error": "ValueError: The current space is in the invalid state: BUILD_ERROR. Please contact the owner to fix this."
+}

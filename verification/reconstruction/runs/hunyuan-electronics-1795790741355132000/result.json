@@ -1,0 +1,15 @@
+{
+  "space": "tencent/Hunyuan3D-2",
+  "input": "electronics.jpg",
+  "input_sha256": "af29f0864f563f3f02c8fd2a444d5c59bfab9412fbf90b31832a2a49a702db4b",
+  "started_at": "2026-11-27T20:15:41.355488+05:30",
+  "steps": [
+    {
+      "endpoint": "/generation_all",
+      "seconds": 15.39
+    }
+  ],
+  "meshes": [],
+  "error": "AppError: \"name 'texgen_worker' is not defined\"",
+  "seconds": 18.38
+}

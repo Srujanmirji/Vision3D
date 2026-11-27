@@ -1,0 +1,23 @@
+{
+  "space": "trellis-community/TRELLIS",
+  "input": "toys.jpg",
+  "input_sha256": "c149d60645f2f24160b1ab76d0f352047dc9604ae800213658f6a1592e68eca8",
+  "started_at": "2026-11-27T20:15:41.355630+05:30",
+  "steps": [
+    {
+      "endpoint": "/start_session",
+      "seconds": 1.7
+    },
+    {
+      "endpoint": "/preprocess_image",
+      "seconds": 4.28
+    },
+    {
+      "endpoint": "/generate_and_extract_glb",
+      "seconds": 3.2
+    }
+  ],
+  "meshes": [],
+  "error": "AppError: You have exceeded your ZeroGPU quota (120s requested vs. 45s left). Try again in 23:59:53. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens",
+  "seconds": 12.18
+}

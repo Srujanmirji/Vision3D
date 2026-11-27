@@ -1,0 +1,20 @@
+{
+  "space": "tencent/Hunyuan3D-2",
+  "input": "electronics.jpg",
+  "input_sha256": "af29f0864f563f3f02c8fd2a444d5c59bfab9412fbf90b31832a2a49a702db4b",
+  "started_at": "2026-11-27T20:16:17.783246+05:30",
+  "steps": [
+    {
+      "endpoint": "/shape_generation",
+      "seconds": 13.63
+    }
+  ],
+  "meshes": [
+    {
+      "file": "mesh-0.glb",
+      "bytes": 9282244,
+      "sha256": "b3dfd38dcc5794d9743af4c92f32efc9e3a70846e3773ea1c848fdb2bc26ed97"
+    }
+  ],
+  "seconds": 16.6
+}

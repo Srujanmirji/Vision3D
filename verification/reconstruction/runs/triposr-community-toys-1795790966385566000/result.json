@@ -1,0 +1,29 @@
+{
+  "space": "AleenDG/3DGenTripoSR",
+  "input": "toys.jpg",
+  "input_sha256": "c149d60645f2f24160b1ab76d0f352047dc9604ae800213658f6a1592e68eca8",
+  "started_at": "2026-11-27T20:19:26.385703+05:30",
+  "steps": [
+    {
+      "endpoint": "/preprocess",
+      "seconds": 4.69
+    },
+    {
+      "endpoint": "/generate",
+      "seconds": 83.89
+    }
+  ],
+  "meshes": [
+    {
+      "file": "mesh-0.obj",
+      "bytes": 2031603,
+      "sha256": "2d163a01709a85f281bd738b8742b9a5c581c59bd1186364854a3cf88a67c583"
+    },
+    {
+      "file": "mesh-1.glb",
+      "bytes": 769900,
+      "sha256": "64c7b6404b438e6fa67da6aa7c19b2bf9a7320655db859af182070bff4a67ab2"
+    }
+  ],
+  "seconds": 90.66
+}

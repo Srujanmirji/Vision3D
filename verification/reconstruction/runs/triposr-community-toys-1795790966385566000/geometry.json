@@ -1,0 +1,13 @@
+{
+  "bytes": 769900,
+  "vertices": 19246,
+  "triangles": 38412,
+  "nondegenerate_triangles": 38412,
+  "bounds_extent": [
+    0.29419755935668945,
+    0.7953973412513733,
+    0.5130698680877686
+  ],
+  "base_color_textures": 0,
+  "color_vertex_primitives": 1
+}

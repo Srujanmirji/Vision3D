@@ -1,0 +1,18 @@
+{
+  "furniture": {
+    "url": "https://images.unsplash.com/photo-1598300056393-4aac492f4344?w=512&fit=max",
+    "sha256": "d50da739d76668c17887d1345c6c262bcad1c8acd309d58797e59242f0cc6d87"
+  },
+  "shoes": {
+    "url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=512&fit=max",
+    "sha256": "877129f1c5868fc1228c13f3a7c2b8efef770dfb7c3498caa6111ce1abe201b4"
+  },
+  "electronics": {
+    "url": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=512&fit=max",
+    "sha256": "af29f0864f563f3f02c8fd2a444d5c59bfab9412fbf90b31832a2a49a702db4b"
+  },
+  "toys": {
+    "url": "https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=512&fit=max",
+    "sha256": "c149d60645f2f24160b1ab76d0f352047dc9604ae800213658f6a1592e68eca8"
+  }
+}

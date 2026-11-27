@@ -1,0 +1,20 @@
+{
+  "space": "tencent/Hunyuan3D-2",
+  "input": "shoes.jpg",
+  "input_sha256": "877129f1c5868fc1228c13f3a7c2b8efef770dfb7c3498caa6111ce1abe201b4",
+  "started_at": "2026-11-27T20:16:56.343129+05:30",
+  "steps": [
+    {
+      "endpoint": "/shape_generation",
+      "seconds": 15.95
+    }
+  ],
+  "meshes": [
+    {
+      "file": "mesh-0.glb",
+      "bytes": 6941388,
+      "sha256": "6dca58e086529fc9c7d768e58107a1546075090a5173be6b765925405e523677"
+    }
+  ],
+  "seconds": 18.92
+}

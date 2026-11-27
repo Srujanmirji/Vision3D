@@ -1,0 +1,596 @@
+[
+  {
+    "type": "directory",
+    "oid": "bddc183bd2bbe1b65a4b66ae9e405e6617e10f61",
+    "size": 0,
+    "path": "demo_files"
+  },
+  {
+    "type": "directory",
+    "oid": "6d6e472127bbe6bafc83543b99e2e352bd59af72",
+    "size": 0,
+    "path": "demo_files/examples"
+  },
+  {
+    "type": "directory",
+    "oid": "02ce0981b61a15d591dab7b8adb26020885126a4",
+    "size": 0,
+    "path": "demo_files/hdri"
+  },
+  {
+    "type": "directory",
+    "oid": "1948e38fb653f28afb0c730aba2d87612c2f1f7c",
+    "size": 0,
+    "path": "demo_files/workflows"
+  },
+  {
+    "type": "directory",
+    "oid": "924be5bc00ee842a261b68bbfd876f5984500c99",
+    "size": 0,
+    "path": "load"
+  },
+  {
+    "type": "directory",
+    "oid": "2d1dcef1ce55c197c26d6181934c98b966807f04",
+    "size": 0,
+    "path": "load/tets"
+  },
+  {
+    "type": "directory",
+    "oid": "888e6eedfc2d8ab0be576e235b7cf982e064dad9",
+    "size": 0,
+    "path": "sf3d"
+  },
+  {
+    "type": "directory",
+    "oid": "1eb52f0de6923e8a770cd00c8f9e4ec1c9b997db",
+    "size": 0,
+    "path": "sf3d/models"
+  },
+  {
+    "type": "directory",
+    "oid": "f55dbfd325f1fe5430b025c970f4a487e9c1a6df",
+    "size": 0,
+    "path": "sf3d/models/global_estimator"
+  },
+  {
+    "type": "directory",
+    "oid": "37419a016958a55d26b694b4518ca36791743177",
+    "size": 0,
+    "path": "sf3d/models/image_estimator"
+  },
+  {
+    "type": "directory",
+    "oid": "8ecc1d9b5621425c8d681b5a13cafa8ea7da3e05",
+    "size": 0,
+    "path": "sf3d/models/tokenizers"
+  },
+  {
+    "type": "directory",
+    "oid": "18502dd9dd675b847b29e2881e94aa10da38c11e",
+    "size": 0,
+    "path": "sf3d/models/transformers"
+  },
+  {
+    "type": "directory",
+    "oid": "153b20a17c0ce332e36d5c5e1b6f061046a14a9f",
+    "size": 0,
+    "path": "texture_baker"
+  },
+  {
+    "type": "directory",
+    "oid": "59a0e6bcb06855779d63c727af3099f04f1743c4",
+    "size": 0,
+    "path": "texture_baker/texture_baker"
+  },
+  {
+    "type": "directory",
+    "oid": "b039a505b5ce4f677aa2b2439036fe770ab12820",
+    "size": 0,
+    "path": "texture_baker/texture_baker/csrc"
+  },
+  {
+    "type": "directory",
+    "oid": "e785f7c218e39f21c040a5bc27c92bccd80c630d",
+    "size": 0,
+    "path": "uv_unwrapper"
+  },
+  {
+    "type": "directory",
+    "oid": "0f2648599ce5ae6aca521b684c0e253636e41b03",
+    "size": 0,
+    "path": "uv_unwrapper/uv_unwrapper"
+  },
+  {
+    "type": "directory",
+    "oid": "b74901fece10c4d9105aacde3673b2743ac59c87",
+    "size": 0,
+    "path": "uv_unwrapper/uv_unwrapper/csrc"
+  },
+  {
+    "type": "file",
+    "oid": "a25246a8aaa7386d8281b4a0970a32c21fea1330",
+    "size": 1645,
+    "path": ".gitattributes"
+  },
+  {
+    "type": "file",
+    "oid": "765d2f6ac0885a28fb2609b3d6c1d7942946e6b8",
+    "size": 3175,
+    "path": ".gitignore"
+  },
+  {
+    "type": "file",
+    "oid": "53574e1eb2ac72750a2f4299764e93695e3c506b",
+    "size": 571,
+    "path": ".pre-commit-config.yaml"
+  },
+  {
+    "type": "file",
+    "oid": "a889fd6b2adf60bbbe8d687e011803892b828eab",
+    "size": 11716,
+    "path": "LICENSE.md"
+  },
+  {
+    "type": "file",
+    "oid": "e36fefb6033744178a127d3763992b6f03f55588",
+    "size": 289,
+    "path": "README.md"
+  },
+  {
+    "type": "file",
+    "oid": "9487e4254452a1a8851acedd5722cd53ed04ea67",
+    "size": 5864,
+    "path": "__init__.py"
+  },
+  {
+    "type": "file",
+    "oid": "5ad3580cc0f1dbdca41d0401e3764b484e0e1e8e",
+    "size": 1930189,
+    "lfs": {
+      "oid": "1d5e060d90f29889c55c1c5681dbeb4b4c2408709d18f7451bb0a6f02c6e9bc5",
+      "size": 1930189,
+      "pointerSize": 132
+    },
+    "xetHash": "bcf9215896a3aa771188e8abbdead7de8fa96f554a605c0d0d7571bb94f0f602",
+    "path": "demo_files/comp.gif"
+  },
+  {
+    "type": "file",
+    "oid": "754a0001caf8d11082200ce7a9c2572d2f251d9b",
+    "size": 1389209,
+    "lfs": {
+      "oid": "5949f60c651e71a41b7291197f91bb8be2c8861472765fc884e604e18b7806a0",
+      "size": 1389209,
+      "pointerSize": 132
+    },
+    "xetHash": "1c67dc54a90d8e5667e322aa9de6b941149911883ba0e6314ecdfda0b7caafd5",
+    "path": "demo_files/examples/animal_character.png"
+  },
+  {
+    "type": "file",
+    "oid": "03b96ccb96533e1e8a38194c5b18693ee628ba9e",
+    "size": 1598460,
+    "lfs": {
+      "oid": "ffc3f10c629afd64798d38dad2cc419eb343c7106149426f78634a91367bf031",
+      "size": 1598460,
+      "pointerSize": 132
+    },
+    "xetHash": "3eef1bf4ecaaaa132348ac88490c289624be476c4110f0b9f779ab34207ae063",
+    "path": "demo_files/examples/animal_character_2.png"
+  },
+  {
+    "type": "file",
+    "oid": "83abb6e3ccc98d1dede1e1c729e75473d8ee052c",
+    "size": 277478,
+    "lfs": {
+      "oid": "94be53862906806ac28367017cd9d794edf416df4d33c1bc223ef6f6eed3b39e",
+      "size": 277478,
+      "pointerSize": 131
+    },
+    "xetHash": "0855d9b6d15a23ce77c50e2e7a1c464800edd21ffaf5378abdd4d5604286fec4",
+    "path": "demo_files/examples/axe.png"
+  },
+  {
+    "type": "file",
+    "oid": "b0a639092acf529415e563dbcd09d65fc719b614",
+    "size": 114705,
+    "lfs": {
+      "oid": "2503c12a74419d91a4c6c9f1affc48fee6e2b8b9091956ca6211e91ada57b5bf",
+      "size": 114705,
+      "pointerSize": 131
+    },
+    "xetHash": "00c6190bbc4c3445fbc88652bf2e5f7424ae98baf21bd4b637adf7d44d62d9da",
+    "path": "demo_files/examples/chair1.png"
+  },
+  {
+    "type": "file",
+    "oid": "dc4c6fa67ab2943871d2f4f5c632551b10877352",
+    "size": 120403,
+    "lfs": {
+      "oid": "39cccb99b31a614144a6d147f0e0a8d52b986d6e73587c6e697da07d0a7112f2",
+      "size": 120403,
+      "pointerSize": 131
+    },
+    "xetHash": "4eee8581f87a4099494da409ac46c6617c319b39bc438bf1348248e2936d00bc",
+    "path": "demo_files/examples/character1.png"
+  },
+  {
+    "type": "file",
+    "oid": "c169aa771ac617816a16938f7b0f5cd02512428a",
+    "size": 979786,
+    "lfs": {
+      "oid": "3f3c68fa49d43908f18087cde98aba486da814e938bd59909fcb70d996e9f77b",
+      "size": 979786,
+      "pointerSize": 131
+    },
+    "xetHash": "91195348e5bbe0278fe691def065d165d037f02fb3eb6367ed0636282aedfca7",
+    "path": "demo_files/examples/otter_samurai.png"
+  },
+  {
+    "type": "file",
+    "oid": "0adbb4ec54a94c70dcebaef5d4981ad1be959ef2",
+    "size": 774200,
+    "lfs": {
+      "oid": "32cc3850d9f48548882c7b148e508e8ab149bc4f363611e9739adcbd38e8b16d",
+      "size": 774200,
+      "pointerSize": 131
+    },
+    "xetHash": "f07334ebb5a14a62c31fa329c50e2bef0d0537ff69b0d8a2fb75f55c93079522",
+    "path": "demo_files/examples/raccoon_wizard.png"
+  },
+  {
+    "type": "file",
+    "oid": "b847cfbad8f80a6286aae660f2273c0bc963ac3a",
+    "size": 439074,
+    "lfs": {
+      "oid": "386c3be3a6f24ee52e13f130c1ebc02a1bc46eb2c0ebe90d79ce6f38751f0fc6",
+      "size": 439074,
+      "pointerSize": 131
+    },
+    "xetHash": "569276fef5ff587143b0c4941c7ab48e6093ab0454b799bb9620583d08edde15",
+    "path": "demo_files/examples/stylized-rocks.png"
+  },
+  {
+    "type": "file",
+    "oid": "9fc8373d7743560ee2a13657edc1923309b13747",
+    "size": 692620,
+    "lfs": {
+      "oid": "b258278b4d85a75f9ea3f795d3692fc58304a1a3a7daf8935a9549107bfee170",
+      "size": 692620,
+      "pointerSize": 131
+    },
+    "xetHash": "bd1be10c291f92a73c27d71e7b2a12d095672ac04b9b65e401271bb819d4267b",
+    "path": "demo_files/examples/tree.png"
+  },
+  {
+    "type": "file",
+    "oid": "cae9a42077b3883152061c8ca79f2520fc8bfae3",
+    "size": 477743,
+    "path": "demo_files/hdri/abandoned_tiled_room_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "58deb543ef46e3edc329430b7670d96bd66fe387",
+    "size": 466724,
+    "path": "demo_files/hdri/metro_noord_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "e3cab8074fa1047c7ce30dfa1df3c43354b4813f",
+    "size": 438060,
+    "path": "demo_files/hdri/neon_photostudio_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "632d5368b86cb992905fed73d2e9ee2e7302d597",
+    "size": 472851,
+    "path": "demo_files/hdri/peppermint_powerplant_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "6ba95544ad9523f2959c134af86bbd58cc9cf2a1",
+    "size": 512033,
+    "path": "demo_files/hdri/rainforest_trail_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "7d9e8c400cc487e99e13ec97916c0bb134acb423",
+    "size": 411810,
+    "path": "demo_files/hdri/studio_small_08_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "cc2abf89a4b01ca3e4c203bacf09f15510774cfe",
+    "size": 457913,
+    "path": "demo_files/hdri/urban_alley_01_1k.hdr"
+  },
+  {
+    "type": "file",
+    "oid": "657715392ab9ae7d31f2dbd59391c8dd67817ade",
+    "size": 885559,
+    "path": "demo_files/scatterplot.jpg"
+  },
+  {
+    "type": "file",
+    "oid": "b4ff1ee65d392b420c9a30dbc6450ca241131673",
+    "size": 2809667,
+    "lfs": {
+      "oid": "1d5dcb4fbe710e94c0fa70cc2c783d66e327222cb5e74839cfd003e619bc2e1d",
+      "size": 2809667,
+      "pointerSize": 132
+    },
+    "xetHash": "9068c7bdc4ad4ec3b6c201dffae6d3b8fe9fe5909ea537b0b559be5b769247bb",
+    "path": "demo_files/teaser.gif"
+  },
+  {
+    "type": "file",
+    "oid": "6f0cede8b4f2de1d0e72488fe6650eebccb5d8ea",
+    "size": 4053,
+    "path": "demo_files/workflows/sf3d_example.json"
+  },
+  {
+    "type": "file",
+    "oid": "0319d9f034b1ad8471f49f5eae3f30c6c2dc5b5d",
+    "size": 11402,
+    "path": "gradio_app.py"
+  },
+  {
+    "type": "file",
+    "oid": "021722f535100c50bdb584957303a1483136929c",
+    "size": 15408790,
+    "lfs": {
+      "oid": "1f4be37efc604d28d55a1a78c2aabefeeab7e63149f541aa45f9dd858ee35bb9",
+      "size": 15408790,
+      "pointerSize": 133
+    },
+    "xetHash": "d688531cc5fa2e4ead71f4d59e4a97dbe358291dcc9a2bbbb4af079aa0ca4fe0",
+    "path": "load/tets/160_tets.npz"
+  },
+  {
+    "type": "file",
+    "oid": "bc7fae066bcf5c9834c553765724e05c1f845e9e",
+    "size": 489,
+    "path": "requirements.txt"
+  },
+  {
+    "type": "file",
+    "oid": "94e0cbfaf9dbf950628636416d390c7141108dda",
+    "size": 47,
+    "path": "ruff.toml"
+  },
+  {
+    "type": "file",
+    "oid": "49d4c8780641ff0da1a310e901c0187c89a5cabf",
+    "size": 4794,
+    "path": "run.py"
+  },
+  {
+    "type": "file",
+    "oid": "0380fa057f16adfe6cadb6da9be0d58872676ce9",
+    "size": 22946,
+    "path": "sf3d/box_uv_unwrap.py"
+  },
+  {
+    "type": "file",
+    "oid": "7fed714f9a14276d0baec8349797dea92841152d",
+    "size": 959,
+    "path": "sf3d/models/camera.py"
+  },
+  {
+    "type": "file",
+    "oid": "c736d4e261a8e6fb403ab1a64886538edb31e4d7",
+    "size": 3431,
+    "path": "sf3d/models/global_estimator/multi_head_estimator.py"
+  },
+  {
+    "type": "file",
+    "oid": "e267c7c7be25cbee73b0655777f7e84dd3992fa7",
+    "size": 5765,
+    "path": "sf3d/models/image_estimator/clip_based_estimator.py"
+  },
+  {
+    "type": "file",
+    "oid": "aad0d345cabef10f6f0613767fad789943368dd2",
+    "size": 8052,
+    "path": "sf3d/models/isosurface.py"
+  },
+  {
+    "type": "file",
+    "oid": "6b56cc2f054cbeaa0966c890c31a3839a3f1e206",
+    "size": 9506,
+    "path": "sf3d/models/mesh.py"
+  },
+  {
+    "type": "file",
+    "oid": "3726b764a19c3c7aa2055cbdddb87a7626f7aed3",
+    "size": 6478,
+    "path": "sf3d/models/network.py"
+  },
+  {
+    "type": "file",
+    "oid": "d3b1c34cacfe52675ac04dc778c9cc5a774192a2",
+    "size": 46239,
+    "path": "sf3d/models/tokenizers/dinov2.py"
+  },
+  {
+    "type": "file",
+    "oid": "73dff311158c2932b1f0cf69a34c1dedfaddb374",
+    "size": 3214,
+    "path": "sf3d/models/tokenizers/image.py"
+  },
+  {
+    "type": "file",
+    "oid": "2b7ea4856e57d5864797752acd569b7feffbd8a9",
+    "size": 1383,
+    "path": "sf3d/models/tokenizers/triplane.py"
+  },
+  {
+    "type": "file",
+    "oid": "dc3e82e070aaefe7bde1fbc4b724025f078230d5",
+    "size": 940,
+    "path": "sf3d/models/transformers/attention.py"
+  },
+  {
+    "type": "file",
+    "oid": "e96d3446ba159d7d2093ab68ad98084fa7f2b1cc",
+    "size": 17089,
+    "path": "sf3d/models/transformers/backbone.py"
+  },
+  {
+    "type": "file",
+    "oid": "fb20381c99a2cad94c3ed63cc49f53139f2fd713",
+    "size": 6927,
+    "path": "sf3d/models/utils.py"
+  },
+  {
+    "type": "file",
+    "oid": "1ed146cc46c19d24b3166fa7e2a27b6c79a0f9a2",
+    "size": 20260,
+    "path": "sf3d/system.py"
+  },
+  {
+    "type": "file",
+    "oid": "ad70581d0ab3e4de8755e214b39cb988d985fc0d",
+    "size": 2809,
+    "path": "sf3d/texture_baker.py"
+  },
+  {
+    "type": "file",
+    "oid": "45e8dfbf23e9c48f16771c47af0c52eda2995537",
+    "size": 2957,
+    "path": "sf3d/texture_baker.slang"
+  },
+  {
+    "type": "file",
+    "oid": "05716828a91906ef7943969e375a38d934fe9d5c",
+    "size": 2697,
+    "path": "sf3d/utils.py"
+  },
+  {
+    "type": "file",
+    "oid": "d7bde117fd1ecd30e193163b50fb825b64f66590",
+    "size": 778,
+    "path": "texture_baker/README.md"
+  },
+  {
+    "type": "file",
+    "oid": "af3149eb479c47955cf0d40d253890baa18d2f54",
+    "size": 12,
+    "path": "texture_baker/requirements.txt"
+  },
+  {
+    "type": "file",
+    "oid": "ca382204166e201a0b3e7abdeb84025757b98a4a",
+    "size": 3687,
+    "path": "texture_baker/setup.py"
+  },
+  {
+    "type": "file",
+    "oid": "b6173e6901823c2a00ca4e48b11e9649df977d53",
+    "size": 105,
+    "path": "texture_baker/texture_baker/__init__.py"
+  },
+  {
+    "type": "file",
+    "oid": "61e4425a2d18d7aece86e5f12199754aeb4d5bb0",
+    "size": 2670,
+    "path": "texture_baker/texture_baker/baker.py"
+  },
+  {
+    "type": "file",
+    "oid": "f92766489d4e25b4df76bfd1516b502c2e179aaa",
+    "size": 18432,
+    "path": "texture_baker/texture_baker/csrc/baker.cpp"
+  },
+  {
+    "type": "file",
+    "oid": "a29ce2f6d0dd3e6f6b555cf45278b200b076e821",
+    "size": 4407,
+    "path": "texture_baker/texture_baker/csrc/baker.h"
+  },
+  {
+    "type": "file",
+    "oid": "f21f0675bf8eb43ceae0115390b7cbec0937b8de",
+    "size": 11193,
+    "path": "texture_baker/texture_baker/csrc/baker_kernel.cu"
+  },
+  {
+    "type": "file",
+    "oid": "dff0a9413d5bfa6e6d03f3c2deec3890c1818bb5",
+    "size": 5745,
+    "path": "texture_baker/texture_baker/csrc/baker_kernel.metal"
+  },
+  {
+    "type": "file",
+    "oid": "ee406a215cba22ae578f04a9721fb66641a0430f",
+    "size": 12566,
+    "path": "texture_baker/texture_baker/csrc/baker_kernel.mm"
+  },
+  {
+    "type": "file",
+    "oid": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+    "size": 0,
+    "path": "uv_unwrapper/README.md"
+  },
+  {
+    "type": "file",
+    "oid": "af3149eb479c47955cf0d40d253890baa18d2f54",
+    "size": 12,
+    "path": "uv_unwrapper/requirements.txt"
+  },
+  {
+    "type": "file",
+    "oid": "dcfc7fd35f27eea725053ff21eb394f05032525b",
+    "size": 2106,
+    "path": "uv_unwrapper/setup.py"
+  },
+  {
+    "type": "file",
+    "oid": "f56e161df5d9e5658fe6d87ccf207b9874e94481",
+    "size": 114,
+    "path": "uv_unwrapper/uv_unwrapper/__init__.py"
+  },
+  {
+    "type": "file",
+    "oid": "790183da8121afde798e83b787c734e8a9ba5a44",
+    "size": 12735,
+    "path": "uv_unwrapper/uv_unwrapper/csrc/bvh.cpp"
+  },
+  {
+    "type": "file",
+    "oid": "91f48f4f735ff7f260e6023044f44137efdcc568",
+    "size": 2807,
+    "path": "uv_unwrapper/uv_unwrapper/csrc/bvh.h"
+  },
+  {
+    "type": "file",
+    "oid": "5b6adb02af038acb68d2de5279e2c3b299b9d69e",
+    "size": 14297,
+    "path": "uv_unwrapper/uv_unwrapper/csrc/common.h"
+  },
+  {
+    "type": "file",
+    "oid": "8d54b2c7f04cb38d79cf1d091393e02f7459fcad",
+    "size": 18087,
+    "path": "uv_unwrapper/uv_unwrapper/csrc/intersect.cpp"
+  },
+  {
+    "type": "file",
+    "oid": "9ecfe80555592fb56449854aa9a937059c708c7a",
+    "size": 424,
+    "path": "uv_unwrapper/uv_unwrapper/csrc/intersect.h"
+  },
+  {
+    "type": "file",
+    "oid": "e76bd62b116caaf2512c67e483772a17b8e44c60",
+    "size": 9350,
+    "path": "uv_unwrapper/uv_unwrapper/csrc/unwrapper.cpp"
+  },
+  {
+    "type": "file",
+    "oid": "6586564496de13aa7f8055e32b5c9cded89e9212",
+    "size": 23794,
+    "path": "uv_unwrapper/uv_unwrapper/unwrap.py"
+  }
+]
