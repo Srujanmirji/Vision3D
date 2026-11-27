@@ -63,15 +63,17 @@ Offset = Annotated[int, Query(ge=0)]
 
 
 def configured_providers(settings: Settings) -> tuple[Provider, ...]:
+    """Providers in the order a job tries them: local TripoSR first, then hosted Spaces as fallbacks."""
+    chain: list[Provider] = []
+    if settings.local_home:
+        chain.append(Provider("triposr-local", "TripoSR on this computer", str(settings.local_home), "local", True))
     if settings.primary_space:
-        primary = Provider("triposr", "TripoSR", settings.primary_space, "triposr", False, True)
+        chain.append(Provider("triposr", "TripoSR", settings.primary_space, "triposr", False, True))
     elif settings.community_demo:
-        primary = Provider("triposr", "TripoSR community demo", COMMUNITY, "triposr", True)
-    else:
-        return ()
-    if settings.shape_fallback:
-        return primary, Provider("hunyuan-shape", "Hunyuan3D-2 shape only", HUNYUAN, "hunyuan", True)
-    return (primary,)
+        chain.append(Provider("triposr", "TripoSR community demo", COMMUNITY, "triposr", True))
+    if chain and settings.shape_fallback:
+        chain.append(Provider("hunyuan-shape", "Hunyuan3D-2 shape only", HUNYUAN, "hunyuan", True))
+    return tuple(chain)
 
 
 def upload_peer(request: Request, trusted: tuple[str, ...]) -> str:
@@ -112,6 +114,7 @@ def create_app(
 ) -> FastAPI:
     settings = config or Settings.from_env()
     providers = configured_providers(settings)
+    sends_photo_externally = any(p.kind != "local" for p in providers)
     rate = UploadRate(settings.uploads_per_minute)
 
     @asynccontextmanager
@@ -285,7 +288,8 @@ def create_app(
         rate.check(upload_peer(request, settings.trusted_proxy_ips))
         if not providers:
             raise Failure("PROVIDER_UNAVAILABLE", "No generation provider is configured.", 503)
-        if not allow_external_processing:
+        # Consent is needed whenever any provider in the chain is hosted (a fallback may be used).
+        if sends_photo_externally and not allow_external_processing:
             raise Failure(
                 "CONSENT_REQUIRED",
                 "This provider requires permission to send your photo to Hugging Face.",
