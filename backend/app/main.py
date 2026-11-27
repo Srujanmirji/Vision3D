@@ -44,8 +44,8 @@ from .schemas import (
 from .storage import Storage, utc
 
 COOKIE = "vision3d_session"
-Mode = Literal["auto", "round"]
-LOCAL_KINDS = ("local", "round")  # providers that keep photos on this machine
+Mode = Literal["auto", "round", "box"]
+LOCAL_KINDS = ("local", "round", "box")  # providers that keep photos on this machine
 GLB = "model/gltf-binary"
 DOWNLOAD: dict[int | str, dict[str, Any]] = {
     200: {"content": {GLB: {"schema": {"type": "string", "format": "binary"}}}},
@@ -117,10 +117,14 @@ def create_app(
     settings = config or Settings.from_env()
     providers = configured_providers(settings)
     sends_photo_externally = any(p.kind not in LOCAL_KINDS for p in providers)
-    round_provider = (
-        Provider("round", "Round object (photo wrap)", str(settings.local_home), "round", True)
+    # Shape modes need the local background-removal model; photos never leave the machine.
+    shape_providers: dict[str, Provider] = (
+        {
+            "round": Provider("round", "Round object (photo wrap)", str(settings.local_home), "round", True),
+            "box": Provider("box", "Box (photo wrap)", str(settings.local_home), "box", True),
+        }
         if settings.local_home
-        else None
+        else {}
     )
     rate = UploadRate(settings.uploads_per_minute)
 
@@ -263,7 +267,8 @@ def create_app(
             share_ttl_seconds=settings.share_ttl,
             poll_timeout_seconds=math.ceil(settings.queue_timeout + settings.deadline + 30),
             external_processing=sends_photo_externally,
-            round_mode=round_provider is not None,
+            round_mode="round" in shape_providers,
+            box_mode="box" in shape_providers,
         )
 
     @api.get("/health/live", tags=["Health"])
@@ -296,12 +301,14 @@ def create_app(
     ) -> str:
         """Validate, strip and queue one upload. Shared by desktop uploads and phone captures."""
         rate.check(upload_peer(request, settings.trusted_proxy_ips))
-        if mode == "round":
-            if round_provider is None:
+        if mode != "auto":
+            if mode not in shape_providers:
                 raise Failure(
-                    "ROUND_MODE_UNAVAILABLE", "Round-object mode needs local processing on the server.", 422
+                    f"{mode.upper()}_MODE_UNAVAILABLE",
+                    f"{mode.capitalize()} mode needs local processing on the server.",
+                    422,
                 )
-            chain: tuple[Provider, ...] = (round_provider,)
+            chain: tuple[Provider, ...] = (shape_providers[mode],)
         else:
             chain = providers
         if not chain:
@@ -353,7 +360,7 @@ def create_app(
         provider: Annotated[
             str | None, Form(description="Configured primary provider ID; fallback is automatic if enabled.")
         ] = None,
-        mode: Annotated[Mode, Form(description="auto: AI reconstruction; round: bottle/can/jar photo wrap.")] = "auto",
+        mode: Annotated[Mode, Form(description="auto: AI; round: bottle/can/jar; box: packaging/book (photo wrap).")] = "auto",
     ) -> JobCreated:
         job_id = await start_job(
             request, key, image, allow_external_processing, remove_background, provider, mode=mode
@@ -405,7 +412,7 @@ def create_app(
             bool, Form(description="Consent to send the stripped photo to Hugging Face.")
         ] = False,
         remove_background: Annotated[bool, Form(description="Run provider background removal.")] = True,
-        mode: Annotated[Mode, Form(description="auto: AI reconstruction; round: bottle/can/jar photo wrap.")] = "auto",
+        mode: Annotated[Mode, Form(description="auto: AI; round: bottle/can/jar; box: packaging/book (photo wrap).")] = "auto",
     ) -> CaptureInfo:
         """Public: the phone sends one photo; the job belongs to the desktop session that made the link."""
         response.headers["Cache-Control"] = "no-store"

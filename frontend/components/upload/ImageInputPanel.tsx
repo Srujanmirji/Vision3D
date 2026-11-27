@@ -6,7 +6,8 @@ import { CameraCaptureDialog } from "./CameraCaptureDialog";
 import { PhotoTips } from "./PhotoTips";
 import { originalPhotoLimit } from "@/lib/uploadImage";
 import { PhoneCaptureDialog } from "./PhoneCaptureDialog";
-import type { ProviderCapability } from "@/lib/api";
+import { ShapeModeSelect } from "./ShapeModeSelect";
+import type { GenerationMode, ProviderCapability } from "@/lib/api";
 import {
   DEFAULT_MAX_UPLOAD_BYTES,
   formatBytes,
@@ -33,10 +34,10 @@ interface ImageInputPanelProps {
   allowExternalProcessing: boolean;
   /** False when the server generates on its own machine only; the consent checkbox is then hidden. */
   consentRequired?: boolean;
-  /** Offer round-object mode (bottles, cans, jars). */
-  roundModeAvailable?: boolean;
-  roundMode?: boolean;
-  onRoundModeChange?: (enabled: boolean) => void;
+  /** Shape modes this server offers ("auto" plus any of "round" / "box"). */
+  modes?: GenerationMode[];
+  mode?: GenerationMode;
+  onModeChange?: (mode: GenerationMode) => void;
   onAllowExternalProcessingChange: (allowed: boolean) => void;
   maxUploadBytes?: number;
   isGenerating: boolean;
@@ -58,9 +59,9 @@ export function ImageInputPanel({
   onRemoveBackgroundChange,
   allowExternalProcessing,
   consentRequired = true,
-  roundModeAvailable = false,
-  roundMode = false,
-  onRoundModeChange,
+  modes = ["auto"],
+  mode = "auto",
+  onModeChange,
   onAllowExternalProcessingChange,
   maxUploadBytes = DEFAULT_MAX_UPLOAD_BYTES,
   isGenerating,
@@ -294,24 +295,17 @@ export function ImageInputPanel({
           </div>
         )}
 
-        {roundModeAvailable && onRoundModeChange && (
-          <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
-            <CopperSwitch
-              id="round-mode-switch"
-              label="Round object (bottle, can, jar)"
-              labelClassName="text-xs font-medium text-ink-primary"
-              checked={roundMode}
-              disabled={isGenerating}
-              onCheckedChange={onRoundModeChange}
-            />
-            <p className="mt-1.5 text-[11px] leading-relaxed text-ink-secondary">
-              Wraps your photo onto a smooth round shape, so labels stay sharp. Best for
-              upright round products shot from the front.
-            </p>
-          </div>
+        {onModeChange && (
+          <ShapeModeSelect
+            id="shape-mode"
+            modes={modes}
+            value={mode}
+            onChange={onModeChange}
+            disabled={isGenerating}
+          />
         )}
 
-        {showBgRemovalToggle && !roundMode && (
+        {showBgRemovalToggle && mode === "auto" && (
           <div className="flex items-center justify-between rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
             <CopperSwitch
               id="bg-removal-switch"

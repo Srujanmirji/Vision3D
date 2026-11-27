@@ -8,6 +8,7 @@ import {
   type WorkspaceStage,
 } from "@/components/viewer/ModelViewport";
 import { ImageInputPanel } from "@/components/upload/ImageInputPanel";
+import { availableModes } from "@/components/upload/ShapeModeSelect";
 import { QrArDialog } from "@/components/ar-dialog/QrArDialog";
 import { ExportDialog } from "@/components/export-dialog/ExportDialog";
 import {
@@ -19,6 +20,7 @@ import {
   getModel,
   pollJobUntilDone,
   type ApiErrorPayload,
+  type GenerationMode,
   type HealthResponse,
   type JobStatusResponse,
   type ModelAsset,
@@ -55,7 +57,7 @@ export function CreateWorkspace() {
   const [selectedProvider, setSelectedProvider] = useState("");
   const [removeBackground, setRemoveBackground] = useState(true);
   const [allowExternalProcessing, setAllowExternalProcessing] = useState(false);
-  const [roundMode, setRoundMode] = useState(false);
+  const [mode, setMode] = useState<GenerationMode>("auto");
   const [autoRotate, setAutoRotate] = useState(false);
   const [arDialogOpen, setArDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -63,8 +65,8 @@ export function CreateWorkspace() {
 
   const verifiedProviders = (health?.providers ?? []).filter((p) => p.verified);
   // Unknown (health not loaded yet) counts as required, so consent is never skipped by accident.
-  // Round-object mode always runs on the server's own machine.
-  const consentRequired = health?.external_processing !== false && !roundMode;
+  // Round and box modes always run on the server's own machine.
+  const consentRequired = health?.external_processing !== false && mode === "auto";
   const hasConsent = !consentRequired || allowExternalProcessing;
 
   useEffect(() => {
@@ -241,7 +243,7 @@ export function CreateWorkspace() {
         allow_external_processing: allowExternalProcessing,
         provider: provider?.id,
         remove_background: provider?.supports_background_removal ? removeBackground : undefined,
-        mode: roundMode ? "round" : "auto",
+        mode,
       }, signal);
       if (signal.aborted) return;
       router.replace(`/create?job=${encodeURIComponent(job.job_id)}`);
@@ -315,9 +317,9 @@ export function CreateWorkspace() {
             onRemoveBackgroundChange={setRemoveBackground}
             allowExternalProcessing={allowExternalProcessing}
             consentRequired={consentRequired}
-            roundModeAvailable={health?.round_mode === true}
-            roundMode={roundMode}
-            onRoundModeChange={setRoundMode}
+            modes={availableModes(health)}
+            mode={mode}
+            onModeChange={setMode}
             onAllowExternalProcessingChange={setAllowExternalProcessing}
             maxUploadBytes={health?.max_upload_bytes}
             isGenerating={stage === "processing"}

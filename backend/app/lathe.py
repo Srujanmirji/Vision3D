@@ -58,6 +58,23 @@ def sample(image: np.ndarray, x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return result
 
 
+def row_colours(rgba: np.ndarray, centre: np.ndarray, half_width: np.ndarray, rows: np.ndarray) -> np.ndarray:
+    """The object's colour at each height: median of the middle half of each row (ignores logos),
+    smoothed vertically. Used for surfaces the photo cannot see."""
+    offsets = np.linspace(-0.5, 0.5, 33)
+    middle = sample(
+        rgba[..., :3],
+        centre[:, None] + half_width[:, None] * offsets[None, :],
+        np.repeat(rows[:, None], len(offsets), axis=1),
+    )
+    colour = np.median(middle, axis=1)
+    kernel = np.ones(15) / 15
+    result: np.ndarray = np.stack(
+        [np.convolve(np.pad(colour[:, ch], 7, mode="edge"), kernel, mode="valid") for ch in range(3)], axis=1
+    )
+    return result
+
+
 def build_round_object(cutout: Path, output: Path) -> None:
     with Image.open(cutout) as source:
         rgba = np.asarray(source.convert("RGBA"), dtype=np.float64)
@@ -78,20 +95,7 @@ def build_round_object(cutout: Path, output: Path) -> None:
     xx = tex_c[:, None] + tex_r[:, None] * np.where(front, np.sin(theta), 0)[None, :]
     photo = sample(rgba[..., :3], xx, yy)
 
-    # The object's colour at each height: median of the middle half of the row (ignores logos),
-    # smoothed vertically. Used where the photo is edge-on or cannot see.
-    offsets = np.linspace(-0.5, 0.5, 33)
-    middle = sample(
-        rgba[..., :3],
-        tex_c[:, None] + tex_r[:, None] * offsets[None, :],
-        np.repeat(tex_y[:, None], len(offsets), axis=1),
-    )
-    row_colour = np.median(middle, axis=1)
-    kernel = np.ones(15) / 15
-    row_colour = np.stack(
-        [np.convolve(np.pad(row_colour[:, ch], 7, mode="edge"), kernel, mode="valid") for ch in range(3)],
-        axis=1,
-    )
+    row_colour = row_colours(rgba, tex_c, tex_r, tex_y)
     weight = np.clip((BLEND_ANGLE - np.abs(theta)) / (BLEND_ANGLE - PHOTO_ANGLE), 0, 1)[None, :, None]
     blended = weight * photo + (1 - weight) * row_colour[:, None, :]
     texture = Image.fromarray(blended.clip(0, 255).astype(np.uint8))
