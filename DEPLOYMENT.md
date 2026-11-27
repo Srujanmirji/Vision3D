@@ -83,6 +83,10 @@ On a shared Caddy host, import a separate site configuration instead of replacin
    ```
 
    `vercel link` appends a `VERCEL_OIDC_TOKEN` to `frontend/.env.local`. That file is git-ignored; keep it out of commits.
+
+   **Git deployments (current setup):** the `vision3d` project is connected to `Srujanmirji/Vision3D`, with Root Directory `frontend` and production branch `main`. Every push or merge to `main` deploys to production, and pull requests get preview deployments. Environment variables still come from the project settings, so a backend tunnel change still needs `VISION3D_BACKEND_ORIGIN` updated and a redeploy (Vercel dashboard → Redeploy).
+
+   Because the Root Directory is now `frontend`, run manual CLI deploys from the **repository root** after `vercel link --yes --project vision3d` there, not from `frontend/`. To connect a new project: `vercel api /v9/projects/<name> -X PATCH -f rootDirectory=frontend`, then `vercel git connect <repo-url>`.
 2. Add these Production environment variables, then deploy the release. Set `NEXT_PUBLIC_PUBLIC_APP_URL` and backend `PUBLIC_APP_URL` to exactly the same origin. When using a custom public application domain, use it for both values. Use the same-origin `/api` client setting.
 
    | Variable | Production value |
