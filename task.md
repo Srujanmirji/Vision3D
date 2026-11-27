@@ -27,7 +27,7 @@ See [HANDOFF.md](HANDOFF.md) and [browser verification artifacts](verification/f
 - [x] Implement rear-preferred camera capture, denial recovery, native and gallery fallback, preview and consent-gated inference. Local HTTPS Chromium capture from a test-camera feed succeeded through live TripoSR.
 - [x] Verify the desktop QR, expiring token, guest model identity, GLB MIME, range support, and fallback viewer over isolated HTTPS.
 - [x] Configure WebXR, Scene Viewer and Quick Look via Model Viewer. Verify automatic textured USDZ packaging with `usdchecker --arkit --strict`. Frontend lint, type checking, 34 Vitest tests and the production build passed. Backend Ruff, strict mypy and 12 tests passed.
-- [ ] Verify a public HTTPS deployment and finish the [physical iPhone/Android checklist](AR_DEVICE_TESTING.md). No native placement, tracking or gesture results are claimed.
+- [ ] Verify a public HTTPS deployment and finish the [physical iPhone/Android checklist](AR_DEVICE_TESTING.md). Public HTTPS deployment verified on 27 November 2026 at https://vision3d-sigma.vercel.app, with a laptop backend behind a Quick Tunnel; see [verification/deployed](verification/deployed). The physical iPhone/Android checklist is still open. No native placement, tracking or gesture results are claimed.
 
 ## Audit resolution — 27 November 2026
 
@@ -59,13 +59,13 @@ See [HANDOFF.md](HANDOFF.md) and [browser verification artifacts](verification/f
 
 ## Phase 4: AR
 - [x] Implement expiring share tokens, QR dialog and mobile route. Backend share endpoints, polished desktop `QrArDialog` (`View in Your Space` with 2-step scan guide, live remaining-time badge, and localhost HTTPS guard), and `/ar/[token]` (plus `/ar/sample`) verified in browser; physical phone verification pending below.
-- [x] Configure HTTPS model URLs and MIME/CORS. Verified on isolated HTTPS. Public network and device acceptance are pending.
+- [x] Configure HTTPS model URLs and MIME/CORS. Verified on isolated HTTPS and on the public Vercel deployment: `model/gltf-binary`, `no-store`, `Access-Control-Allow-Origin: *`, HEAD and a `206` range response for a cookie-free guest. Device acceptance is pending.
 - [x] Implement Quick Look and Scene Viewer/WebXR launch with fallback. `<model-viewer ar ar-modes="webxr scene-viewer quick-look">` with neutral studio lighting, GLB loading overlay, touch-friendly presets/auto-rotate/reset, real `canActivateAR` detection, `View in Your Space` CTA, and honest unsupported-device 3D fallback card (iOS Safari Quick Look & Android Chrome ARCore guidance, zero fake in-AR controls) verified at `390×844`; physical phone verification pending below.
 - [ ] Test actual iPhone and Android placement and scaling.
 
 ## Phase 5: Quality and delivery
-- [x] Add loading, empty, error and accessibility states. Implemented across all 13 screens plus polished mobile camera capture (permission guidance, copper framing brackets, in-dialog captured preview review, and iOS/Android permission recovery) and safe-area mobile navigation. Verified with 36 Vitest tests and Desktop + Mobile browser QA with zero console errors.
+- [x] Add loading, empty, error and accessibility states. Implemented across all 13 screens plus polished mobile camera capture (permission guidance, copper framing brackets, in-dialog captured preview review, and iOS/Android permission recovery) and safe-area mobile navigation. Final 4-breakpoint (`1440px`, `1280px`, `768px`, `390px`) visual & UX audit recorded in [VISUAL_REVIEW.md](VISUAL_REVIEW.md); verified with 38 Vitest tests, strict typecheck, ESLint, and production build with zero console or WebGL errors.
 - [ ] Run unit, integration, E2E and device tests.
-- [ ] Deploy within approved budget; verify real inference and AR.
+- [ ] Deploy within approved budget; verify real inference and AR. Free deployment is live: Vercel Hobby frontend plus a laptop backend behind a Cloudflare Quick Tunnel, at no cost. Real inference was verified twice through the public URL (127.6 s via script, 89.7 s via browser), and the desktop QR decodes to the public share URL. Still open: a durable always-on backend (Oracle Cloud Always Free or similar, needs your account) and AR on physical phones.
 - [ ] Update README with actual commands, screenshots, limitations and test results.
 - [ ] Prepare college demo: upload → generate → rotate → QR → AR.

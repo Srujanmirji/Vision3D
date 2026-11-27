@@ -1,0 +1,8 @@
+[Unit]
+Description=Vision3D backend readiness check
+After=vision3d-api.service
+
+[Service]
+Type=oneshot
+# Fails (and is logged in the journal) when SQLite, storage or provider configuration is not ready.
+ExecStart=/usr/bin/curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8000/health/ready
