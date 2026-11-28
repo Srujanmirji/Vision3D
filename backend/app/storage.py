@@ -246,6 +246,14 @@ class Storage:
         ).fetchone()
         return dict(row) if row else None
 
+    def revoke_share(self, model: str, owner: str, token: str) -> bool:
+        with self.db:
+            result = self.db.execute(
+                "DELETE FROM shares WHERE hash=? AND model_id IN (SELECT id FROM models WHERE id=? AND owner=?)",
+                (digest(token), model, owner),
+            )
+        return result.rowcount == 1
+
 
     def new_capture(self, owner: str) -> tuple[str, float]:
         token = secrets.token_urlsafe(24)

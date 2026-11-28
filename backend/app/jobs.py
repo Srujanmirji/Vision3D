@@ -21,7 +21,7 @@ from .providers import (
     local_env,
     sf3d_env,
 )
-from .schemas import Failure, MeshInfo
+from .schemas import Failure, InferenceHealth, MeshInfo
 from .storage import Storage
 
 logger = logging.getLogger("uvicorn.error")
@@ -122,15 +122,25 @@ class WarmModel:
         assert self.process.stdout is not None
         try:
             ready = await self.process.stdout.readline()
-            started = bool(ready) and json.loads(ready).get("ready") is True
-        except BaseException:
+            started = self.read_reply(ready).get("ready") is True
+        except (asyncio.CancelledError, Failure):
             # Cancelled or timed out while loading: the unread "ready" line would desync the next job.
             await self.stop()
             raise
         if not started:
             await self.stop()
-            raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model could not start.", 503)
+            raise Failure("TRANSIENT_PROVIDER_ERROR", "The local 3D model could not start.", 503)
         return self.process
+
+    @staticmethod
+    def read_reply(line: bytes) -> dict[str, object]:
+        try:
+            reply: object = json.loads(line)
+        except (ValueError, UnicodeError) as exc:
+            raise Failure("TRANSIENT_PROVIDER_ERROR", "The local worker stopped or sent an invalid reply.", 503) from exc
+        if not isinstance(reply, dict):
+            raise Failure("TRANSIENT_PROVIDER_ERROR", "The local worker sent an invalid reply.", 503)
+        return reply
 
     async def reconstruct(self, command: tuple[str, ...], env: dict[str, str], request: dict[str, object]) -> None:
         process = await self.start(command, env)
@@ -139,15 +149,14 @@ class WarmModel:
         try:
             process.stdin.write((json.dumps(request) + "\n").encode())
             await process.stdin.drain()
-            line = await process.stdout.readline()
+            reply = self.read_reply(await process.stdout.readline())
             answered = True
+        except (BrokenPipeError, ConnectionResetError) as exc:
+            raise Failure("TRANSIENT_PROVIDER_ERROR", "The local worker connection closed.", 503) from exc
         finally:
             if not answered:
                 await self.stop()
-        if not line:
-            await self.stop()
-            raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model stopped unexpectedly.", 503)
-        if not json.loads(line).get("ok"):
+        if reply.get("ok") is not True:
             raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model failed on this photo.", 503)
 
     async def stop(self) -> None:
@@ -306,13 +315,36 @@ class Jobs:
         self.runner = runner
         self.gate = asyncio.Semaphore(1)
         self.active: dict[str, asyncio.Task[None]] = {}
+        self.ai_jobs: set[str] = set()
+        self.last_ai_success: Provider | None = None
+        self.last_ai_failed = False
+
+    def inference_health(self, configured: bool) -> InferenceHealth:
+        state: InferenceHealth = InferenceHealth(state="unconfigured", active_jobs=len(self.ai_jobs))
+        if configured:
+            state.state = "unverified"
+        if self.last_ai_success:
+            provider = self.last_ai_success
+            state.last_successful_provider = provider.id
+            if provider.kind not in ("sf3d", "local") or (
+                WARM.process and WARM.process.returncode is None
+            ):
+                state.state = "ready"
+        if self.last_ai_failed:
+            state.state = "degraded"
+        if self.ai_jobs:
+            state.state = "busy"
+        return state
 
     def enqueue(self, key: str, owner: str, providers: tuple[Provider, ...], remove: bool) -> None:
+        if providers[0].kind not in ("round", "box"):
+            self.ai_jobs.add(key)
         task = asyncio.create_task(self.run(key, owner, providers, remove))
         self.active[key] = task
 
         def finished(_: asyncio.Task[None]) -> None:
             self.active.pop(key, None)
+            self.ai_jobs.discard(key)
             shutil.rmtree(self.store.work / key, ignore_errors=True)
 
         task.add_done_callback(finished)
@@ -320,6 +352,8 @@ class Jobs:
     def fail(self, key: str, code: str) -> None:
         stage = "cancelled" if code == "CANCELLED" else "failed"
         if self.store.transition(key, "failed", stage, error={"code": code, "message": ERRORS[code]}):
+            if key in self.ai_jobs and code not in ("CANCELLED", "INTERRUPTED", "QUEUE_TIMEOUT"):
+                self.last_ai_failed = True
             event("job_failed", job_id=key, code=code)
 
     async def run(self, key: str, owner: str, providers: tuple[Provider, ...], remove: bool) -> None:
@@ -360,6 +394,9 @@ class Jobs:
                     async with asyncio.timeout(self.config.attempt_timeout):
                         info = await self.runner(provider, inside, remove, self.config, stage)
                     self.store.publish(key, owner, provider.id, info, inside / "model.glb")
+                    if key in self.ai_jobs:
+                        self.last_ai_success = provider
+                        self.last_ai_failed = False
                     event("job_succeeded", job_id=key, provider=provider.id)
                     return
                 except TimeoutError:

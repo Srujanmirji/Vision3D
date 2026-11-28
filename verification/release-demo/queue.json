@@ -1,0 +1,34 @@
+{
+  "accepted_seconds_from_start": [
+    0.016,
+    0.027
+  ],
+  "observed": [
+    [
+      "processing",
+      "succeeded"
+    ],
+    [
+      "queued",
+      "processing",
+      "succeeded"
+    ]
+  ],
+  "completed": {
+    "0": {
+      "seconds_from_start": 23.295,
+      "triangles": 63718,
+      "glb_bytes": 4522232
+    },
+    "1": {
+      "seconds_from_start": 43.631,
+      "triangles": 90111,
+      "glb_bytes": 5387884
+    }
+  },
+  "inference_at_end": {
+    "state": "ready",
+    "active_jobs": 0,
+    "last_successful_provider": "triposr-local"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "sf3d": {
+    "cold_start": {
+      "device": "cpu",
+      "duration_seconds": 30.227,
+      "cpu_peak_sample_percent": 383.2,
+      "worker_peak_rss_mib": 2316.5,
+      "system_gpu_percent_median": 50.0,
+      "system_gpu_percent_peak": 58.0
+    },
+    "jobs": [
+      {
+        "texture_seconds": 1.061755666974932,
+        "reconstruct_seconds": 56.11784204200376,
+        "duration_seconds": 56.128,
+        "cpu_peak_sample_percent": 323.1,
+        "worker_peak_rss_mib": 2529.046875,
+        "system_gpu_percent_median": 54.0,
+        "system_gpu_percent_peak": 67.0,
+        "photo": "shoes",
+        "glb_bytes": 812412,
+        "separate_segmentation_seconds": null
+      },
+      {
+        "texture_seconds": 1.0893527920125052,
+        "reconstruct_seconds": 38.10875654197298,
+        "duration_seconds": 38.139,
+        "cpu_peak_sample_percent": 335.0,
+        "worker_peak_rss_mib": 2378.5,
+        "system_gpu_percent_median": 54.0,
+        "system_gpu_percent_peak": 73.0,
+        "photo": "shoes",
+        "glb_bytes": 812432,
+        "separate_segmentation_seconds": null
+      }
+    ]
+  },
+  "triposr": {
+    "cold_start": {
+      "device": "mps",
+      "duration_seconds": 7.133,
+      "cpu_peak_sample_percent": 135.7,
+      "worker_peak_rss_mib": 1411.28125,
+      "system_gpu_percent_median": 58.0,
+      "system_gpu_percent_peak": 67.0
+    },
+    "jobs": [
+      {
+        "model": 1.8959990000003017,
+        "mesh": 11.988331208005548,
+        "resolution": 256,
+        "bake": 52.976415000041015,
+        "duration_seconds": 67.518,
+        "cpu_peak_sample_percent": 370.4,
+        "worker_peak_rss_mib": 431.296875,
+        "system_gpu_percent_median": 53.0,
+        "system_gpu_percent_peak": 99.0,
+        "photo": "shoes",
+        "glb_bytes": 4522232,
+        "separate_segmentation_seconds": 4.541
+      },
+      {
+        "model": 2.818041416001506,
+        "mesh": 13.296165083011147,
+        "resolution": 256,
+        "bake": 20.716788541991264,
+        "duration_seconds": 37.028,
+        "cpu_peak_sample_percent": 501.3,
+        "worker_peak_rss_mib": 401.796875,
+        "system_gpu_percent_median": 61.0,
+        "system_gpu_percent_peak": 100.0,
+        "photo": "shoes",
+        "glb_bytes": 4522232,
+        "separate_segmentation_seconds": 4.541
+      },
+      {
+        "model": 1.3443186249933206,
+        "mesh": 6.114851624995936,
+        "resolution": 224,
+        "bake": 11.581380666990299,
+        "duration_seconds": 19.217,
+        "cpu_peak_sample_percent": 850.6,
+        "worker_peak_rss_mib": 479.65625,
+        "system_gpu_percent_median": 33.0,
+        "system_gpu_percent_peak": 99.0,
+        "photo": "electronics",
+        "glb_bytes": 5387884,
+        "separate_segmentation_seconds": 2.529
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "sneaker.usdz": {
+    "sha256": "7923cd211b87cd1345ffed862670050f5870422d7b4b7b4f68b3de4b9cc59714",
+    "bytes": 2054699,
+    "arkit_checker": "Validation Result with no explicit variants set\nSuccess!",
+    "stored_aligned64": true,
+    "embedded_texture": true,
+    "y_up": true,
+    "metre_units": true,
+    "usd_preview_surface": true,
+    "physical_device": false
+  },
+  "quick-look-sdk.usdz": {
+    "sha256": "75de394aee4403e0a7d939ddb80052d7c5df94db635f8fb96f28820ab57af544",
+    "bytes": 2055055,
+    "arkit_checker": "Validation Result with no explicit variants set\nSuccess!",
+    "stored_aligned64": true,
+    "embedded_texture": true,
+    "y_up": true,
+    "metre_units": true,
+    "usd_preview_surface": true,
+    "physical_device": false
+  }
+}

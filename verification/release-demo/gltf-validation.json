@@ -1,0 +1,29 @@
+{
+  "../release-demo/sneaker.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  }
+}

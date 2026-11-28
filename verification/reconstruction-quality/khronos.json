@@ -1,0 +1,503 @@
+{
+  "baseline/bottle.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "baseline/chair.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "baseline/electronics.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "baseline/shoe.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "baseline/toy.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/bottle.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/chair-2048.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/chair.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/electronics.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/shoe-2048.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/shoe-model-material.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 1,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      },
+      {
+        "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+        "severity": 1,
+        "pointer": "/meshes/0/primitives/0/material"
+      }
+    ]
+  },
+  "reviewed/shoe-normal-only.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 1,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      },
+      {
+        "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+        "severity": 1,
+        "pointer": "/meshes/0/primitives/0/material"
+      }
+    ]
+  },
+  "reviewed/shoe-roughness-only.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      },
+      {
+        "code": "UNUSED_OBJECT",
+        "severity": 2,
+        "pointer": "/textures/1"
+      }
+    ]
+  },
+  "reviewed/shoe.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "reviewed/toy.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "edited/bottle.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "edited/electronics.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  },
+  "browser/shoe.glb": {
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "messages": [
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/POSITION"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/TEXCOORD_0"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/attributes/NORMAL"
+      },
+      {
+        "code": "BUFFER_VIEW_TARGET_MISSING",
+        "severity": 3,
+        "pointer": "/meshes/0/primitives/0/indices"
+      }
+    ]
+  }
+}

@@ -56,3 +56,23 @@ The code review found correct disposal: the three.js canvas disposes geometry, m
 ## Backend overhead
 
 `prepare_image` and `finish_mesh` are included in the times above. The Round and Box jobs (2.5–3.1 s in total, including background removal) bound that overhead at about 3 s.
+
+## Release rehearsal on the M5
+
+28 November 2026, IST. The new run loaded each model in its existing isolated environment and exercised the same worker routines as production. SF3D reported CPU. TripoSR reported MPS for model operations, with CPU marching cubes and other host work. GPU percentages came from the system-wide AGX driver during a live rehearsal, so they include rendering and other applications. They cannot be attributed to either worker alone. CPU percentage is the worker's sampled `ps` value with 100% representing one core. RSS is a 500 ms sample of resident memory, with shared and compressed unified memory outside a complete estimate.
+
+| Worker, fixture | Cold model startup | First reconstruction | Warm reconstruction | Texture work, first / warm | Maximum observed worker RSS | Warm GLB |
+|---|---:|---:|---:|---:|---:|---:|
+| SF3D, sneaker, 1024 px | 30.23 s | 56.13 s | 38.14 s | 1.06 / 1.09 s | 2,529 MiB | 812,432 B |
+| TripoSR, sneaker, 2048 px | 7.13 s | 67.52 s | 37.03 s | 52.98 / 20.72 s | 1,411 MiB | 4,522,232 B |
+
+SF3D includes segmentation in its reconstruction time. TripoSR's separate sneaker segmentation took 4.54 s. The SF3D texture phase spans UV rasterization to material construction in the installed model. The instrumented TripoSR texture phase uses the worker's bake timer. Warm CPU peaks were 335% for SF3D and 501% for TripoSR. At those workload intervals the system GPU peaked at 73% and 100% respectively. The queued TripoSR headphones chose grid 224 after the grid-256 reconstruction exceeded budget, and its direct worker GLB was 5,387,884 bytes. The model warms once and the normal backend limits it to one active reconstruction. [Raw M5 timings](verification/release-demo/m5.json)
+
+Reproduce with the installed local model environments:
+
+```sh
+.venv/bin/python verification/release-demo/benchmark_m5.py verification/release-demo/m5.json
+.venv/bin/python verification/release-demo/queue_smoke.py
+```
+
+The release queue test accepted both TripoSR jobs before either completed at 0.016 and 0.027 seconds from start. The sneaker completed at 23.30 s. The headphones waited, then completed at 43.63 s with 90,111 published triangles and 5,387,884 bytes. Measurements used real jobs and the production queue implementation with isolated storage. [Queue timing](verification/release-demo/queue.json)

@@ -10,6 +10,7 @@ export interface DialogProps {
   eyebrow?: ReactNode;
   description?: string;
   lightDismiss?: boolean;
+  className?: string;
   children: ReactNode;
   footer?: ReactNode;
 }
@@ -21,6 +22,7 @@ export function Dialog({
   eyebrow,
   description,
   lightDismiss = true,
+  className,
   children,
   footer,
 }: DialogProps) {
@@ -83,7 +85,7 @@ export function Dialog({
         }
         onClose();
       }}
-      className="v3d-dialog"
+      className={className ? `v3d-dialog ${className}` : "v3d-dialog"}
       {...(lightDismiss
         ? ({ closedby: "any" } as Record<string, string>)
         : {})}

@@ -87,6 +87,12 @@ class Capability(BaseModel):
     supports_background_removal: bool = True
 
 
+class InferenceHealth(BaseModel):
+    state: Literal["unconfigured", "unverified", "busy", "ready", "degraded"]
+    active_jobs: int
+    last_successful_provider: str | None = None
+
+
 class Health(BaseModel):
     status: str
     providers: list[Capability]
@@ -100,6 +106,17 @@ class Health(BaseModel):
     # Round-object mode (bottles, cans, jars): needs the local background-removal model.
     round_mode: bool = False
     box_mode: bool = False
+    foreground_preview: bool = False
+    provider_chain: list[Capability]
+    inference: InferenceHealth
+
+
+class ForegroundPreview(BaseModel):
+    width: int
+    height: int
+    crop: tuple[int, int, int, int]
+    mask_png: str
+    cutout_png: str
 
 
 class CaptureSession(BaseModel):

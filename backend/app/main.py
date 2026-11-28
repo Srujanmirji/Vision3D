@@ -5,10 +5,12 @@ import math
 import secrets
 import shutil
 import sqlite3
+import tempfile
 import time
 from collections import OrderedDict, deque
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from fastapi import Cookie, Depends, FastAPI, File, Form, Query, Request, Response, UploadFile
@@ -19,10 +21,10 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
 from .config import Settings
-from .images import prepare_image
-from .jobs import Jobs, Runner, event, subprocess_runner
+from .images import MAX_MASK_BYTES, apply_reviewed_mask, foreground_preview, prepare_image
+from .jobs import Jobs, Runner, event, run_step, subprocess_runner
 from .middleware import UploadBodyLimit
-from .providers import COMMUNITY, HUNYUAN, Provider
+from .providers import COMMUNITY, HUNYUAN, SF3D_SCRIPT, Provider, sf3d_env
 from .schemas import (
     Capability,
     CaptureInfo,
@@ -31,8 +33,10 @@ from .schemas import (
     Error,
     ErrorResponse,
     Failure,
+    ForegroundPreview,
     Health,
     History,
+    InferenceHealth,
     Job,
     JobCreated,
     MeshInfo,
@@ -129,6 +133,8 @@ def create_app(
         else {}
     )
     rate = UploadRate(settings.uploads_per_minute)
+    preview_gate = asyncio.Lock()
+    foreground_supported = bool(providers and providers[0].kind == "sf3d")
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -159,6 +165,9 @@ def create_app(
         title="Vision3D API",
         version="1.0.0",
         lifespan=lifespan,
+        docs_url=None if settings.public_app else "/docs",
+        redoc_url=None if settings.public_app else "/redoc",
+        openapi_url=None if settings.public_app else "/openapi.json",
         responses=api_errors(500),
         description="Session-scoped photo reconstruction jobs, model storage and expiring read-only shares.",
     )
@@ -187,7 +196,8 @@ def create_app(
     @api.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, _: RequestValidationError) -> JSONResponse:
         upload = request.method == "POST" and (
-            request.url.path == "/v1/jobs" or request.url.path.startswith("/v1/captures/")
+            request.url.path in ("/v1/jobs", "/v1/preprocessing/foreground")
+            or request.url.path.startswith("/v1/captures/")
         )
         code = "INVALID_IMAGE" if upload else "INVALID_REQUEST"
         return error_response(422, code, "The request fields are missing or invalid.")
@@ -254,7 +264,7 @@ def create_app(
         raise Failure("NOT_FOUND", "Model not found.", 404)
 
     @api.get("/health", tags=["Health"])
-    async def health(response: Response) -> Health:
+    async def health(request: Request, response: Response) -> Health:
         response.headers["Cache-Control"] = "no-store"
         capabilities = [
             Capability(id=p.id, label=p.label, verified=p.verified, operator_configured=p.use_token)
@@ -271,7 +281,15 @@ def create_app(
             external_processing=sends_photo_externally,
             round_mode="round" in shape_providers,
             box_mode="box" in shape_providers,
+            foreground_preview=foreground_supported,
+            provider_chain=capabilities,
+            inference=jobs(request).inference_health(bool(providers)),
         )
+
+    @api.get("/health/inference", tags=["Health"])
+    async def inference_health(request: Request, response: Response) -> InferenceHealth:
+        response.headers["Cache-Control"] = "no-store"
+        return jobs(request).inference_health(bool(providers))
 
     @api.get("/health/live", tags=["Health"])
     async def liveness() -> dict[str, str]:
@@ -291,6 +309,43 @@ def create_app(
         if origin and origin != allowed_origin:
             raise Failure("ORIGIN_FORBIDDEN", "This origin cannot modify Vision3D data.", 403)
 
+    async def read_photo(image: UploadFile) -> bytes:
+        if image.size is not None and image.size > settings.max_upload:
+            raise Failure("INVALID_IMAGE", "The upload exceeds the size limit.", 413)
+        raw = await image.read(settings.max_upload + 1)
+        if len(raw) > settings.max_upload:
+            raise Failure("INVALID_IMAGE", "The upload exceeds the size limit.", 413)
+        return raw
+
+    @api.post("/v1/preprocessing/foreground", tags=["Images"], responses=api_errors(403, 413, 422, 429, 503))
+    async def preview_foreground(
+        request: Request,
+        key: Owner,
+        image: Annotated[UploadFile, File(description="One JPEG, PNG or WebP image.")],
+    ) -> ForegroundPreview:
+        """Return the full-frame transparent cutout, grayscale mask and exclusive crop bounds."""
+        rate.check(upload_peer(request, settings.trusted_proxy_ips))
+        if not foreground_supported:
+            raise Failure("PROVIDER_UNAVAILABLE", "Foreground preview needs local Stable Fast 3D.", 503)
+        raw = await read_photo(image)
+        if preview_gate.locked():
+            raise Failure("RATE_LIMITED", "Another foreground preview is running. Try again shortly.", 429)
+        async with preview_gate:
+            with tempfile.TemporaryDirectory(prefix="preview-", dir=storage(request).work) as temporary:
+                source = Path(temporary) / "source.png"
+                mask = Path(temporary) / "mask.png"
+                await run_in_threadpool(prepare_image, raw, source)
+                home = Path(providers[0].space)
+                try:
+                    async with asyncio.timeout(20):
+                        await run_step([
+                            str(home / "venv/bin/python"), str(SF3D_SCRIPT.with_name("segment.py")),
+                            str(source), str(mask),
+                        ], sf3d_env(home))
+                except TimeoutError as exc:
+                    raise Failure("PROVIDER_UNAVAILABLE", "Foreground preview timed out.", 503) from exc
+                return await run_in_threadpool(foreground_preview, source, mask)
+
     async def start_job(
         request: Request,
         key: str,
@@ -300,6 +355,7 @@ def create_app(
         provider: str | None = None,
         claim: Callable[[str], None] | None = None,
         mode: Mode = "auto",
+        foreground_mask: UploadFile | None = None,
     ) -> str:
         """Validate, strip and queue one upload. Shared by desktop uploads and phone captures."""
         rate.check(upload_peer(request, settings.trusted_proxy_ips))
@@ -313,6 +369,10 @@ def create_app(
             chain: tuple[Provider, ...] = (shape_providers[mode],)
         else:
             chain = providers
+        if foreground_mask is not None:
+            if not foreground_supported or mode != "auto" or not remove_background:
+                raise Failure("INVALID_MASK", "A reviewed mask requires local AI with background removal on.", 422)
+            chain = providers[:1]
         if not chain:
             raise Failure("PROVIDER_UNAVAILABLE", "No generation provider is configured.", 503)
         # Consent is needed whenever a provider this job may use is hosted (a fallback counts).
@@ -327,23 +387,24 @@ def create_app(
         queue = jobs(request)
         if len(queue.active) >= settings.queue_limit:
             raise Failure("QUEUE_FULL", "The generation queue is full.", 429)
-        if image.size is not None and image.size > settings.max_upload:
-            raise Failure("INVALID_IMAGE", "The upload exceeds the size limit.", 413)
-        raw = await image.read(settings.max_upload + 1)
-        if len(raw) > settings.max_upload:
-            raise Failure("INVALID_IMAGE", "The upload exceeds the size limit.", 413)
+        raw = await read_photo(image)
         job_id = secrets.token_hex(16)
         store = storage(request)
         folder = store.work / job_id
         folder.mkdir(mode=0o700)
         try:
             await run_in_threadpool(prepare_image, raw, folder / "input.png")
+            if foreground_mask is not None:
+                mask_bytes = await foreground_mask.read(MAX_MASK_BYTES + 1)
+                if len(mask_bytes) > MAX_MASK_BYTES:
+                    raise Failure("INVALID_MASK", "The mask exceeds the size limit.", 413)
+                await run_in_threadpool(apply_reviewed_mask, folder / "input.png", mask_bytes)
             if len(queue.active) >= settings.queue_limit:
                 raise Failure("QUEUE_FULL", "The generation queue is full.", 429)
             if claim:
                 claim(job_id)
             store.new_job(job_id, key)
-            queue.enqueue(job_id, key, chain, remove_background)
+            queue.enqueue(job_id, key, chain, remove_background and foreground_mask is None)
         except BaseException:
             shutil.rmtree(folder, ignore_errors=True)
             raise
@@ -363,9 +424,13 @@ def create_app(
             str | None, Form(description="Configured primary provider ID; fallback is automatic if enabled.")
         ] = None,
         mode: Annotated[Mode, Form(description="auto: AI; round: bottle/can/jar; box: packaging/book (photo wrap).")] = "auto",
+        foreground_mask: Annotated[
+            UploadFile | None, File(description="Optional reviewed PNG mask for local SF3D only.")
+        ] = None,
     ) -> JobCreated:
         job_id = await start_job(
-            request, key, image, allow_external_processing, remove_background, provider, mode=mode
+            request, key, image, allow_external_processing, remove_background, provider,
+            mode=mode, foreground_mask=foreground_mask,
         )
         return JobCreated(job_id=job_id, status="queued")
 
@@ -507,6 +572,13 @@ def create_app(
         return Share(
             token=token, mobile_url=f"{settings.public_app.rstrip('/')}/ar/{token}", expires_at=utc(expiry)
         )
+
+    @api.delete(
+        "/v1/models/{model_id}/share/{token}", status_code=204, tags=["Shares"], responses=api_errors(403, 404)
+    )
+    async def revoke_share(request: Request, model_id: str, token: str, key: Owner) -> None:
+        if not storage(request).revoke_share(model_id, key, token):
+            raise Failure("NOT_FOUND", "Share link not found.", 404)
 
     def shared_asset(request: Request, token: str) -> SharedAsset:
         record = storage(request).shared(token)

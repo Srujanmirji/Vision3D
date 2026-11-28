@@ -1,0 +1,29 @@
+{
+  "fixtureOnly": true,
+  "uploaded": true,
+  "downloadedMatchingGlb": true,
+  "successfulShareWithoutOwnerCookie": true,
+  "sampleLoaded": true,
+  "wireframeReusedBlob": true,
+  "noPolicyViolations": true,
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 834,
+      "height": 1194
+    },
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 375,
+      "height": 812
+    }
+  ],
+  "accessibility": [],
+  "physicalDevice": false
+}

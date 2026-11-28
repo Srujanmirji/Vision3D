@@ -1,6 +1,40 @@
 # Implementation checklist
 Mark tasks complete only after verification.
 
+## AR and release rehearsal — 28 November 2026
+
+- [x] Review the latest remote audit and apply the worker cancellation, protocol recovery and TripoSR geometry-budget fixes. Verify the two-request queue with real local inference.
+- [x] Check desktop GLB and USDZ download, the SDK's Quick Look package and the guest 3D fallback. Cover share expiry and owner-only revocation in the backend suite.
+- [x] Exercise a live Quick Tunnel outage and restore the Vercel alias to a healthy backend origin. Separate worker status from API reachability and test supervisor and status-poll recovery.
+- [x] Rerun the live rehearsal after restoration. Verify SF3D, browser downloads, decoded QR, cookie-free asset delivery and revocation after deletion. Verify the public camera UI with a browser fixture.
+- [x] Measure cold startup, warm inference, texture work, sampled memory, CPU and system GPU activity on the M5.
+- [ ] Provision and verify a named Cloudflare route with a stable hostname. The public rehearsal uses a Quick Tunnel.
+- [ ] Record hands-on iPhone and Android outcomes, including scan, placement, tracking, rotation, scaling and return over separate networks.
+
+See [RELEASE_REPORT.md](RELEASE_REPORT.md), [AR_DEVICE_TESTING.md](AR_DEVICE_TESTING.md) and [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md).
+
+## Workspace & 3D inspection UX improvements — 28 November 2026
+
+- [x] Replace the full-width emerald generation banner with a compact inline status pill (`role="status"`, `"3D model generated and validated."`, and `Details` link) inside the viewport top bar.
+- [x] Add side-by-side Before (`Source 2D`, with `Photo`/`Cutout` toggle when a reviewed mask exists and `Align 3D Front`) and After (`3D Model`) comparison without unmounting the 3D canvas or re-fetching the GLB.
+- [x] Upgrade local SF3D background-removal preview and mask editing (`POST /v1/preprocessing/foreground` and `foreground_mask` on `POST /v1/jobs`) with `Fine`/`Medium`/`Broad` brush presets, `Show cutout`/`Show mask` view toggle, dark checkerboard transparency backdrop, reviewed cutout preview badge in `ImageInputPanel`, and preserved `44px` touch targets and keyboard `Tab`/arrow/`Space` flow.
+- [x] Add `Top` and `Bottom` camera presets alongside `Perspective`, `Front`, `Rear`, and `Side`, unlocking full polar orbit bounds (`0deg`–`180deg`) in `<model-viewer>` and Three.js across `/create` and `/models/[id]`.
+- [x] Add real untextured `Geometry` (matte studio clay) inspection mode alongside `Textured` and `Wireframe`, reusing the in-memory GLB blob URL with zero duplicate network requests.
+- [x] Add optional studio `Grid` (perspective floor grid in Textured mode and 3D `GridHelper` in Geometry/Wireframe modes) and `Lighting` controls (`Studio`, `Soft`, and `Contrast` presets, `Exposure` slider, and `Shadows` toggle).
+- [x] Provide clear labels and an expandable comparison explaining `AI`, `Round`, and `Box` reconstruction modes, and gate `Quality` controls strictly on backend `/health` capability advertisement (hidden when unsupported).
+- [x] Refine 3D viewport object framing, suppress `<model-viewer>`'s redundant top progress line, and verify desktop (`1440px`, `1280px`) and mobile (`390px`, `375px`) layouts with 49 backend tests, 65 frontend Vitest tests, ESLint, strict TypeScript, production Next.js build, `pnpm test:browser`, and live local SF3D foreground-preview browser checks.
+
+## SF3D reconstruction quality — 28 November 2026
+
+- [x] Reconstruct chair, sneaker, water bottle, toy and headphones with the original pipeline. Save the meshes, timings, sampled memory and six views.
+- [x] Return a transparent PNG and mask from local SF3D preprocessing. Add workspace mask review, brush tools and opacity adjustment. Cover red edges, shadows and thin silhouettes in regression tests.
+- [x] Compare 1024 px and 2048 px at identical geometry. Evaluate roughness, normal mapping and test lighting. Retain the existing 1024 px matte default.
+- [x] Add optional offline geometry and silhouette diagnostics. Keep heuristic flags separate from measured geometry and structural validation.
+- [x] Regenerate all five categories and compare six views. Submit hand-edited bottle and headphone masks to the real API and independently validate the downloads. A cluttered toy still reconstructs as a thin surface. Hidden surface accuracy remains unverified without reference scans.
+- [x] Verify keyboard mask editing, live SF3D and GLB download using a local production frontend. Pass 49 backend tests, 64 frontend tests, lint, type checks and production build.
+
+See [RECONSTRUCTION_QUALITY_REPORT.md](RECONSTRUCTION_QUALITY_REPORT.md) for commands, output and limitations.
+
 ## Current status — 27 November 2026
 
 **Initial geometry spike.** Live testing produced three real shape-only GLBs from Hunyuan3D-2, and all three passed geometry checks and a browser orbit through 360°. Its texture route failed and the toy request hit GPU quota. Community CPU TripoSR also returned valid vertex-colored GLBs and OBJ files for the sneaker and toy photos. CPU TripoSR is the geometry demo primary and Hunyuan shape-only is the quota-dependent fallback. No provider-native texture route qualified during that spike. The backend phase below verified texture baking from vertex colors. Mobile AR and USDZ are pending.

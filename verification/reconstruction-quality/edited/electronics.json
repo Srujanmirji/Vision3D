@@ -1,0 +1,13 @@
+{
+  "vertices": 9194,
+  "triangles": 15124,
+  "bounds_extent": [
+    0.9065161049365997,
+    0.951703816652298,
+    0.1300763487815857
+  ],
+  "appearance": "native_texture",
+  "byte_size": 563424,
+  "provider": "sf3d-local",
+  "end_to_end_seconds": 23.521
+}

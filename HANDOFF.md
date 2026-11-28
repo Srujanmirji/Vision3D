@@ -1,5 +1,33 @@
 # Vision3D engineering handoff
 
+## AR and release rehearsal — 28 November 2026
+
+- Recovered the public Vercel app after its Quick Tunnel returned Cloudflare 1033. The replacement connector and backend are supervised under the temporary macOS job `com.vision3d.demo-rehearsal`, with the runtime staged outside Downloads. The production alias was kept and the same frontend deployment source was rebuilt with the replacement upstream.
+- The backend exposes observed inference health and owner-only share revocation. The local frontend candidate rechecks health after reconnect, tolerates 45 seconds of transient poll failures, and reports provider state separately from API reachability.
+- The M5 benchmark recorded SF3D on CPU and TripoSR using MPS for model operations. Two isolated TripoSR submissions completed, including a valid 90,111-triangle headphone result.
+- Strict ARKit package validation passed on the public sneaker's browser USDZ and SDK Quick Look USDZ. Physical device results and a named Cloudflare route remain release gates. See [the release report](RELEASE_REPORT.md) and [startup and recovery](DEPLOYMENT_CHECKLIST.md).
+- The restored public app passed desktop SF3D, orbit and wireframe, both downloads, decoded QR, cookie-free GLB with byte ranges, and deletion that revoked the link. A separate mobile-size camera fixture passed capture and denial recovery. Backend tests passed 55, frontend tests passed 68, and lint, types and the production build passed.
+
+## Workspace & 3D inspection UX improvements — 28 November 2026
+
+Refined the creation studio and model detail viewer without altering the Obsidian Black (`#101011`), Charcoal (`#19191B`), and Copper Orange (`#F79448`) visual identity or modifying backend contracts:
+
+- **Compact generation status (`ModelViewport.tsx`)**: Replaced the full-width green alert bar with a compact status pill (`role="status"`, `"3D model generated and validated."`, and `Details` link) in the viewport header.
+- **Before & After 2D/3D comparison (`ModelViewport.tsx`)**: Added a `Compare` split view pairing `Before · Source 2D` (with `Photo` vs `Cutout` toggle when a reviewed foreground mask is active and an `Align 3D Front` quick camera snap) alongside the live interactive `After · 3D Model` canvas without remounting or re-downloading the GLB.
+- **Background-removal preview & mask editing (`ForegroundDialog.tsx`, `ImageInputPanel.tsx`, `CreateWorkspace.tsx`)**: Built on `POST /v1/preprocessing/foreground` and `POST /v1/jobs` (`foreground_mask`) to add `Fine`/`Medium`/`Broad` brush sizes, `Show mask`/`Show cutout` layer toggle, checkerboard transparency backdrop, live pointer brush ring, and a `Reviewed mask active` thumbnail summary in `ImageInputPanel`, preserving `>= 44px` touch targets and the keyboard `Tab`/arrow/`Space` editing sequence.
+- **Expanded camera presets & framing (`viewerTypes.ts`, `InteractiveModelCanvas.tsx`, `ThreeWireframeCanvas.tsx`, `app/models/[id]/page.tsx`)**: Added `Top` (`0deg 2deg 98%`) and `Bottom` (`0deg 178deg 98%`) presets, unlocked `0deg`–`180deg` polar orbits on `<model-viewer>`, improved object scale/radius framing, centered desktop stage spacing while keeping mobile left-toolbar clearance, wrapped mobile preset buttons cleanly without clipping, and hid `<model-viewer>`'s redundant default progress bar.
+- **Geometry-only inspection, ground grid & lighting controls (`ThreeWireframeCanvas.tsx`, `InteractiveModelCanvas.tsx`, `ModelViewport.tsx`, `app/models/[id]/page.tsx`)**: Added `Geometry` (untextured matte clay `MeshStandardMaterial` over real parsed GLB geometry with vertex normal fallback) alongside `Textured` and `Wireframe` reusing the shared `blob:` URL with zero extra network fetches, plus a toggleable `Grid` and expandable `Lighting` bar (`Studio`, `Soft`, `Contrast` presets, `Exposure` multiplier, and `Shadows` switch).
+- **Clear reconstruction mode guidance & capability-gated quality (`ShapeModeSelect.tsx`, `lib/api.ts`)**: Added explicit badges, descriptions, and a collapsible comparison for `AI` (`auto`), `Round` (`round`), and `Box` (`box`) modes, plus `QualitySelect` / `availableQualityOptions()` which exposes quality controls strictly when advertised by `/health` (remaining hidden while the backend retains its fixed 1024 px matte default per [RECONSTRUCTION_QUALITY_REPORT.md](RECONSTRUCTION_QUALITY_REPORT.md)).
+- **Verification**: Backend `pytest` (`49 passed, 3 skipped`), frontend `pnpm lint`, `pnpm typecheck`, `pnpm test` (`65 passed` across 12 test files), `pnpm build`, `pnpm test:browser` (`1440px`, `834px`, `390px`, `375px`, zero CSP or `axe-core` WCAG 2.1 AA violations, verified GLB SHA-256 download and cookie-free QR AR share), and live local SF3D + TripoSR Chromium verification (`1280px` and `375px` foreground mask dialog, brush sizes, keyboard `Tab`/arrow/`Space` + opacity slider, `AI`/`Round`/`Box` labels, and local `Box` generation) all passed.
+
+## SF3D reconstruction quality — 28 November 2026
+
+- The creation workspace adds local foreground preview, erase and restore brushes, and a minimum-opacity control using the existing dialog styles. `POST /v1/preprocessing/foreground` returns PNG data and crop bounds. `POST /v1/jobs` accepts `foreground_mask` and uses local SF3D for reviewed jobs.
+- Five real photo categories have original and reviewed GLBs and six-view renders. Manually removing the bottle's reflection and clearing the headphone opening improved front silhouette agreement with the edited references. Headphone depth and the cluttered toy remain weak.
+- Retained the existing unreviewed path and 1024 px matte texture default. 2048 px kept positions and indices identical and added about 19–20% in GLB bytes for the paired tests. The experimental normal map triggered a generated-tangent warning.
+- Optional `python -m app.quality` reports measured geometry separately from silhouette and shape flags. See [the reconstruction report](RECONSTRUCTION_QUALITY_REPORT.md) and [evidence](verification/reconstruction-quality) for reproduction and validation.
+- Ruff, mypy, 49 backend tests, ESLint, strict TypeScript, 64 frontend tests and the production build passed. Chromium verified the editor at 375 px and 1280 px, followed by a real browser upload and SF3D download. Khronos reported zero errors across 18 GLBs. Its two warnings concern the experimental normal maps.
+
 ## Box mode and paid-model research — 28 November 2026
 
 **Box mode** (`backend/app/box.py`, `mode=box`) is for packaging, books and phones.

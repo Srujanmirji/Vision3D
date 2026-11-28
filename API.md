@@ -2,6 +2,7 @@
 | Method | Path | Result |
 |---|---|---|
 | POST | /v1/jobs | multipart image, optional supported options; 202 job_id/status |
+| POST | /v1/preprocessing/foreground | local SF3D foreground preview; transparent PNG, grayscale PNG and crop bounds |
 | GET | /v1/jobs | session-scoped job history with limit and offset |
 | GET | /v1/jobs/{id} | status, stage, progress, error, model_id and provider |
 | DELETE | /v1/jobs/{id} | cancel active job, return terminal status |
@@ -9,6 +10,7 @@
 | GET | /v1/models | session-scoped list with limit and offset |
 | GET / HEAD | /v1/models/{id}/glb | private inline GLB or attachment with download=true |
 | POST | /v1/models/{id}/share | expiring token and mobile URL |
+| DELETE | /v1/models/{id}/share/{token} | revoke one link as the owner |
 | GET | /v1/share/{token} | read-only asset metadata |
 | GET / HEAD | /v1/share/{token}/glb | expiring cookie-free GLB, Range support, optional download=true |
 | DELETE | /v1/models/{id} | revoke shares and delete assets |
@@ -19,9 +21,12 @@
 | GET | /health | provider configuration and upload limits |
 | GET | /health/live | process liveness |
 | GET | /health/ready | store and provider configuration readiness |
-| GET | /openapi.json, /docs | generated OpenAPI and interactive reference |
+| GET | /health/inference | observed inference status, without starting work |
+| GET | /openapi.json, /docs | generated OpenAPI and interactive reference in local mode |
 
 Status: queued, processing, succeeded, failed. Progress nullable. Job failures include INVALID_IMAGE, PROVIDER_UNAVAILABLE, QUOTA_EXCEEDED, TIMEOUT, INVALID_MODEL, CANCELLED and INTERRUPTED. Return structured code/message, no stack traces. Use anonymous session ownership via secure cookie or signed session token; authorize all private operations. Rate-limit uploads, restrict CORS, enforce size limits. Public share tokens grant read-only access until expiry.
+
+Advertised as `foreground_preview` in `/health`, foreground preview accepts the same multipart `image` field as an AI job. The no-store response includes `width`, `height`, the exclusive pixel bounds `crop` as `[left, top, right, bottom]`, and full-frame base64 PNG bytes in `cutout_png` and `mask_png`. Dimensions reflect EXIF orientation and the 1024 px backend limit. Submit the same photo and an optional opaque grayscale PNG as multipart `foreground_mask` to `POST /v1/jobs`. The mask must match the preview dimensions and fit within 1,100,000 bytes and the existing multipart limit. A reviewed mask uses local SF3D in `auto` mode with background removal enabled. The backend frames the mask once and sends the result directly to SF3D.
 
 ## Backend contract decisions
 

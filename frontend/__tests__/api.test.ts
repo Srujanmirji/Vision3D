@@ -4,11 +4,13 @@ import {
   createJob,
   downloadModel,
   getModel,
+  getSharedAsset,
   isHttpsUrl,
   isLocalhostUrl,
   listJobs,
   listModels,
   pollJobUntilDone,
+  previewForeground,
   Vision3DApiError,
 } from "@/lib/api";
 
@@ -80,6 +82,25 @@ describe("API URL helpers and error handling", () => {
     expect(form.get("remove_background")).toBe("false");
   });
 
+  it("submits a reviewed mask with the exact photo used for its preview", async () => {
+    const preview = { width: 32, height: 24, crop: [1, 2, 20, 18], mask_png: "mask", cutout_png: "png" };
+    const fetch = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.json(preview))
+      .mockResolvedValueOnce(Response.json({ job_id: "real-job", status: "queued" }, { status: 202 }));
+    const photo = new File(["photo"], "shoe.jpg", { type: "image/jpeg" });
+    const result = await previewForeground(photo, new AbortController().signal);
+    expect(fetch.mock.calls[0]?.[0]).toBe("/api/v1/preprocessing/foreground");
+    expect(result.upload).toBe(photo);
+    const mask = new Blob(["grayscale"], { type: "image/png" });
+    await createJob(new File(["different"], "other.jpg"), {
+      allow_external_processing: false,
+      reviewedForeground: { upload: result.upload, mask },
+    });
+    const form = fetch.mock.calls[1]?.[1]?.body as FormData;
+    expect(form.get("image")).toBe(photo);
+    expect(form.get("foreground_mask")).toMatchObject({ name: "foreground.png", type: "image/png" });
+  });
+
   it("polls real states, recovers from a network interruption and preserves null progress", async () => {
     vi.useFakeTimers();
     const queued = { job_id: "job", status: "queued", progress: null };
@@ -103,6 +124,20 @@ describe("API URL helpers and error handling", () => {
     const job = pollJobUntilDone("job", () => controller.abort(), controller.signal);
     await expect(job).rejects.toMatchObject({ name: "AbortError" });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the same job through a short Cloudflare tunnel outage", async () => {
+    vi.useFakeTimers();
+    const succeeded = { job_id: "job", status: "succeeded", model_id: "model", progress: null };
+    const fetch = vi.spyOn(globalThis, "fetch");
+    for (let attempt = 0; attempt < 4; attempt++) {
+      fetch.mockResolvedValueOnce(new Response("Cloudflare error", { status: 530 }));
+    }
+    fetch.mockResolvedValueOnce(Response.json(succeeded));
+    const polling = pollJobUntilDone("job", vi.fn());
+    await vi.advanceTimersByTimeAsync(18000);
+    await expect(polling).resolves.toEqual(succeeded);
+    expect(fetch.mock.calls.map(([path]) => path)).toEqual(Array(5).fill("/api/v1/jobs/job"));
   });
 
   it("bounds polling and asks the caller to check the existing job again", async () => {
@@ -133,5 +168,19 @@ describe("API URL helpers and error handling", () => {
     await expect(downloadModel(model)).resolves.toMatchObject({ size: 9 });
     expect(fetchSpy.mock.calls[2]?.[0]).toBe("/api/v1/models/model/glb?download=true");
     await expect(downloadModel(model)).rejects.toMatchObject({ code: "INVALID_MODEL" });
+  });
+
+  it("retries transient guest metadata failures without credentials and stops at expiry", async () => {
+    vi.useFakeTimers();
+    const fetch = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response("gateway timeout", { status: 504 }))
+      .mockResolvedValueOnce(Response.json({ model_id: "model" }))
+      .mockResolvedValueOnce(Response.json({ error: { code: "EXPIRED", message: "Expired" } }, { status: 410 }));
+    const retried = getSharedAsset("share");
+    await vi.advanceTimersByTimeAsync(750);
+    await expect(retried).resolves.toEqual({ model_id: "model" });
+    expect(fetch.mock.calls.slice(0, 2).every(([, request]) => request?.credentials === "omit")).toBe(true);
+    await expect(getSharedAsset("expired")).rejects.toMatchObject({ status: 410 });
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 });

@@ -6,8 +6,12 @@ import { CameraCaptureDialog } from "./CameraCaptureDialog";
 import { PhotoTips } from "./PhotoTips";
 import { originalPhotoLimit } from "@/lib/uploadImage";
 import { PhoneCaptureDialog } from "./PhoneCaptureDialog";
-import { ShapeModeSelect } from "./ShapeModeSelect";
-import type { GenerationMode, ProviderCapability } from "@/lib/api";
+import { QualitySelect, ShapeModeSelect } from "./ShapeModeSelect";
+import type {
+  GenerationMode,
+  ProviderCapability,
+  QualityOption,
+} from "@/lib/api";
 import {
   DEFAULT_MAX_UPLOAD_BYTES,
   formatBytes,
@@ -16,6 +20,7 @@ import {
 } from "@/lib/validation";
 import {
   AlertBanner,
+  Badge,
   Button,
   Checkbox,
   CopperSwitch,
@@ -31,6 +36,9 @@ interface ImageInputPanelProps {
   onProviderChange: (providerId: string) => void;
   removeBackground: boolean;
   onRemoveBackgroundChange: (enabled: boolean) => void;
+  onPreviewForeground?: () => void;
+  onClearForeground?: () => void;
+  reviewedCutoutUrl?: string;
   allowExternalProcessing: boolean;
   /** False when the server generates on its own machine only; the consent checkbox is then hidden. */
   consentRequired?: boolean;
@@ -38,6 +46,10 @@ interface ImageInputPanelProps {
   modes?: GenerationMode[];
   mode?: GenerationMode;
   onModeChange?: (mode: GenerationMode) => void;
+  /** Quality options advertised by the backend, if supported. */
+  qualityOptions?: QualityOption[];
+  quality?: string;
+  onQualityChange?: (qualityId: string) => void;
   onAllowExternalProcessingChange: (allowed: boolean) => void;
   maxUploadBytes?: number;
   isGenerating: boolean;
@@ -57,11 +69,17 @@ export function ImageInputPanel({
   onProviderChange,
   removeBackground,
   onRemoveBackgroundChange,
+  onPreviewForeground,
+  onClearForeground,
+  reviewedCutoutUrl,
   allowExternalProcessing,
   consentRequired = true,
   modes = ["auto"],
   mode = "auto",
   onModeChange,
+  qualityOptions = [],
+  quality = "",
+  onQualityChange,
   onAllowExternalProcessingChange,
   maxUploadBytes = DEFAULT_MAX_UPLOAD_BYTES,
   isGenerating,
@@ -76,14 +94,21 @@ export function ImageInputPanel({
   const [dragActive, setDragActive] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const activeProvider = verifiedProviders.find((p) => p.id === selectedProvider);
+  const activeProvider = verifiedProviders.find(
+    (p) => p.id === selectedProvider
+  );
   const showProviderSelector = verifiedProviders.length > 1;
-  const showBgRemovalToggle = Boolean(activeProvider?.supports_background_removal);
+  const showBgRemovalToggle = Boolean(
+    activeProvider?.supports_background_removal
+  );
 
   const handleFile = async (file?: File) => {
     if (isGenerating || !file) return;
     setValidationError(null);
-    const result = await validateImageFile(file, originalPhotoLimit(maxUploadBytes));
+    const result = await validateImageFile(
+      file,
+      originalPhotoLimit(maxUploadBytes)
+    );
     if (!result.ok) {
       setValidationError(result.error.message);
       return;
@@ -167,7 +192,9 @@ export function ImageInputPanel({
                   aria-label="Remove uploaded image"
                   className="absolute right-0 top-0 flex size-11 items-start justify-end rounded-[8px] p-1 text-ink-primary disabled:opacity-40"
                 >
-                  <span className="grid size-6 place-items-center rounded-full bg-obsidian/85"><X className="h-3.5 w-3.5" /></span>
+                  <span className="grid size-6 place-items-center rounded-full bg-obsidian/85">
+                    <X className="h-3.5 w-3.5" />
+                  </span>
                 </button>
               </div>
 
@@ -305,6 +332,16 @@ export function ImageInputPanel({
           />
         )}
 
+        {onQualityChange && qualityOptions.length >= 2 && (
+          <QualitySelect
+            id="quality-select"
+            options={qualityOptions}
+            value={quality}
+            onChange={onQualityChange}
+            disabled={isGenerating}
+          />
+        )}
+
         {showBgRemovalToggle && mode === "auto" && (
           <div className="flex items-center justify-between rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
             <CopperSwitch
@@ -318,9 +355,78 @@ export function ImageInputPanel({
           </div>
         )}
 
+        {onPreviewForeground ? (
+          <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 p-3 space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-ink-primary">
+                Foreground Mask
+              </span>
+              {onClearForeground ? (
+                <Badge tone="copper" dot>
+                  Reviewed mask active
+                </Badge>
+              ) : (
+                <span className="text-[11px] text-ink-muted">Automatic</span>
+              )}
+            </div>
+
+            {onClearForeground && reviewedCutoutUrl ? (
+              <div className="flex items-center gap-2.5 rounded-[8px] border border-border-subtle bg-panel p-2">
+                <div
+                  className="h-12 w-12 shrink-0 overflow-hidden rounded-[6px] border border-border-subtle"
+                  style={{
+                    backgroundImage:
+                      "repeating-conic-gradient(#1b1b1e 0% 25%, #121214 0% 50%)",
+                    backgroundSize: "10px 10px",
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={reviewedCutoutUrl}
+                    alt="Reviewed foreground cutout preview"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <p className="text-[11px] leading-snug text-ink-secondary">
+                  Edited mask will guide local SF3D object cropping and background cleanup.
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] leading-relaxed text-ink-secondary">
+                Inspect the isolated cutout and erase reflections or stray background before generating.
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="lg"
+                variant="secondary"
+                disabled={isGenerating}
+                onClick={onPreviewForeground}
+              >
+                {onClearForeground
+                  ? "Review foreground again"
+                  : "Preview foreground"}
+              </Button>
+              {onClearForeground ? (
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  disabled={isGenerating}
+                  onClick={onClearForeground}
+                >
+                  Clear reviewed mask
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         {verifiedProviders.length === 0 && (
           <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5 text-xs leading-relaxed text-ink-secondary">
-            <p className="font-medium text-ink-primary">Server-side provider pending</p>
+            <p className="font-medium text-ink-primary">
+              Server-side provider pending
+            </p>
             <p className="mt-1 text-[11px]">
               Provider options appear automatically once the backend verifies an
               active image-to-3D endpoint.
@@ -338,16 +444,16 @@ export function ImageInputPanel({
               onCheckedChange={onAllowExternalProcessingChange}
               label={
                 <span>
-                  Allow server-side upload (EXIF stripped) to the hosted 3D inference
-                  provider. Hidden surfaces are inferred, not measured.
+                  Allow server-side upload (EXIF stripped) if generation uses a hosted 3D
+                  inference provider. Hidden surfaces are inferred, not measured.
                 </span>
               }
             />
           </div>
         ) : (
           <p className="rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-3 text-[11px] leading-relaxed text-ink-secondary">
-            Your photo is processed on this server only (location data removed). Hidden
-            surfaces are inferred, not measured.
+            Your photo is processed on this server only (location data removed).
+            Hidden surfaces are inferred, not measured.
           </p>
         )}
       </div>
@@ -358,20 +464,36 @@ export function ImageInputPanel({
           variant="primary"
           size="lg"
           loading={isGenerating}
-          disabled={!uploadedImage || (consentRequired && !allowExternalProcessing) || isGenerating || generationBlocked}
+          disabled={
+            !uploadedImage ||
+            (consentRequired && !allowExternalProcessing) ||
+            isGenerating ||
+            generationBlocked
+          }
           onClick={onGenerate}
           className="w-full"
         >
-          {!isGenerating ? <Sparkles className="h-4 w-4" strokeWidth={2} /> : null}
+          {!isGenerating ? (
+            <Sparkles className="h-4 w-4" strokeWidth={2} />
+          ) : null}
           <span>{isGenerating ? "Generating 3D…" : "Generate 3D"}</span>
         </Button>
       </div>
       {cameraOpen && !isGenerating && (
         <CameraCaptureDialog
           onClose={() => setCameraOpen(false)}
-          onCapture={(file) => { setCameraOpen(false); void handleFile(file); }}
-          onGallery={() => { fileInputRef.current?.click(); setCameraOpen(false); }}
-          onNativeCamera={() => { cameraInputRef.current?.click(); setCameraOpen(false); }}
+          onCapture={(file) => {
+            setCameraOpen(false);
+            void handleFile(file);
+          }}
+          onGallery={() => {
+            fileInputRef.current?.click();
+            setCameraOpen(false);
+          }}
+          onNativeCamera={() => {
+            cameraInputRef.current?.click();
+            setCameraOpen(false);
+          }}
         />
       )}
       <PhoneCaptureDialog

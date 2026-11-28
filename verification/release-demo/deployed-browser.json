@@ -1,0 +1,20 @@
+{
+  "site": "https://vision3d-sigma.vercel.app",
+  "modelId": "3a2c6f00d682f4ff142011a017857de7",
+  "provider": "sf3d-local",
+  "acceptedSeconds": 0.29,
+  "generatedSeconds": 68.02,
+  "triangles": 23694,
+  "bytes": 815624,
+  "beforeOrbit": 0.6108652381980153,
+  "wireframe": true,
+  "twoDownloads": true,
+  "decodedQR": true,
+  "guest": true,
+  "range": true,
+  "networkRetries": [],
+  "conversionSeconds": 4,
+  "physicalDevice": false,
+  "revokedByDeletion": true,
+  "deleteStatus": 204
+}

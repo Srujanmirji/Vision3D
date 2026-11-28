@@ -30,3 +30,19 @@ Record the phone model, OS version, browser version, runtime used, external URL 
 - [ ] Deny camera access or test a device without a compatible runtime. Confirm a usable 3D view and download remain available.
 
 No physical-device checks were run during implementation. Browser emulation and USDZ package validation do not establish native device acceptance.
+
+## Active release rehearsal — 28 November 2026
+
+Use the [public creation page](https://vision3d-sigma.vercel.app/create). Generate from a non-personal photo with a simple solid object, such as a sneaker. Record the model ID from the desktop model details URL. Keep its AR share dialog open for both phones. Scan it rather than typing the address. Record outcomes before revoking the link or deleting the model.
+
+1. On the iPhone 14 Pro Max, turn off Wi-Fi, scan the desktop QR with Camera, and open it in Safari. Confirm the guest model matches and orbit it in 3D. Tap **View in Your Space**. In Quick Look choose AR, scan a well-lit floor, place the model, walk around it, rotate it and pinch to scale. Check texture and orientation as well as stable anchoring. Exit Quick Look and confirm the same Safari page. Repeat on Wi-Fi if practical.
+2. On Android, open the same QR with Chrome on a second network. Verify the Google app and Google Play Services for AR are available. Record which AR runtime opens and test the same placement and gestures. To cover the other Android path separately, use a compatible phone/browser where that path is selected. Report any path that cannot be selected as not run.
+3. On each phone, open `/create`, tap **Take Photo**, allow access, check rear camera, capture, retake and submit a non-personal photo. Reset permissions and deny access to test the gallery fallback. Record camera and AR permission behavior separately.
+4. Check the same link in a fresh guest browsing session with no desktop cookie. Test an expired disposable share and a revoked share as separate cases. After deleting a disposable model, reload its link and confirm the GLB no longer opens. Keep tokens private.
+
+| Device | OS / browser | Network | Model ID | Expected result | Observed result | Status |
+|---|---|---|---|---|---|---|
+| iPhone 14 Pro Max | iOS 27.2.1 reported by device discovery, Safari version to record | Cellular, then optional Wi-Fi | Pending | Camera scan, guest viewer, Quick Look and return | Awaiting hands-on results | Not run by verifier |
+| Android ARCore device | Model, OS, Chrome and AR runtime to record | Separate Wi-Fi or cellular | Pending | Camera scan, guest viewer, WebXR or Scene Viewer and return | Awaiting hands-on results | Not run by verifier |
+
+For each result send the device model, OS version, browser version, network type, runtime, model ID, first failed step or confirmation of the individual steps, and screenshots or logs if available. Redact the share token and avoid capturing personal surroundings.

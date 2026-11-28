@@ -1,0 +1,779 @@
+{
+  "models": {
+    "baseline/bottle.glb": {
+      "bytes": 615552,
+      "vertices": 10207,
+      "triangles": 13928,
+      "nondegenerate_triangles": 13928,
+      "bounds_extent": [
+        0.440768837928772,
+        0.8925125300884247,
+        0.502321720123291
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "591da11ff23a24828ccf41f3ce002851f76c7f772b41facd36f6393c67fd7792",
+      "geometry_sha256": "f3a2e1ddada7a00c5543c4b2c2a4344c82d90271d96113b9d7ce981cacd839e3",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 10207,
+          "triangles": 13928,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.440768837928772,
+            0.8925125300884247,
+            0.502321720123291
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.36127358150589745,
+          "dominant_normal_area_fraction": 0.17650179744487782,
+          "front_silhouette_iou": 0.5254593655727214,
+          "flags": [
+            "low_front_silhouette_overlap"
+          ]
+        }
+      }
+    },
+    "baseline/chair.glb": {
+      "bytes": 697184,
+      "vertices": 11869,
+      "triangles": 19253,
+      "nondegenerate_triangles": 19253,
+      "bounds_extent": [
+        0.5752980709075928,
+        0.9459834694862366,
+        0.5461891889572144
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "47643c8dca824357d20c4da7529682a8a80a632389a8054db7d815317f0756ed",
+      "geometry_sha256": "f39818fd1eb47263805ff2b84f7011c680fd8caedaaa71dad2bfc72e6a987805",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 11869,
+          "triangles": 19253,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.5752980709075928,
+            0.9459834694862366,
+            0.5461891889572144
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.537939369581069,
+          "dominant_normal_area_fraction": 0.1819074647942275,
+          "front_silhouette_iou": 0.7541803344267541,
+          "flags": []
+        }
+      }
+    },
+    "baseline/electronics.glb": {
+      "bytes": 849832,
+      "vertices": 14455,
+      "triangles": 23808,
+      "nondegenerate_triangles": 23808,
+      "bounds_extent": [
+        0.8770559430122375,
+        0.9169813990592957,
+        0.29002970457077026
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "8209ab79f461d970c884412c8c2f7cf01379c38218dcc4f3af602e246227cfab",
+      "geometry_sha256": "488cedf6ca776965471ee9a1967b3431b8b25ee9fbe8759be151451892d1e1b9",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 14455,
+          "triangles": 23808,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.8770559430122375,
+            0.9169813990592957,
+            0.29002970457077026
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.2747271451009024,
+          "dominant_normal_area_fraction": 0.17640231283499125,
+          "front_silhouette_iou": 0.782883882772895,
+          "flags": []
+        }
+      }
+    },
+    "baseline/shoe.glb": {
+      "bytes": 810456,
+      "vertices": 13554,
+      "triangles": 23704,
+      "nondegenerate_triangles": 23704,
+      "bounds_extent": [
+        0.9243499636650085,
+        0.8392732441425323,
+        0.4521651864051819
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "f826e9b487484a637015536098be268dcca611ae946bef57a412dc29eb1051b7",
+      "geometry_sha256": "56227aab173f84b5967059cb22b8d6f69ff5a069d00bd3bdd6f285663ada45b7",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 13554,
+          "triangles": 23704,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9243499636650085,
+            0.8392732441425323,
+            0.4521651864051819
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3852022670139817,
+          "dominant_normal_area_fraction": 0.20147868423976373,
+          "front_silhouette_iou": 0.9314807160344664,
+          "flags": []
+        }
+      }
+    },
+    "baseline/toy.glb": {
+      "bytes": 200736,
+      "vertices": 2421,
+      "triangles": 3484,
+      "nondegenerate_triangles": 3484,
+      "bounds_extent": [
+        0.23877817392349243,
+        0.5090251564979553,
+        0.1737726926803589
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "bb49d7307d1135a2150a80315856de38a071229aa2a80a1b27a253f100ced520",
+      "geometry_sha256": "5f0ea1786de3f827e175b9a00ffb203f6619a191d1e383e5b31f616aacba6d43",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 2421,
+          "triangles": 3484,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.23877817392349243,
+            0.5090251564979553,
+            0.1737726926803589
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.10496760770985099,
+          "dominant_normal_area_fraction": 0.5387459464816104,
+          "front_silhouette_iou": 0.8275844654310388,
+          "flags": [
+            "limited_thickness"
+          ]
+        }
+      }
+    },
+    "browser/shoe.glb": {
+      "bytes": 918664,
+      "vertices": 15523,
+      "triangles": 26028,
+      "nondegenerate_triangles": 26028,
+      "bounds_extent": [
+        0.9305686354637146,
+        0.851485013961792,
+        0.4457002282142639
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "633e948e8ad0471092b9f190667da8fa61437af837f058fb12cf8bdd7667aca4",
+      "geometry_sha256": "6b5f8279e4eb784cb78baf2a47f4d051dca792ccc7c30a4bd133b9776e4adb5e",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 15523,
+          "triangles": 26028,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9305686354637146,
+            0.851485013961792,
+            0.4457002282142639
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.39051030995313424,
+          "dominant_normal_area_fraction": 0.1586510223686438,
+          "front_silhouette_iou": 0.9294596571573959,
+          "flags": []
+        }
+      }
+    },
+    "edited/bottle.glb": {
+      "bytes": 479660,
+      "vertices": 7497,
+      "triangles": 13196,
+      "nondegenerate_triangles": 13196,
+      "bounds_extent": [
+        0.2729930281639099,
+        0.9165955781936646,
+        0.5889535546302795
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "bc8b69f4a8c32a35c40da2e2df41e5a1076c2a20b47dea3b9d5285450b3a97b3",
+      "geometry_sha256": "41b3ee99b399fbefaed2316bd0e731d59042ef5d734a335fdd121baa0c69be8a",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 7497,
+          "triangles": 13196,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.2729930281639099,
+            0.9165955781936646,
+            0.5889535546302795
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.28414198563596266,
+          "dominant_normal_area_fraction": 0.11623916200742973,
+          "front_silhouette_iou": 0.9121770362646275,
+          "flags": []
+        }
+      }
+    },
+    "edited/electronics.glb": {
+      "bytes": 563424,
+      "vertices": 9194,
+      "triangles": 15124,
+      "nondegenerate_triangles": 15124,
+      "bounds_extent": [
+        0.9065161049365997,
+        0.951703816652298,
+        0.1300763487815857
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "08cf63bb73550b2363654d07fbd521ca3d5c7c210ba4ce6e883921a7dcb3feb5",
+      "geometry_sha256": "5c4736bb7d06f0a8c816914668b8b4fb7cffcd018f9bfbe0dd60a6df4d5f9ec3",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 9194,
+          "triangles": 15124,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9065161049365997,
+            0.951703816652298,
+            0.1300763487815857
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.12062586716023228,
+          "dominant_normal_area_fraction": 0.558730169264277,
+          "front_silhouette_iou": 0.9330353872078541,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/bottle.glb": {
+      "bytes": 454340,
+      "vertices": 7380,
+      "triangles": 12648,
+      "nondegenerate_triangles": 12648,
+      "bounds_extent": [
+        0.4447516202926636,
+        0.8940629065036774,
+        0.5853646993637085
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "730fbff4173b5b28d06743c913eadb0f987519611abae96ee6070ac3d1f93487",
+      "geometry_sha256": "c264220ca29b89df300f8c453379c274084c93fd43d253d8ccc7c7d474da8fcf",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 7380,
+          "triangles": 12648,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.4447516202926636,
+            0.8940629065036774,
+            0.5853646993637085
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3901512175432852,
+          "dominant_normal_area_fraction": 0.08459574783179301,
+          "front_silhouette_iou": 0.5388961714053248,
+          "flags": [
+            "low_front_silhouette_overlap"
+          ]
+        }
+      }
+    },
+    "reviewed/chair-2048.glb": {
+      "bytes": 890196,
+      "vertices": 12453,
+      "triangles": 20480,
+      "nondegenerate_triangles": 20480,
+      "bounds_extent": [
+        0.5886247754096985,
+        0.954275518655777,
+        0.5474488735198975
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "8c328a7618ae23c7cbc5939824296b4e2645cf91681e7933ab5afbd824070c1e",
+      "geometry_sha256": "827daac89fd94f175dc44c83dfda444f4102625ac13a09f4ffc951a405a60326",
+      "material": {
+        "base_color_dimensions": [
+          2048,
+          2048
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 12453,
+          "triangles": 20480,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.5886247754096985,
+            0.954275518655777,
+            0.5474488735198975
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.5317845213419556,
+          "dominant_normal_area_fraction": 0.24051665959949242,
+          "front_silhouette_iou": 0.7610482430017868,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/chair.glb": {
+      "bytes": 739176,
+      "vertices": 12453,
+      "triangles": 20480,
+      "nondegenerate_triangles": 20480,
+      "bounds_extent": [
+        0.5886247754096985,
+        0.954275518655777,
+        0.5474488735198975
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "6c85218b4ee4025a27d04be3e45ba47b2d9d12b24f86344487d0dfd5e59e2732",
+      "geometry_sha256": "827daac89fd94f175dc44c83dfda444f4102625ac13a09f4ffc951a405a60326",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 12453,
+          "triangles": 20480,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.5886247754096985,
+            0.954275518655777,
+            0.5474488735198975
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.5317845213419556,
+          "dominant_normal_area_fraction": 0.24051665959949242,
+          "front_silhouette_iou": 0.7610482430017868,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/electronics.glb": {
+      "bytes": 677764,
+      "vertices": 11176,
+      "triangles": 19389,
+      "nondegenerate_triangles": 19389,
+      "bounds_extent": [
+        0.9179784953594208,
+        0.9775683879852295,
+        0.07342654466629028
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "50c3f76041dbec33eeb5ef3924e022be8311eb3f835b364faa93bcdbda1b436d",
+      "geometry_sha256": "4ac64582963e057a46e0d2bfce60be6eaa9cc049335088c8b608a40dc2210cfc",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 11176,
+          "triangles": 19389,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9179784953594208,
+            0.9775683879852295,
+            0.07342654466629028
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.07029348140497234,
+          "dominant_normal_area_fraction": 0.7875876369464767,
+          "front_silhouette_iou": 0.6931514971835162,
+          "flags": [
+            "limited_thickness",
+            "dominant_parallel_surface"
+          ]
+        }
+      }
+    },
+    "reviewed/shoe-2048.glb": {
+      "bytes": 998376,
+      "vertices": 14020,
+      "triangles": 24257,
+      "nondegenerate_triangles": 24257,
+      "bounds_extent": [
+        0.9297246634960175,
+        0.8518287241458893,
+        0.4501969814300537
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "7ff2b8e2b8e5ee6c60b22adc034e685e383867014d5b3fb4670ddf9b3e73e3d2",
+      "geometry_sha256": "fcad4714c378d54fe423e52f973ded9f1908d0ec0378aff7a237e2b600e400cd",
+      "material": {
+        "base_color_dimensions": [
+          2048,
+          2048
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 14020,
+          "triangles": 24257,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9297246634960175,
+            0.8518287241458893,
+            0.4501969814300537
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3840925149993796,
+          "dominant_normal_area_fraction": 0.19884042803860386,
+          "front_silhouette_iou": 0.933286784308747,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/shoe-model-material.glb": {
+      "bytes": 946928,
+      "vertices": 14020,
+      "triangles": 24257,
+      "nondegenerate_triangles": 24257,
+      "bounds_extent": [
+        0.9297246634960175,
+        0.8518287241458893,
+        0.4501969814300537
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "fb99e4233531d2ed88ae6aca6dd61245499a434063a4e09c762a73649d2a5705",
+      "geometry_sha256": "fcad4714c378d54fe423e52f973ded9f1908d0ec0378aff7a237e2b600e400cd",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.003331663552671671,
+        "roughness": 0.12066271156072617,
+        "normal_texture": true
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 14020,
+          "triangles": 24257,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9297246634960175,
+            0.8518287241458893,
+            0.4501969814300537
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3840925149993796,
+          "dominant_normal_area_fraction": 0.19884042803860386,
+          "front_silhouette_iou": 0.933286784308747,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/shoe-normal-only.glb": {
+      "bytes": 946892,
+      "vertices": 14020,
+      "triangles": 24257,
+      "nondegenerate_triangles": 24257,
+      "bounds_extent": [
+        0.9297246634960175,
+        0.8518287241458893,
+        0.4501969814300537
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "e36431b670b4a471067cee6e15e70064fa029000894958e298fa9e29d9acf506",
+      "geometry_sha256": "fcad4714c378d54fe423e52f973ded9f1908d0ec0378aff7a237e2b600e400cd",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0,
+        "roughness": 1,
+        "normal_texture": true
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 14020,
+          "triangles": 24257,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9297246634960175,
+            0.8518287241458893,
+            0.4501969814300537
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3840925149993796,
+          "dominant_normal_area_fraction": 0.19884042803860386,
+          "front_silhouette_iou": 0.933286784308747,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/shoe-roughness-only.glb": {
+      "bytes": 946880,
+      "vertices": 14020,
+      "triangles": 24257,
+      "nondegenerate_triangles": 24257,
+      "bounds_extent": [
+        0.9297246634960175,
+        0.8518287241458893,
+        0.4501969814300537
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "14b12d6d230b2f862d72c3bd3ac375c275a1b6c13a672cf57493ddd7f8a3f081",
+      "geometry_sha256": "fcad4714c378d54fe423e52f973ded9f1908d0ec0378aff7a237e2b600e400cd",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0,
+        "roughness": 0.12066271156072617,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 14020,
+          "triangles": 24257,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9297246634960175,
+            0.8518287241458893,
+            0.4501969814300537
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3840925149993796,
+          "dominant_normal_area_fraction": 0.19884042803860386,
+          "front_silhouette_iou": 0.933286784308747,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/shoe.glb": {
+      "bytes": 837124,
+      "vertices": 14020,
+      "triangles": 24257,
+      "nondegenerate_triangles": 24257,
+      "bounds_extent": [
+        0.9297246634960175,
+        0.8518287241458893,
+        0.4501969814300537
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "03c9bbd98e7d68ac183b366ccfa0074fb129a2a7505040e6adf4aaec3d0ca1c6",
+      "geometry_sha256": "fcad4714c378d54fe423e52f973ded9f1908d0ec0378aff7a237e2b600e400cd",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 14020,
+          "triangles": 24257,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.9297246634960175,
+            0.8518287241458893,
+            0.4501969814300537
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.3840925149993796,
+          "dominant_normal_area_fraction": 0.19884042803860386,
+          "front_silhouette_iou": 0.933286784308747,
+          "flags": []
+        }
+      }
+    },
+    "reviewed/toy.glb": {
+      "bytes": 286084,
+      "vertices": 4026,
+      "triangles": 6144,
+      "nondegenerate_triangles": 6144,
+      "bounds_extent": [
+        0.32576239109039307,
+        0.7559035420417786,
+        0.12943458557128906
+      ],
+      "base_color_textures": 1,
+      "color_vertex_primitives": 0,
+      "sha256": "67863109a0fc400a592d226fdd27414feca4e4fbaa4028ce1b56d9dd7525ac1a",
+      "geometry_sha256": "a45c8939288f3bbf58213009ea972d9596c9a3f972e6601b8c7563a126b8e6f0",
+      "material": {
+        "base_color_dimensions": [
+          1024,
+          1024
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "normal_texture": false
+      },
+      "report": {
+        "measured_geometry": {
+          "vertices": 4026,
+          "triangles": 6144,
+          "degenerate_triangles": 0,
+          "bounds_extent": [
+            0.32576239109039307,
+            0.7559035420417786,
+            0.12943458557128906
+          ]
+        },
+        "estimates": {
+          "smallest_to_largest_pca_extent": 0.07345950658880163,
+          "dominant_normal_area_fraction": 0.7681715009159802,
+          "front_silhouette_iou": 0.8644948319714271,
+          "flags": [
+            "limited_thickness",
+            "dominant_parallel_surface"
+          ]
+        }
+      }
+    }
+  },
+  "front_mean_rgb_delta_8bit": {
+    "shoe-2048": 2.2,
+    "chair-2048": 1.916,
+    "shoe-model-material": 8.082,
+    "shoe-normal-only": 1.912,
+    "shoe-roughness-only": 7.057
+  }
+}

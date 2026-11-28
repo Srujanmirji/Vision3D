@@ -36,20 +36,30 @@ def load() -> tuple[Any, Any]:
     return model, rembg.new_session("u2net")
 
 
-def reconstruct(model: Any, session: Any, source: str, target: str, remove: bool) -> float:
+def reconstruct(
+    model: Any,
+    session: Any,
+    source: str,
+    target: str,
+    remove: bool,
+    texture: int = TEXTURE_RESOLUTION,
+    material_profile: str = "matte",
+) -> float:
     start = time.perf_counter()
-    image = Image.open(source).convert("RGBA")
+    with Image.open(source) as original:
+        image = original.convert("RGBA")
     if remove:
         image = resize_foreground(remove_background(image, session), FOREGROUND_RATIO)
     with torch.no_grad():
-        mesh, _ = model.run_image(image, bake_resolution=TEXTURE_RESOLUTION, remesh="none", vertex_count=-1)
+        mesh, _ = model.run_image(image, bake_resolution=texture, remesh="none", vertex_count=-1)
     # SF3D leaves a few zero-area triangles, which the backend rejects; drop them as infer.py does.
     mesh.update_faces((mesh.area_faces > 1e-12) & mesh.unique_faces())
     mesh.remove_unreferenced_vertices()
-    material = mesh.visual.material
-    material.metallicFactor = 0.0
-    material.roughnessFactor = 1.0
-    material.normalTexture = None
+    if material_profile == "matte":
+        material = mesh.visual.material
+        material.metallicFactor = 0.0
+        material.roughnessFactor = 1.0
+        material.normalTexture = None
     mesh.export(target, include_normals=True)
     return time.perf_counter() - start
 
@@ -64,7 +74,13 @@ def serve() -> None:
     for line in sys.stdin:
         try:
             job = json.loads(line)
-            reply = {"ok": True, "seconds": reconstruct(model, session, job["input"], job["output"], job["remove"])}
+            # Only the offline benchmark sets texture/material. Production requests keep the default.
+            texture = job.get("texture", TEXTURE_RESOLUTION)
+            material = job.get("material", "matte")
+            if texture not in (1024, 2048) or material not in ("matte", "model"):
+                raise ValueError("Unsupported benchmark configuration")
+            seconds = reconstruct(model, session, job["input"], job["output"], job["remove"], texture, material)
+            reply = {"ok": True, "seconds": seconds}
         except Exception as exc:  # noqa: BLE001 - report and keep serving
             reply = {"ok": False, "error": type(exc).__name__}
         replies.write(json.dumps(reply) + "\n")

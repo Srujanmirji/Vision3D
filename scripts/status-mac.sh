@@ -34,4 +34,12 @@ else
   status=1
 fi
 [ -z "$url" ] || echo "Vercel's VISION3D_BACKEND_ORIGIN must be: $url"
+if [ -n "${PUBLIC_APP_URL:-}" ]; then
+  if ready "${PUBLIC_APP_URL%/}/api"; then
+    ok "Public Vercel API is reachable"
+  else
+    fail "Public Vercel API did not answer. Verify its upstream matches the current tunnel and redeploy if needed."
+    status=1
+  fi
+fi
 exit $status

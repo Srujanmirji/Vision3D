@@ -8,12 +8,14 @@ import {
   Box,
   Download,
   ExternalLink,
+  Grid3x3,
   Hand,
   Maximize2,
   Minimize2,
   Orbit,
   Play,
   Smartphone,
+  SunMedium,
   Trash2,
   ZoomIn,
   ZoomOut,
@@ -25,10 +27,13 @@ import { InteractiveModelCanvas } from "@/components/viewer/InteractiveModelCanv
 import {
   CAMERA_PRESETS,
   DEFAULT_FOV_DEG,
+  DEFAULT_VIEWER_ENVIRONMENT,
+  LIGHTING_PRESETS,
   MAX_FOV_DEG,
   MIN_FOV_DEG,
   type CameraPreset,
   type InteractionMode,
+  type LightingPreset,
   type RenderMode,
   type RuntimeMeshMetadata,
 } from "@/components/viewer/viewerTypes";
@@ -59,6 +64,12 @@ interface ModelDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+const RENDER_MODES: readonly { id: RenderMode; label: string }[] = [
+  { id: "textured", label: "Textured" },
+  { id: "geometry", label: "Geometry" },
+  { id: "wireframe", label: "Wireframe" },
+];
+
 export default function ModelDetailPage({ params }: ModelDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
@@ -70,12 +81,20 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
   const [error, setError] = useState<ApiErrorPayload | null>(null);
 
   const [renderMode, setRenderMode] = useState<RenderMode>("textured");
-  const [interactionMode, setInteractionMode] = useState<InteractionMode>("orbit");
+  const [interactionMode, setInteractionMode] =
+    useState<InteractionMode>("orbit");
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>("perspective");
   const [presetVersion, setPresetVersion] = useState(0);
   const [fov, setFov] = useState(DEFAULT_FOV_DEG);
   const [autoRotate, setAutoRotate] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [lightingOpen, setLightingOpen] = useState(false);
+  const [showGrid, setShowGrid] = useState(DEFAULT_VIEWER_ENVIRONMENT.showGrid);
+  const [lightingPreset, setLightingPreset] = useState<LightingPreset>(
+    DEFAULT_VIEWER_ENVIRONMENT.lightingPreset
+  );
+  const [exposure, setExposure] = useState(DEFAULT_VIEWER_ENVIRONMENT.exposure);
+  const [shadows, setShadows] = useState(DEFAULT_VIEWER_ENVIRONMENT.shadows);
   const [runtimeStats, setRuntimeStats] = useState<RuntimeMeshMetadata | null>(
     null
   );
@@ -90,7 +109,8 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
   }, []);
 
   useEffect(() => {
-    const onFsChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    const onFsChange = () =>
+      setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
@@ -200,7 +220,8 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                 ) : null}
               </div>
               <p className="mt-0.5 text-xs text-ink-secondary">
-                Inspect geometry metadata, switch shading or camera views, export GLB, or launch mobile AR.
+                Inspect geometry metadata, switch shading or camera views,
+                export GLB, or launch mobile AR.
               </p>
             </div>
           </div>
@@ -218,11 +239,19 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                 <ExternalLink className="h-3.5 w-3.5 text-copper" />
                 Open in Studio
               </Link>
-              <Button variant="secondary" size="md" onClick={() => setArOpen(true)}>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => setArOpen(true)}
+              >
                 <Smartphone className="h-4 w-4 text-ink-secondary" />
                 View in AR
               </Button>
-              <Button variant="primary" size="md" onClick={() => setExportOpen(true)}>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setExportOpen(true)}
+              >
                 <Download className="h-4 w-4" />
                 Export GLB
               </Button>
@@ -233,7 +262,9 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
         {loading && (
           <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-[16px] border border-border-subtle bg-panel p-8">
             <Spinner size="lg" label="Loading model details" />
-            <p className="text-xs text-ink-secondary">Loading 3D model metadata…</p>
+            <p className="text-xs text-ink-secondary">
+              Loading 3D model metadata…
+            </p>
           </div>
         )}
 
@@ -245,7 +276,11 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
               message={error.message}
               actions={
                 <>
-                  <Button variant="primary" size="md" onClick={() => void loadModel()}>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => void loadModel()}
+                  >
                     Retry
                   </Button>
                   <Link
@@ -266,7 +301,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
             <section
               ref={stageRef}
               aria-label="3D model preview"
-              className="relative flex min-h-[460px] lg:min-h-[580px] flex-col justify-between overflow-hidden rounded-[16px] border border-border-subtle bg-[#131315]"
+              className="relative flex min-h-[460px] lg:min-h-[600px] flex-col justify-between overflow-hidden rounded-[16px] border border-border-subtle bg-[#131315]"
             >
               <div
                 aria-hidden="true"
@@ -277,12 +312,16 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                 }}
               />
 
-              {/* Top Bar: Badges + Textured/Wireframe Toggle */}
+              {/* Top Bar: Badges + Textured/Geometry/Wireframe Toggle */}
               <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-5">
                 <div className="flex flex-wrap items-center gap-2">
-                  {appearanceLabel ? <Badge tone="neutral">{appearanceLabel}</Badge> : null}
+                  {appearanceLabel ? (
+                    <Badge tone="neutral">{appearanceLabel}</Badge>
+                  ) : null}
                   {model.byte_size ? (
-                    <Badge tone="neutral">GLB · {formatBytes(model.byte_size)}</Badge>
+                    <Badge tone="neutral">
+                      GLB · {formatBytes(model.byte_size)}
+                    </Badge>
                   ) : null}
                 </div>
 
@@ -291,39 +330,33 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                   aria-label="Shading mode"
                   className="v3d-glass inline-flex shrink-0 items-center rounded-[10px] border border-border-subtle p-0.5"
                 >
-                  <button
-                    type="button"
-                    aria-pressed={renderMode === "textured"}
-                    onClick={() => setRenderMode("textured")}
-                    className={`min-h-11 rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
-                      renderMode === "textured"
-                        ? "bg-ink-primary text-ink-on-copper"
-                        : "text-ink-secondary hover:text-ink-primary"
-                    }`}
-                  >
-                    Textured
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={renderMode === "wireframe"}
-                    onClick={() => setRenderMode("wireframe")}
-                    className={`min-h-11 rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
-                      renderMode === "wireframe"
-                        ? "bg-ink-primary text-ink-on-copper"
-                        : "text-ink-secondary hover:text-ink-primary"
-                    }`}
-                  >
-                    Wireframe
-                  </button>
+                  {RENDER_MODES.map((item) => {
+                    const active = renderMode === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setRenderMode(item.id)}
+                        className={`min-h-[38px] rounded-[8px] px-3 py-1 text-xs font-medium transition-colors ${
+                          active
+                            ? "bg-ink-primary text-ink-on-copper"
+                            : "text-ink-secondary hover:text-ink-primary"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Central Canvas + Floating Toolbar */}
-              <div className="relative z-0 flex flex-1 items-center justify-center pl-[74px] pr-4 py-4 sm:px-16">
+              <div className="relative z-0 flex flex-1 items-center justify-center pl-15 pr-2 py-2 sm:px-14">
                 <div
                   role="toolbar"
                   aria-label="Model detail camera controls"
-                  className="v3d-glass absolute left-3.5 top-3 z-20 flex flex-col gap-1 rounded-[12px] border border-border-subtle p-1"
+                  className="v3d-glass absolute left-3 top-3 z-20 flex flex-col gap-1 rounded-[12px] border border-border-subtle p-1"
                 >
                   <Tooltip content="Orbit camera">
                     {(tip) => (
@@ -336,7 +369,10 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                         onClick={() => setInteractionMode("orbit")}
                         {...tip}
                       >
-                        <Orbit className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                        <Orbit
+                          className="h-[17px] w-[17px]"
+                          strokeWidth={1.75}
+                        />
                       </Button>
                     )}
                   </Tooltip>
@@ -351,7 +387,10 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                         onClick={() => setInteractionMode("pan")}
                         {...tip}
                       >
-                        <Hand className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                        <Hand
+                          className="h-[17px] w-[17px]"
+                          strokeWidth={1.75}
+                        />
                       </Button>
                     )}
                   </Tooltip>
@@ -361,10 +400,15 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                         variant="icon"
                         size="md"
                         aria-label="Zoom in"
-                        onClick={() => setFov((f) => Math.max(MIN_FOV_DEG, f - 5))}
+                        onClick={() =>
+                          setFov((f) => Math.max(MIN_FOV_DEG, f - 5))
+                        }
                         {...tip}
                       >
-                        <ZoomIn className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                        <ZoomIn
+                          className="h-[17px] w-[17px]"
+                          strokeWidth={1.75}
+                        />
                       </Button>
                     )}
                   </Tooltip>
@@ -374,10 +418,15 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                         variant="icon"
                         size="md"
                         aria-label="Zoom out"
-                        onClick={() => setFov((f) => Math.min(MAX_FOV_DEG, f + 5))}
+                        onClick={() =>
+                          setFov((f) => Math.min(MAX_FOV_DEG, f + 5))
+                        }
                         {...tip}
                       >
-                        <ZoomOut className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                        <ZoomOut
+                          className="h-[17px] w-[17px]"
+                          strokeWidth={1.75}
+                        />
                       </Button>
                     )}
                   </Tooltip>
@@ -390,30 +439,43 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                         onClick={handleResetView}
                         {...tip}
                       >
-                        <Box className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                        <Box
+                          className="h-[17px] w-[17px]"
+                          strokeWidth={1.75}
+                        />
                       </Button>
                     )}
                   </Tooltip>
-                  <Tooltip content={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
+                  <Tooltip
+                    content={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                  >
                     {(tip) => (
                       <Button
                         variant="icon"
                         size="md"
-                        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                        aria-label={
+                          isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
+                        }
                         onClick={() => void handleToggleFullscreen()}
                         {...tip}
                       >
                         {isFullscreen ? (
-                          <Minimize2 className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                          <Minimize2
+                            className="h-[17px] w-[17px]"
+                            strokeWidth={1.75}
+                          />
                         ) : (
-                          <Maximize2 className="h-[17px] w-[17px]" strokeWidth={1.75} />
+                          <Maximize2
+                            className="h-[17px] w-[17px]"
+                            strokeWidth={1.75}
+                          />
                         )}
                       </Button>
                     )}
                   </Tooltip>
                 </div>
 
-                <div className="h-[340px] w-full sm:h-[420px]">
+                <div className="h-[350px] w-full sm:h-[456px]">
                   <InteractiveModelCanvas
                     modelKey={model.id}
                     src={model.glb_url}
@@ -425,18 +487,94 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                     presetVersion={presetVersion}
                     fov={fov}
                     autoRotate={autoRotate}
+                    showGrid={showGrid}
+                    lightingPreset={lightingPreset}
+                    exposure={exposure}
+                    shadows={shadows}
                     onMetadataLoaded={handleMetadataLoaded}
                     onRenderModeFallback={() => setRenderMode("textured")}
                   />
                 </div>
               </div>
 
-              {/* Camera Presets & Auto Rotate Bar */}
+              {lightingOpen ? (
+                <div
+                  role="region"
+                  aria-label="Viewer lighting settings"
+                  className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle/60 bg-panel/95 px-4 py-2.5 sm:px-5"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[11px] font-medium text-ink-secondary">
+                      Lighting
+                    </span>
+                    <div
+                      role="group"
+                      aria-label="Lighting preset"
+                      className="inline-flex rounded-[8px] border border-border-subtle bg-obsidian p-0.5"
+                    >
+                      {LIGHTING_PRESETS.map((preset) => {
+                        const active = lightingPreset === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => setLightingPreset(preset.id)}
+                            className={`min-h-[32px] rounded-[6px] px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                              active
+                                ? "bg-raised text-copper"
+                                : "text-ink-secondary hover:text-ink-primary"
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor="detail-exposure"
+                        className="text-[11px] font-medium text-ink-secondary"
+                      >
+                        Exposure
+                      </label>
+                      <input
+                        id="detail-exposure"
+                        type="range"
+                        min="0.65"
+                        max="1.45"
+                        step="0.05"
+                        value={exposure}
+                        onChange={(e) =>
+                          setExposure(e.currentTarget.valueAsNumber)
+                        }
+                        className="h-8 w-24 accent-copper"
+                      />
+                      <span className="w-9 font-mono text-[11px] text-ink-muted">
+                        {exposure.toFixed(2)}×
+                      </span>
+                    </div>
+
+                    <CopperSwitch
+                      id="detail-shadows"
+                      label="Shadows"
+                      labelClassName="text-[11px] font-medium text-ink-primary"
+                      checked={shadows}
+                      onCheckedChange={setShadows}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Camera Presets, Grid, Lighting & Auto Rotate Bar */}
               <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle/60 bg-obsidian/50 px-4 py-3 sm:px-5">
                 <div
                   role="group"
                   aria-label="Camera angle presets"
-                  className="inline-flex flex-wrap items-center gap-1"
+                  className="flex flex-wrap items-center gap-1"
                 >
                   {CAMERA_PRESETS.map((preset) => {
                     const active = cameraPreset === preset.id;
@@ -449,7 +587,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                           setCameraPreset(preset.id);
                           setPresetVersion((v) => v + 1);
                         }}
-                        className={`min-h-11 rounded-[7px] px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                        className={`min-h-[38px] shrink-0 rounded-[7px] px-2.5 py-1 text-[11px] font-medium transition-colors ${
                           active
                             ? "border border-copper/50 bg-copper/16 text-copper"
                             : "border border-transparent text-ink-secondary hover:bg-raised/80 hover:text-ink-primary"
@@ -461,15 +599,48 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                   })}
                 </div>
 
-                <div className="v3d-glass inline-flex min-h-[36px] items-center gap-2 rounded-[9px] border border-border-subtle px-3 py-1">
-                  <Play className="h-3 w-3 text-ink-secondary" strokeWidth={1.75} />
-                  <CopperSwitch
-                    id="detail-auto-rotate"
-                    label="Auto Rotate"
-                    labelClassName="text-[11px] font-medium text-ink-primary"
-                    checked={autoRotate}
-                    onCheckedChange={setAutoRotate}
-                  />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    aria-pressed={showGrid}
+                    aria-label="Ground grid"
+                    onClick={() => setShowGrid((prev) => !prev)}
+                    className={`v3d-glass ${
+                      showGrid ? "border-copper/60 text-copper" : ""
+                    }`}
+                  >
+                    <Grid3x3 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    <span>Grid</span>
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    aria-expanded={lightingOpen}
+                    aria-label="Lighting controls"
+                    onClick={() => setLightingOpen((prev) => !prev)}
+                    className={`v3d-glass ${
+                      lightingOpen ? "border-copper/60 text-copper" : ""
+                    }`}
+                  >
+                    <SunMedium className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    <span>Lighting</span>
+                  </Button>
+
+                  <div className="v3d-glass inline-flex min-h-[36px] items-center gap-2 rounded-[9px] border border-border-subtle px-3 py-1">
+                    <Play
+                      className="h-3 w-3 text-ink-secondary"
+                      strokeWidth={1.75}
+                    />
+                    <CopperSwitch
+                      id="detail-auto-rotate"
+                      label="Auto Rotate"
+                      labelClassName="text-[11px] font-medium text-ink-primary"
+                      checked={autoRotate}
+                      onCheckedChange={setAutoRotate}
+                    />
+                  </div>
                 </div>
               </div>
             </section>
@@ -494,7 +665,9 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                   <div className="flex items-center justify-between gap-2 rounded-[10px] border border-border-subtle bg-obsidian/55 px-3.5 py-2.5">
                     <dt className="text-ink-muted">File Size</dt>
                     <dd className="text-ink-primary">
-                      {model.byte_size ? formatBytes(model.byte_size) : "Not reported"}
+                      {model.byte_size
+                        ? formatBytes(model.byte_size)
+                        : "Not reported"}
                     </dd>
                   </div>
                   {model.provider ? (
@@ -566,7 +739,11 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
         )}
       </div>
 
-      <QrArDialog open={arOpen} onClose={() => setArOpen(false)} model={model} />
+      <QrArDialog
+        open={arOpen}
+        onClose={() => setArOpen(false)}
+        model={model}
+      />
       <ExportDialog
         open={exportOpen}
         onClose={() => setExportOpen(false)}
@@ -602,8 +779,8 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
       >
         <p className="text-xs sm:text-sm leading-relaxed text-ink-secondary">
           This permanently deletes{" "}
-          <span className="font-medium text-ink-primary">{model?.name}</span> from
-          storage and revokes all active mobile AR share links.
+          <span className="font-medium text-ink-primary">{model?.name}</span>{" "}
+          from storage and revokes all active mobile AR share links.
         </p>
       </Dialog>
     </AppShell>
