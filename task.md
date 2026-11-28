@@ -69,3 +69,18 @@ See [HANDOFF.md](HANDOFF.md) and [browser verification artifacts](verification/f
 - [ ] Deploy within approved budget; verify real inference and AR. Free deployment is live: Vercel Hobby frontend plus a laptop backend behind a Cloudflare Quick Tunnel, at no cost. Real inference was verified twice through the public URL (127.6 s via script, 89.7 s via browser), and the desktop QR decodes to the public share URL. Still open: a durable always-on backend (Oracle Cloud Always Free or similar, needs your account) and AR on physical phones.
 - [ ] Update README with actual commands, screenshots, limitations and test results.
 - [ ] Prepare college demo: upload → generate → rotate → QR → AR.
+
+## Independent audit — 28 November 2026
+
+See [AUDIT_REPORT.md](AUDIT_REPORT.md). Fixed and tested in this audit: A-1 (stale model reply after a cancel during load) and A-2 (fallback now logged). Remaining:
+
+- [ ] A-5 (P1): set up a named Cloudflare tunnel so the site survives restarts (owner: needs a domain)
+- [ ] A-6 (P1): run AR_DEVICE_TESTING.md on one iPhone and one ARCore Android phone
+- [ ] A-3 (P2): stop TripoSR fallback failing on outputs over 100k triangles (approve option a or b)
+- [ ] S-1 (P2): per-visitor upload rate limit behind Vercel and the tunnel (approve design)
+- [ ] S-2 (P2): hide `/docs` and `/openapi.json` on the public backend
+- [ ] S-3 (P2): decide the community Space fallback: turn it off, or reword the consent
+- [ ] A-2 UI (P2): show which model made the result, with a note when it was the backup
+- [ ] A-11 (P3): raise `/create` buttons and the consent checkbox to 44 px hit areas
+- [ ] A-12 (P3): decide whether before/after comparison and a geometry mode are wanted
+- [ ] Test in a current Firefox and in Safari on a Mac and an iPhone; install a frontend coverage tool

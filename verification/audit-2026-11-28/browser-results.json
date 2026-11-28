@@ -1,0 +1,177 @@
+[
+ {
+  "test": "chrome: / loads without errors",
+  "result": "FAIL",
+  "detail": "HTTP 200 console: Failed to load resource: the server responded with a status of 404 ()"
+ },
+ {
+  "test": "chrome: /create loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "chrome: /models loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "chrome: /settings loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "chrome: /ar/sample loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "chrome: sample model renders in model-viewer",
+  "result": "PASS",
+  "detail": "elements=1 loaded=true"
+ },
+ {
+  "test": "firefox: launch",
+  "result": "BLOCKED",
+  "detail": "browserType.launch: Failed to launch the browser process.\nBrowser logs:\n\n<launching> /Users/srujanmirji/Library/Caches/ms-playwright/firefox-1543/firefox/Nightly.app/Contents/MacOS/firefox -no-remote -headless -profile /var/folders/5h/hydnllkj3713_8nkccdtm00m0000gn/T/playwright_firefoxdev_profile-pr"
+ },
+ {
+  "test": "webkit: / loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "webkit: /create loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "webkit: /models loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "webkit: /settings loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "webkit: /ar/sample loads without errors",
+  "result": "PASS",
+  "detail": "HTTP 200 no errors"
+ },
+ {
+  "test": "webkit: sample model renders in model-viewer",
+  "result": "PASS",
+  "detail": "elements=1 loaded=true"
+ },
+ {
+  "test": "Generate disabled before an image is chosen",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "Generate disabled until consent is ticked (hosted fallback configured)",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "live upload -> generation -> model shown",
+  "result": "PASS",
+  "detail": "44.3s in browser"
+ },
+ {
+  "test": "camera presets switch and report aria-pressed",
+  "result": "PASS",
+  "detail": "Perspective, Front, Rear, Side"
+ },
+ {
+  "test": "viewer control \"Zoom in\" is clickable",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "viewer control \"Zoom out\" is clickable",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "viewer control \"Pan camera mode\" is clickable",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "viewer control \"Orbit camera mode\" is clickable",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "viewer control \"Reset camera view\" is clickable",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "wireframe mode renders a canvas",
+  "result": "PASS",
+  "detail": "canvases=1"
+ },
+ {
+  "test": "fullscreen toggles",
+  "result": "PASS",
+  "detail": ""
+ },
+ {
+  "test": "download saves a GLB",
+  "result": "FAIL",
+  "detail": "model-198342a4.usdz"
+ },
+ {
+  "test": "cancel stops the job and offers retry",
+  "result": "PASS",
+  "detail": "CANCELLED"
+ },
+ {
+  "test": "every keyboard stop on /create shows a focus indicator",
+  "result": "PASS",
+  "detail": "29 stops"
+ },
+ {
+  "test": "tab stops are at least 44x44 px at 1280",
+  "result": "FAIL",
+  "detail": "Upload Image 151x42; Load Sample 3D Model 213x42; Browse Files 121x36; Take Photo 112x36; Use Phone 110x36; INPUT 18x18; Upload Image 151x42; Load Sample 3D Model 213x42; Browse Files 121x36; Take Photo 112x36; Use Phone 110x36; INPUT 18x18; Upload Image 151x42; Load Sample 3D Model 213x42"
+ },
+ {
+  "test": "/ at 375px has no horizontal overflow",
+  "result": "PASS",
+  "detail": "overflow=0px"
+ },
+ {
+  "test": "/create at 375px has no horizontal overflow",
+  "result": "PASS",
+  "detail": "overflow=0px"
+ },
+ {
+  "test": "/models at 375px has no horizontal overflow",
+  "result": "PASS",
+  "detail": "overflow=0px"
+ },
+ {
+  "test": "/ at 1280px has no horizontal overflow",
+  "result": "PASS",
+  "detail": "overflow=0px"
+ },
+ {
+  "test": "/create at 1280px has no horizontal overflow",
+  "result": "PASS",
+  "detail": "overflow=0px"
+ },
+ {
+  "test": "/models at 1280px has no horizontal overflow",
+  "result": "PASS",
+  "detail": "overflow=0px"
+ },
+ {
+  "test": "no page errors during the Chrome flow",
+  "result": "PASS",
+  "detail": "none"
+ }
+]

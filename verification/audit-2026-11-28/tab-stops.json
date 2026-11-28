@@ -1,0 +1,205 @@
+[
+ {
+  "name": "Vision3DStudio",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 26
+ },
+ {
+  "name": "Create 3D",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "My Models",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "Settings",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "Enter fullscreen",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 44,
+  "h": 44
+ },
+ {
+  "name": "Upload Image",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 151,
+  "h": 42
+ },
+ {
+  "name": "Load Sample 3D Model",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 213,
+  "h": 42
+ },
+ {
+  "name": "Browse Files",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 121,
+  "h": 36
+ },
+ {
+  "name": "Take Photo",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 112,
+  "h": 36
+ },
+ {
+  "name": "Use Phone",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 110,
+  "h": 36
+ },
+ {
+  "name": "INPUT",
+  "tag": "INPUT",
+  "visible": true,
+  "w": 18,
+  "h": 18
+ },
+ {
+  "name": "Vision3DStudio",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 26
+ },
+ {
+  "name": "Create 3D",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "My Models",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "Settings",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "Enter fullscreen",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 44,
+  "h": 44
+ },
+ {
+  "name": "Upload Image",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 151,
+  "h": 42
+ },
+ {
+  "name": "Load Sample 3D Model",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 213,
+  "h": 42
+ },
+ {
+  "name": "Browse Files",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 121,
+  "h": 36
+ },
+ {
+  "name": "Take Photo",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 112,
+  "h": 36
+ },
+ {
+  "name": "Use Phone",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 110,
+  "h": 36
+ },
+ {
+  "name": "INPUT",
+  "tag": "INPUT",
+  "visible": true,
+  "w": 18,
+  "h": 18
+ },
+ {
+  "name": "Vision3DStudio",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 26
+ },
+ {
+  "name": "Create 3D",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "My Models",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "Settings",
+  "tag": "A",
+  "visible": true,
+  "w": 195,
+  "h": 42
+ },
+ {
+  "name": "Enter fullscreen",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 44,
+  "h": 44
+ },
+ {
+  "name": "Upload Image",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 151,
+  "h": 42
+ },
+ {
+  "name": "Load Sample 3D Model",
+  "tag": "BUTTON",
+  "visible": true,
+  "w": 213,
+  "h": 42
+ }
+]
