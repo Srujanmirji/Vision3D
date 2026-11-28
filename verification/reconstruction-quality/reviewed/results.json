@@ -1,0 +1,144 @@
+{
+  "chair-preprocessing-seconds": 8.631,
+  "shoe-preprocessing-seconds": 7.878,
+  "bottle-preprocessing-seconds": 7.736,
+  "toy-preprocessing-seconds": 7.895,
+  "electronics-preprocessing-seconds": 7.687,
+  "worker_start_seconds": 22.102,
+  "chair": {
+    "ok": true,
+    "seconds": 28.334282667026855,
+    "bytes": 739176,
+    "vertices": 12453,
+    "triangles": 20480,
+    "nondegenerate_triangles": 20480,
+    "bounds_extent": [
+      0.5886247754096985,
+      0.954275518655777,
+      0.5474488735198975
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "chair.glb",
+    "peak_rss_mib": 3584.0
+  },
+  "shoe": {
+    "ok": true,
+    "seconds": 18.982879916962702,
+    "bytes": 837124,
+    "vertices": 14020,
+    "triangles": 24257,
+    "nondegenerate_triangles": 24257,
+    "bounds_extent": [
+      0.9297246634960175,
+      0.8518287241458893,
+      0.4501969814300537
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "shoe.glb",
+    "peak_rss_mib": 3834.5
+  },
+  "bottle": {
+    "ok": true,
+    "seconds": 23.82457920903107,
+    "bytes": 454340,
+    "vertices": 7380,
+    "triangles": 12648,
+    "nondegenerate_triangles": 12648,
+    "bounds_extent": [
+      0.4447516202926636,
+      0.8940629065036774,
+      0.5853646993637085
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "bottle.glb",
+    "peak_rss_mib": 4586.9
+  },
+  "toy": {
+    "ok": true,
+    "seconds": 23.59555608400842,
+    "bytes": 286084,
+    "vertices": 4026,
+    "triangles": 6144,
+    "nondegenerate_triangles": 6144,
+    "bounds_extent": [
+      0.32576239109039307,
+      0.7559035420417786,
+      0.12943458557128906
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "toy.glb",
+    "peak_rss_mib": 3761.2
+  },
+  "electronics": {
+    "ok": true,
+    "seconds": 18.245057874999475,
+    "bytes": 677764,
+    "vertices": 11176,
+    "triangles": 19389,
+    "nondegenerate_triangles": 19389,
+    "bounds_extent": [
+      0.9179784953594208,
+      0.9775683879852295,
+      0.07342654466629028
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "electronics.glb",
+    "peak_rss_mib": 4366.1
+  },
+  "shoe-2048": {
+    "ok": true,
+    "seconds": 26.329988417041022,
+    "bytes": 998376,
+    "vertices": 14020,
+    "triangles": 24257,
+    "nondegenerate_triangles": 24257,
+    "bounds_extent": [
+      0.9297246634960175,
+      0.8518287241458893,
+      0.4501969814300537
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "shoe-2048.glb",
+    "peak_rss_mib": 3721.8
+  },
+  "chair-2048": {
+    "ok": true,
+    "seconds": 28.7145753329969,
+    "bytes": 890196,
+    "vertices": 12453,
+    "triangles": 20480,
+    "nondegenerate_triangles": 20480,
+    "bounds_extent": [
+      0.5886247754096985,
+      0.954275518655777,
+      0.5474488735198975
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "chair-2048.glb",
+    "peak_rss_mib": 3382.5
+  },
+  "shoe-model-material": {
+    "ok": true,
+    "seconds": 28.169914167025127,
+    "bytes": 946928,
+    "vertices": 14020,
+    "triangles": 24257,
+    "nondegenerate_triangles": 24257,
+    "bounds_extent": [
+      0.9297246634960175,
+      0.8518287241458893,
+      0.4501969814300537
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0,
+    "file": "shoe-model-material.glb",
+    "peak_rss_mib": 2800.0
+  }
+}

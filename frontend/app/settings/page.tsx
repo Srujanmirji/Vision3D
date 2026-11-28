@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle2, RefreshCw, Server, Shield, Sliders } from "lucide-react";
-import { AppShell } from "@/components/sidebar/AppShell";
+import { AppShell, inferenceText } from "@/components/sidebar/AppShell";
 import { Badge, Button, CopperSwitch } from "@/components/ui";
 import {
   checkHealth,
@@ -56,11 +56,15 @@ export default function SettingsPage() {
   };
 
   const apiBaseUrl = getApiBaseUrl();
+  const providerChain = health?.provider_chain ?? [
+    ...(health?.providers ?? []),
+    ...(health?.fallback_provider ? [health.fallback_provider] : []),
+  ];
   const arUrlReady =
     publicAppUrl !== null && !isLocalhostUrl(publicAppUrl) && isHttpsUrl(publicAppUrl);
 
   return (
-    <AppShell backendOnline={backendOnline}>
+    <AppShell backendOnline={backendOnline} inferenceState={health?.inference?.state}>
       <div className="mx-auto flex w-full max-w-[960px] flex-col gap-5 px-4 py-5 sm:px-6 lg:px-7 lg:py-6">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight text-ink-primary sm:text-[28px]">
@@ -121,6 +125,12 @@ export default function SettingsPage() {
               </dd>
             </div>
             <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 p-3.5">
+              <dt className="text-[11px] text-ink-muted">Inference Status</dt>
+              <dd className="mt-1 text-xs text-ink-primary">
+                {backendOnline ? inferenceText[health?.inference?.state ?? "unverified"] : "Waiting for API"}
+              </dd>
+            </div>
+            <div className="rounded-[10px] border border-border-subtle bg-obsidian/55 p-3.5">
               <dt className="text-[11px] text-ink-muted">Public Mobile AR Origin</dt>
               <dd className="mt-1 space-y-1 text-xs">
                 <div className="break-all font-mono text-ink-primary">
@@ -146,19 +156,18 @@ export default function SettingsPage() {
 
           <div className="mt-4 rounded-[10px] border border-border-subtle bg-obsidian/45 p-4">
             <p className="text-xs font-medium text-ink-primary">
-              Verified Server-Side Providers
+              Configured Providers
             </p>
-            {health?.providers && health.providers.some((p) => p.verified) ? (
+            {providerChain.length ? (
               <ul className="mt-2.5 space-y-2">
-                {health.providers
-                  .filter((p) => p.verified)
+                {providerChain
                   .map((p) => (
                     <li
                       key={p.id}
                       className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-secondary"
                     >
                       <span className="inline-flex items-center gap-2 text-ink-primary">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                        {p.verified ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> : null}
                         {p.label}
                       </span>
                       <span>
@@ -171,7 +180,7 @@ export default function SettingsPage() {
               </ul>
             ) : (
               <p className="mt-1.5 text-xs leading-relaxed text-ink-secondary">
-                No verified image-to-3D provider is currently reported by the backend.
+                No image-to-3D provider is currently reported by the backend.
                 Provider-specific controls remain hidden until verified server-side.
               </p>
             )}

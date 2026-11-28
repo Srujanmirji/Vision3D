@@ -13,14 +13,17 @@ import { Button, ErrorState, Spinner } from "@/components/ui";
 import type { ModelViewerElement } from "@/types/model-viewer";
 import {
   getCameraPresetConfig,
+  getLightingPresetConfig,
   type CameraPreset,
   type InteractionMode,
+  type LightingPreset,
   type RenderMode,
   type RuntimeMeshMetadata,
 } from "./viewerTypes";
 
 const ThreeWireframeCanvas = dynamic(
-  () => import("./ThreeWireframeCanvas").then((mod) => mod.ThreeWireframeCanvas),
+  () =>
+    import("./ThreeWireframeCanvas").then((mod) => mod.ThreeWireframeCanvas),
   { ssr: false }
 );
 
@@ -36,6 +39,10 @@ export interface InteractiveModelCanvasProps {
   fov: number;
   autoRotate: boolean;
   showFloorRing?: boolean;
+  showGrid?: boolean;
+  lightingPreset?: LightingPreset;
+  exposure?: number;
+  shadows?: boolean;
   onMetadataLoaded?: (stats: RuntimeMeshMetadata) => void;
   onRenderModeFallback?: () => void;
 }
@@ -52,6 +59,10 @@ export function InteractiveModelCanvas({
   fov,
   autoRotate,
   showFloorRing = true,
+  showGrid = false,
+  lightingPreset = "studio",
+  exposure = 1.0,
+  shadows = true,
   onMetadataLoaded,
   onRenderModeFallback,
 }: InteractiveModelCanvasProps) {
@@ -72,13 +83,32 @@ export function InteractiveModelCanvas({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  const [resource, setResource] = useState<{ source: string; retry: number; url: string } | null>(null);
-  const sharedSrc = resource?.source === src && resource.retry === retryCount ? resource.url : null;
+  const [resource, setResource] = useState<{
+    source: string;
+    retry: number;
+    url: string;
+  } | null>(null);
+  const sharedSrc =
+    resource?.source === src && resource.retry === retryCount
+      ? resource.url
+      : null;
+
+  const isThreeMode = renderMode !== "textured";
+  const lightingCfg = getLightingPresetConfig(lightingPreset);
+  const mvExposure = (lightingCfg.mvExposureBase * exposure).toFixed(2);
+  const mvShadowIntensity = shadows
+    ? lightingCfg.mvShadowIntensity.toFixed(2)
+    : "0";
+  const mvShadowSoftness = lightingCfg.mvShadowSoftness.toFixed(2);
 
   useEffect(() => {
     const controller = new AbortController();
     let url: string | undefined;
-    fetch(src, { credentials: "include", cache: "no-store", signal: controller.signal })
+    fetch(src, {
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const blob = await response.blob();
@@ -87,7 +117,11 @@ export function InteractiveModelCanvas({
         setResource({ source: src, retry: retryCount, url });
       })
       .catch(() => {
-        if (!controller.signal.aborted) setLoadError("Could not download the model. Check the connection or retry.");
+        if (!controller.signal.aborted) {
+          setLoadError(
+            "Could not download the model. Check the connection or retry."
+          );
+        }
       });
     return () => {
       controller.abort();
@@ -110,11 +144,11 @@ export function InteractiveModelCanvas({
     };
   }, []);
 
-  // Reset loading state cleanly whenever the model or render mode changes
+  // Reset loading state cleanly when switching between <model-viewer> and Three.js or changing models
   useEffect(() => {
     setLoaded(false);
     setLoadError(null);
-  }, [modelKey, src, renderMode, retryCount]);
+  }, [modelKey, src, isThreeMode, retryCount]);
 
   // Attach load/error handlers and clean up <model-viewer> src on unmount/switch
   useEffect(() => {
@@ -133,7 +167,9 @@ export function InteractiveModelCanvas({
 
     const handleError = () => {
       setLoaded(false);
-      setLoadError("Could not load the 3D GLB geometry. Check the connection or retry.");
+      setLoadError(
+        "Could not load the 3D GLB geometry. Check the connection or retry."
+      );
     };
 
     el.addEventListener("load", handleLoad);
@@ -144,7 +180,7 @@ export function InteractiveModelCanvas({
     };
   }, [mvReady, renderMode, modelKey, src, retryCount, sharedSrc, onMetadataLoaded]);
 
-  // Apply camera presets (Perspective / Front / Rear / Side) and reset smoothly
+  // Apply camera presets (Perspective / Front / Rear / Side / Top / Bottom) smoothly
   useEffect(() => {
     if (renderMode !== "textured" || !mvReady || !sharedSrc) return;
     const el = viewerRef.current;
@@ -164,13 +200,34 @@ export function InteractiveModelCanvas({
     el.fieldOfView = `${fov}deg`;
   }, [fov, renderMode, mvReady, sharedSrc]);
 
+  // Sync live lighting updates on <model-viewer>
+  useEffect(() => {
+    if (renderMode !== "textured" || !mvReady || !sharedSrc) return;
+    const el = viewerRef.current;
+    if (!el) return;
+    el.exposure = mvExposure;
+    el.shadowIntensity = mvShadowIntensity;
+    el.shadowSoftness = mvShadowSoftness;
+  }, [
+    mvExposure,
+    mvShadowIntensity,
+    mvShadowSoftness,
+    renderMode,
+    mvReady,
+    sharedSrc,
+  ]);
+
   // Primary-drag Pan support for <model-viewer> when Pan mode is active
   const handlePanPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
       if (renderMode !== "textured" || interactionMode !== "pan") return;
       const el = viewerRef.current;
       if (!el) return;
-      const orbit = el.getCameraOrbit?.() ?? { theta: 0, phi: 1.3, radius: 2.2 };
+      const orbit = el.getCameraOrbit?.() ?? {
+        theta: 0,
+        phi: 1.3,
+        radius: 2.2,
+      };
       const target = el.getCameraTarget?.() ?? { x: 0, y: 0, z: 0 };
       panStateRef.current = {
         active: true,
@@ -223,7 +280,7 @@ export function InteractiveModelCanvas({
     []
   );
 
-  const handleWireframeLoad = useCallback(
+  const handleThreeLoad = useCallback(
     (stats: RuntimeMeshMetadata) => {
       setLoaded(true);
       setLoadError(null);
@@ -232,7 +289,7 @@ export function InteractiveModelCanvas({
     [onMetadataLoaded]
   );
 
-  const handleWireframeError = useCallback((msg: string) => {
+  const handleThreeError = useCallback((msg: string) => {
     setLoaded(false);
     setLoadError(msg);
   }, []);
@@ -241,12 +298,51 @@ export function InteractiveModelCanvas({
 
   return (
     <div className="relative h-full w-full">
+      {/* Optional perspective ground grid for <model-viewer> Textured stage */}
+      {renderMode === "textured" && showGrid && cameraPreset !== "bottom" ? (
+        <svg
+          aria-hidden="true"
+          data-testid="textured-ground-grid"
+          viewBox="0 0 640 200"
+          className="pointer-events-none absolute bottom-1 left-1/2 w-[min(94%,560px)] -translate-x-1/2 opacity-55"
+        >
+          <g stroke="#2C2C30" strokeWidth="1" fill="none">
+            <polygon points="150,36 490,36 610,180 30,180" />
+            <line x1="126" y1="62" x2="514" y2="62" />
+            <line x1="98" y1="94" x2="542" y2="94" />
+            <line x1="66" y1="133" x2="574" y2="133" />
+            <line x1="206" y1="36" x2="126" y2="180" />
+            <line x1="263" y1="36" x2="223" y2="180" />
+            <line x1="377" y1="36" x2="417" y2="180" />
+            <line x1="434" y1="36" x2="514" y2="180" />
+          </g>
+          <line
+            x1="320"
+            y1="36"
+            x2="320"
+            y2="180"
+            stroke="#F79448"
+            strokeOpacity="0.45"
+            strokeWidth="1.15"
+          />
+          <line
+            x1="98"
+            y1="94"
+            x2="542"
+            y2="94"
+            stroke="#F79448"
+            strokeOpacity="0.35"
+            strokeWidth="1.15"
+          />
+        </svg>
+      ) : null}
+
       {/* Restrained 360° studio floor ring matching design-reference.png */}
-      {showFloorRing ? (
+      {showFloorRing && !showGrid && cameraPreset !== "bottom" ? (
         <svg
           aria-hidden="true"
           viewBox="0 0 600 140"
-          className="pointer-events-none absolute bottom-3 left-1/2 w-[min(92%,510px)] -translate-x-1/2 opacity-65"
+          className="pointer-events-none absolute bottom-2 left-1/2 w-[min(90%,500px)] -translate-x-1/2 opacity-65"
         >
           <defs>
             <linearGradient id="ringFade" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -293,15 +389,15 @@ export function InteractiveModelCanvas({
               auto-rotate-delay={0}
               rotation-per-second="18deg"
               camera-orbit={presetCfg.orbit}
-              min-camera-orbit="auto auto auto"
-              max-camera-orbit="auto auto auto"
+              min-camera-orbit="auto 0deg auto"
+              max-camera-orbit="auto 180deg auto"
               field-of-view={`${fov}deg`}
               interpolation-decay={120}
               environment-image="neutral"
               tone-mapping="commerce"
-              shadow-intensity="1.25"
-              shadow-softness="0.82"
-              exposure="1.08"
+              shadow-intensity={mvShadowIntensity}
+              shadow-softness={mvShadowSoftness}
+              exposure={mvExposure}
               interaction-prompt="none"
               touch-action="pan-y"
               style={{
@@ -309,7 +405,9 @@ export function InteractiveModelCanvas({
                 height: "100%",
                 backgroundColor: "transparent",
               }}
-            />
+            >
+              <div slot="progress-bar" className="hidden" aria-hidden="true" />
+            </model-viewer>
 
             {/* Transparent pan-drag surface active ONLY when user selects Pan mode */}
             {interactionMode === "pan" && loaded && !loadError ? (
@@ -331,27 +429,34 @@ export function InteractiveModelCanvas({
         )
       ) : sharedSrc ? (
         <ThreeWireframeCanvas
-          key={`wire:${modelKey}:${src}:${retryCount}`}
+          key={`three:${modelKey}:${src}:${retryCount}`}
           src={sharedSrc}
           alt={alt}
+          mode={renderMode === "geometry" ? "geometry" : "wireframe"}
           autoRotate={autoRotate}
           interactionMode={interactionMode}
           cameraPreset={cameraPreset}
           presetVersion={presetVersion}
           fov={fov}
-          onLoad={handleWireframeLoad}
-          onError={handleWireframeError}
+          showGrid={showGrid}
+          lightingPreset={lightingPreset}
+          exposure={exposure}
+          shadows={shadows}
+          onLoad={handleThreeLoad}
+          onError={handleThreeError}
         />
       ) : null}
 
       {/* Loading Indicator Overlay */}
-      {!loaded && !loadError && (renderMode === "wireframe" || mvReady) ? (
+      {!loaded && !loadError && (isThreeMode || mvReady) ? (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div className="v3d-glass inline-flex items-center gap-2 rounded-[10px] border border-border-subtle px-3.5 py-2 text-xs text-ink-secondary">
             <Spinner size="sm" label="Loading 3D geometry" />
             <span>
               {renderMode === "wireframe"
                 ? "Building wireframe mesh…"
+                : renderMode === "geometry"
+                ? "Preparing geometry view…"
                 : "Loading GLB geometry…"}
             </span>
           </div>
@@ -375,7 +480,7 @@ export function InteractiveModelCanvas({
                   <RefreshCw className="h-3.5 w-3.5" />
                   Retry Load
                 </Button>
-                {renderMode === "wireframe" && onRenderModeFallback ? (
+                {isThreeMode && onRenderModeFallback ? (
                   <Button
                     variant="secondary"
                     size="sm"

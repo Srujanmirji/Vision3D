@@ -8,7 +8,11 @@ import {
   type WorkspaceStage,
 } from "@/components/viewer/ModelViewport";
 import { ImageInputPanel } from "@/components/upload/ImageInputPanel";
-import { availableModes } from "@/components/upload/ShapeModeSelect";
+import { ForegroundDialog } from "@/components/upload/ForegroundDialog";
+import {
+  availableModes,
+  availableQualityOptions,
+} from "@/components/upload/ShapeModeSelect";
 import { QrArDialog } from "@/components/ar-dialog/QrArDialog";
 import { ExportDialog } from "@/components/export-dialog/ExportDialog";
 import {
@@ -24,6 +28,7 @@ import {
   type HealthResponse,
   type JobStatusResponse,
   type ModelAsset,
+  type ReviewedForeground,
 } from "@/lib/api";
 import { SAMPLE_MODEL } from "@/lib/sample";
 import { loadViewerPreferences } from "@/lib/preferences";
@@ -56,17 +61,42 @@ export function CreateWorkspace() {
 
   const [selectedProvider, setSelectedProvider] = useState("");
   const [removeBackground, setRemoveBackground] = useState(true);
+  const [foregroundOpen, setForegroundOpen] = useState(false);
+  const [reviewedForeground, setReviewedForeground] =
+    useState<ReviewedForeground | null>(null);
   const [allowExternalProcessing, setAllowExternalProcessing] = useState(false);
   const [mode, setMode] = useState<GenerationMode>("auto");
+  const [quality, setQuality] = useState("");
   const [autoRotate, setAutoRotate] = useState(false);
   const [arDialogOpen, setArDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const verifiedProviders = (health?.providers ?? []).filter((p) => p.verified);
+  const qualityOptions = availableQualityOptions(health, selectedProvider);
+  const activeQuality =
+    qualityOptions.length >= 2
+      ? (qualityOptions.find((q) => q.id === quality)?.id ??
+        qualityOptions[0]?.id ??
+        "")
+      : "";
+
   // Unknown (health not loaded yet) counts as required, so consent is never skipped by accident.
   // Round and box modes always run on the server's own machine.
-  const consentRequired = health?.external_processing !== false && mode === "auto";
+  const canReviewForeground = Boolean(
+    uploadedImage &&
+      health?.foreground_preview &&
+      selectedProvider === "sf3d-local" &&
+      removeBackground &&
+      mode === "auto"
+  );
+  const useReviewedForeground = canReviewForeground
+    ? (reviewedForeground ?? undefined)
+    : undefined;
+  const consentRequired =
+    health?.external_processing !== false &&
+    mode === "auto" &&
+    !useReviewedForeground;
   const hasConsent = !consentRequired || allowExternalProcessing;
 
   useEffect(() => {
@@ -76,20 +106,36 @@ export function CreateWorkspace() {
 
   useEffect(() => {
     const controller = new AbortController();
-    checkHealth(controller.signal)
-      .then((res) => {
+    let pending = false;
+    async function probe() {
+      if (pending || controller.signal.aborted) return;
+      pending = true;
+      try {
+        const res = await checkHealth(controller.signal);
+        if (controller.signal.aborted) return;
         setHealth(res);
-        pollingBudget.current = res.poll_timeout_seconds ? res.poll_timeout_seconds * 1000 : undefined;
+        pollingBudget.current = res.poll_timeout_seconds
+          ? res.poll_timeout_seconds * 1000
+          : undefined;
         setBackendOnline(true);
-        const firstVerified = (res.providers ?? []).find((p) => p.verified);
-        if (firstVerified) {
-          setSelectedProvider(firstVerified.id);
-        }
-      })
-      .catch(() => {
+        const verified = (res.providers ?? []).filter((provider) => provider.verified);
+        setSelectedProvider((current) =>
+          verified.some((provider) => provider.id === current) ? current : verified[0]?.id ?? "",
+        );
+      } catch {
         if (!controller.signal.aborted) setBackendOnline(false);
-      });
-    return () => controller.abort();
+      } finally {
+        pending = false;
+      }
+    }
+    void probe();
+    const interval = window.setInterval(probe, 15000);
+    window.addEventListener("online", probe);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+      window.removeEventListener("online", probe);
+    };
   }, []);
 
   const startRequest = useCallback(() => {
@@ -104,16 +150,30 @@ export function CreateWorkspace() {
     setStage("processing");
     setError(null);
     try {
-      const job = await pollJobUntilDone(jobId, setJobStatus, signal, pollingBudget.current);
+      const job = await pollJobUntilDone(
+        jobId,
+        setJobStatus,
+        signal,
+        pollingBudget.current
+      );
       if (job.status === "failed") {
         setRetryJobId(null);
-        setError(job.error ?? { code: "PROVIDER_UNAVAILABLE", message: "Generation failed." });
+        setError(
+          job.error ?? {
+            code: "PROVIDER_UNAVAILABLE",
+            message: "Generation failed.",
+          }
+        );
         setStage("error");
         return;
       }
       if (!job.model_id) {
         setRetryJobId(null);
-        throw new Vision3DApiError("NOT_FOUND", "This job’s model is no longer in the library.", 404);
+        throw new Vision3DApiError(
+          "NOT_FOUND",
+          "This job’s model is no longer in the library.",
+          404
+        );
       }
       const asset = await getModel(job.model_id, signal);
       if (signal.aborted) return;
@@ -123,7 +183,9 @@ export function CreateWorkspace() {
       setStage("result");
     } catch (err) {
       if (signal.aborted) return;
-      if (err instanceof Vision3DApiError && err.status === 404) setRetryJobId(null);
+      if (err instanceof Vision3DApiError && err.status === 404) {
+        setRetryJobId(null);
+      }
       setError(formatUserError(err));
       setStage("error");
     }
@@ -165,13 +227,24 @@ export function CreateWorkspace() {
       setStage(previewRef.current ? "uploaded" : "empty");
     }
     return () => requestRef.current?.abort();
-  }, [requestedJobId, requestedModelId, requestedSample, showJob, openModel, startRequest]);
+  }, [
+    requestedJobId,
+    requestedModelId,
+    requestedSample,
+    showJob,
+    openModel,
+    startRequest,
+  ]);
 
-  useEffect(() => () => {
-    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    },
+    []
+  );
 
   function handleImageValidated(info: ValidatedImageInfo) {
+    setReviewedForeground(null);
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     previewRef.current = info.previewUrl;
     setUploadedImage(info);
@@ -183,6 +256,7 @@ export function CreateWorkspace() {
   }
 
   function handleClearImage() {
+    setReviewedForeground(null);
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     previewRef.current = null;
     setUploadedImage(null);
@@ -230,7 +304,9 @@ export function CreateWorkspace() {
   }
 
   async function handleGenerate() {
-    if (!uploadedImage || !hasConsent || stage === "processing" || retryJobId) return;
+    if (!uploadedImage || !hasConsent || stage === "processing" || retryJobId) {
+      return;
+    }
     const signal = startRequest();
     setError(null);
     setActiveModel(null);
@@ -239,12 +315,20 @@ export function CreateWorkspace() {
     setStage("processing");
     try {
       const provider = verifiedProviders.find((p) => p.id === selectedProvider);
-      const job = await createJob(uploadedImage.file, {
-        allow_external_processing: allowExternalProcessing,
-        provider: provider?.id,
-        remove_background: provider?.supports_background_removal ? removeBackground : undefined,
-        mode,
-      }, signal);
+      const job = await createJob(
+        uploadedImage.file,
+        {
+          allow_external_processing: allowExternalProcessing,
+          provider: provider?.id,
+          remove_background: provider?.supports_background_removal
+            ? removeBackground
+            : undefined,
+          reviewedForeground: useReviewedForeground,
+          mode,
+          quality: activeQuality || undefined,
+        },
+        signal
+      );
       if (signal.aborted) return;
       router.replace(`/create?job=${encodeURIComponent(job.job_id)}`);
     } catch (err) {
@@ -254,15 +338,23 @@ export function CreateWorkspace() {
     }
   }
 
-  const handlePhoneJob = useCallback((jobId: string) => {
-    setActiveModel(null);
-    setSuccessNotice(null);
-    router.replace(`/create?job=${encodeURIComponent(jobId)}`);
-  }, [router]);
+  const handlePhoneJob = useCallback(
+    (jobId: string) => {
+      setActiveModel(null);
+      setSuccessNotice(null);
+      router.replace(`/create?job=${encodeURIComponent(jobId)}`);
+    },
+    [router]
+  );
 
   const mayRetryUpload = Boolean(uploadedImage && hasConsent);
-  const retryLabel = retryJobId ? "Check Job Status" : mayRetryUpload ? "Retry Generation"
-    : requestedModelId ? "Retry Loading Model" : "Choose Image";
+  const retryLabel = retryJobId
+    ? "Check Job Status"
+    : mayRetryUpload
+    ? "Retry Generation"
+    : requestedModelId
+    ? "Retry Loading Model"
+    : "Choose Image";
 
   function handleRetry() {
     if (retryJobId) void showJob(retryJobId, startRequest());
@@ -272,7 +364,7 @@ export function CreateWorkspace() {
   }
 
   return (
-    <AppShell backendOnline={backendOnline}>
+    <AppShell backendOnline={backendOnline} inferenceState={health?.inference?.state}>
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-4 py-5 sm:px-6 lg:px-7 lg:py-6">
         {/* Top Title Header — crisp scale, no oversized headings */}
         <header className="flex flex-col gap-1">
@@ -280,7 +372,8 @@ export function CreateWorkspace() {
             2D to <span className="text-copper">3D</span>
           </h1>
           <p className="text-xs sm:text-sm text-ink-secondary">
-            Convert any image into a 3D model with interactive 360° view and mobile AR.
+            Convert any image into a 3D model with interactive 360° view and
+            mobile AR.
           </p>
         </header>
 
@@ -290,6 +383,7 @@ export function CreateWorkspace() {
             stage={stage}
             model={activeModel}
             uploadedImage={uploadedImage}
+            reviewedCutoutUrl={useReviewedForeground?.cutoutPreviewUrl}
             jobStatus={jobStatus}
             error={error}
             autoRotate={autoRotate}
@@ -315,11 +409,23 @@ export function CreateWorkspace() {
             onProviderChange={setSelectedProvider}
             removeBackground={removeBackground}
             onRemoveBackgroundChange={setRemoveBackground}
+            onPreviewForeground={
+              canReviewForeground ? () => setForegroundOpen(true) : undefined
+            }
+            onClearForeground={
+              useReviewedForeground
+                ? () => setReviewedForeground(null)
+                : undefined
+            }
+            reviewedCutoutUrl={useReviewedForeground?.cutoutPreviewUrl}
             allowExternalProcessing={allowExternalProcessing}
             consentRequired={consentRequired}
             modes={availableModes(health)}
             mode={mode}
             onModeChange={setMode}
+            qualityOptions={qualityOptions}
+            quality={activeQuality}
+            onQualityChange={setQuality}
             onAllowExternalProcessingChange={setAllowExternalProcessing}
             maxUploadBytes={health?.max_upload_bytes}
             isGenerating={stage === "processing"}
@@ -329,6 +435,18 @@ export function CreateWorkspace() {
           />
         </div>
       </div>
+
+      {foregroundOpen && uploadedImage && canReviewForeground ? (
+        <ForegroundDialog
+          key={uploadedImage.previewUrl}
+          photo={uploadedImage.file}
+          onClose={() => setForegroundOpen(false)}
+          onUse={(review) => {
+            setReviewedForeground(review);
+            setForegroundOpen(false);
+          }}
+        />
+      ) : null}
 
       <QrArDialog
         open={arDialogOpen}

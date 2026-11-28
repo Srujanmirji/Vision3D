@@ -250,7 +250,7 @@ def test_upload_limits_consent_rate_and_openapi(tmp_path: Path) -> None:
         assert "HF_TOKEN" not in json.dumps(spec)
 
 
-def test_transient_retry_and_quota_fallback(tmp_path: Path) -> None:
+def test_transient_retry_and_quota_fallback(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
     calls: list[str] = []
 
     async def attempt(
@@ -267,12 +267,16 @@ def test_transient_retry_and_quota_fallback(tmp_path: Path) -> None:
             raise Failure("QUOTA_EXCEEDED", "Quota exhausted")
         return await fixture_runner(provider, folder, remove, config, stage)
 
+    caplog.set_level("INFO", logger="uvicorn.error")
     config = Settings(data=tmp_path, community_demo=True, shape_fallback=True)
     with TestClient(create_app(config, attempt)) as client:
         job = terminal(client, submit(client))
         assert job["status"] == "succeeded"
         assert job["provider"] == "hunyuan-shape"
         assert calls == ["triposr", "triposr", "hunyuan-shape"]
+    # A fallback must leave a trace: the main model silently failing looked like a quality problem.
+    failed = [json.loads(r.getMessage()) for r in caplog.records if "provider_failed" in r.getMessage()]
+    assert failed == [{"event": "provider_failed", "job_id": job["job_id"], "provider": "triposr", "code": "QUOTA_EXCEEDED"}]
 
 
 def test_cancel_timeout_and_queue_limit(tmp_path: Path) -> None:

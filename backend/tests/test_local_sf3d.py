@@ -16,7 +16,7 @@ from app.providers import Provider
 from app.schemas import Failure, MeshInfo
 
 
-def fake_sf3d_home(tmp_path: Path, fail: bool = False) -> Path:
+def fake_sf3d_home(tmp_path: Path, fail: bool = False, ready_delay: float = 0) -> Path:
     """A LOCAL_SF3D_HOME whose 'python' runs a tiny server that answers like local_sf3d/infer.py."""
     home = tmp_path / "sf3d-home"
     (home / "stable-fast-3d").mkdir(parents=True)
@@ -24,7 +24,8 @@ def fake_sf3d_home(tmp_path: Path, fail: bool = False) -> Path:
     glb = tmp_path / "sf3d-fixture.glb"
     textured_box(glb)
     server = tmp_path / "fake_sf3d.py"
-    server.write_text(f"""import json, os, shutil, sys
+    server.write_text(f"""import json, os, shutil, sys, time
+time.sleep({ready_delay!r})
 with open({str(tmp_path / "sf3d.log")!r}, "a") as log:
     log.write("serve|" + os.environ.get("HF_HUB_OFFLINE", "") + "|" + os.environ.get("HF_TOKEN", "none")
               + "|" + os.environ.get("SF3D_CODE", "") + "\\n")
@@ -114,3 +115,20 @@ def test_only_one_model_stays_in_memory(tmp_path: Path) -> None:
 
     sf3d_exit, triposr_alive = asyncio.run(scenario())
     assert sf3d_exit != 0 and triposr_alive == 0
+
+
+def test_cancel_while_the_model_loads_does_not_desync_the_next_job(tmp_path: Path) -> None:
+    """A job cancelled before the worker says ready must not leave that unread 'ready' line for the next job."""
+    provider = Provider("sf3d-local", "local", str(fake_sf3d_home(tmp_path, ready_delay=1.0)), "sf3d", True)
+    settings = Settings(data=tmp_path / "data")
+
+    async def scenario() -> MeshInfo:
+        try:
+            with pytest.raises(TimeoutError):
+                async with asyncio.timeout(0.2):
+                    await sf3d_runner(provider, job_folder(tmp_path, "a"), True, settings, lambda _s: None)
+            return await sf3d_runner(provider, job_folder(tmp_path, "b"), True, settings, lambda _s: None)
+        finally:
+            await WARM.stop()
+
+    assert asyncio.run(scenario()).appearance == "native_texture"

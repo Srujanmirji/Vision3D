@@ -258,6 +258,8 @@ export default function MobileArPage({ params }: ArPageProps) {
 
   const appearanceLabel = formatAppearanceLabel(asset?.appearance);
   const activePresetCfg = getCameraPresetConfig(cameraPreset);
+  const retryable = error && ["TIMEOUT", "NETWORK_ERROR", "PROVIDER_UNAVAILABLE", "INVALID_MODEL"]
+    .includes(error.code);
 
   return (
     <div className="studio-ambient-bg flex min-h-dvh flex-col bg-obsidian text-ink-primary">
@@ -265,7 +267,7 @@ export default function MobileArPage({ params }: ArPageProps) {
       <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border-subtle bg-[#121214]/95 backdrop-blur-md px-4 py-2.5">
         <Link
           href="/create"
-          className="inline-flex min-h-[42px] items-center gap-2 rounded-[10px] px-2 text-xs font-medium text-ink-secondary transition-colors hover:text-ink-primary"
+          className="inline-flex min-h-11 items-center gap-2 rounded-[10px] px-2 text-xs font-medium text-ink-secondary transition-colors hover:text-ink-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Vision3D Studio</span>
@@ -297,14 +299,18 @@ export default function MobileArPage({ params }: ArPageProps) {
                   : "Shared 3D model unavailable"
               }
               message={error.message}
-              actions={
+              actions={retryable ? (
+                <Button size="lg" variant="primary" onClick={() => window.location.reload()}>
+                  Retry loading model
+                </Button>
+              ) : (
                 <Link
                   href="/create"
                   className="inline-flex min-h-[44px] items-center gap-2 rounded-[10px] bg-copper px-5 py-2.5 text-xs font-semibold text-ink-on-copper transition-colors hover:bg-copper-hover"
                 >
                   Return to Vision3D
                 </Link>
-              }
+              )}
             />
           </div>
         )}
@@ -436,7 +442,7 @@ export default function MobileArPage({ params }: ArPageProps) {
                           type="button"
                           aria-pressed={active}
                           onClick={() => applyCameraPreset(preset.id)}
-                          className={`min-h-[38px] shrink-0 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                          className={`min-h-11 shrink-0 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
                             active
                               ? "border border-copper/55 bg-copper/16 text-copper"
                               : "border border-transparent text-ink-secondary hover:bg-raised hover:text-ink-primary"

@@ -1,0 +1,14 @@
+{
+  "viewports": [
+    1280,
+    375
+  ],
+  "keyboardBrushAndSlider": true,
+  "generatedSeconds": 71.81,
+  "model": {
+    "bytes": 918664,
+    "provider": "sf3d-local",
+    "vertices": 15523,
+    "triangles": 26028
+  }
+}

@@ -43,28 +43,44 @@ export class Vision3DApiError extends Error {
   }
 }
 
+export interface QualityOption {
+  id: string;
+  label: string;
+  description?: string;
+}
+
 export interface ProviderCapability {
   id: string;
   label: string;
   verified: boolean;
   operator_configured?: boolean;
   supports_background_removal?: boolean;
+  quality_options?: QualityOption[];
 }
 
 export interface HealthResponse {
   status: string;
   providers?: ProviderCapability[];
   fallback_provider?: ProviderCapability | null;
+  provider_chain?: ProviderCapability[];
+  inference?: {
+    state: InferenceState;
+    active_jobs: number;
+    last_successful_provider: string | null;
+  };
   max_upload_bytes?: number;
   retention_days?: number;
   share_ttl_seconds?: number;
   poll_timeout_seconds?: number;
   /** False when generation runs only on the server's own machine; consent is then not needed. */
   external_processing?: boolean;
+  foreground_preview?: boolean;
   /** Round-object mode is available (needs local processing on the server). */
   round_mode?: boolean;
   /** Box mode is available (needs local processing on the server). */
   box_mode?: boolean;
+  /** Optional reconstruction quality tiers when supported by the server. */
+  quality_options?: QualityOption[];
 }
 
 export interface JobCreatedResponse {
@@ -143,6 +159,23 @@ export interface CreateJobOptions {
   provider?: string;
   remove_background?: boolean;
   mode?: GenerationMode;
+  quality?: string;
+  reviewedForeground?: ReviewedForeground;
+}
+
+export interface ReviewedForeground {
+  upload: File;
+  mask: Blob;
+  cutoutPreviewUrl?: string;
+}
+
+export interface ForegroundPreview {
+  upload: File;
+  width: number;
+  height: number;
+  crop: [number, number, number, number];
+  mask_png: string;
+  cutout_png: string;
 }
 
 export function getApiBaseUrl(): string {
@@ -232,7 +265,7 @@ function statusToCode(status: number): ApiErrorCode {
   if (status === 404) return "NOT_FOUND";
   if (status === 410) return "EXPIRED";
   if (status === 429) return "QUOTA_EXCEEDED";
-  if (status === 503) return "PROVIDER_UNAVAILABLE";
+  if (status === 502 || status === 503 || status === 530) return "PROVIDER_UNAVAILABLE";
   if (status === 504) return "TIMEOUT";
   return "UNKNOWN_ERROR";
 }
@@ -321,8 +354,22 @@ export async function downloadModel(model: ModelAsset, signal?: AbortSignal): Pr
   return blob;
 }
 
+export type InferenceState = "unconfigured" | "unverified" | "busy" | "ready" | "degraded";
+
 export async function checkHealth(signal?: AbortSignal): Promise<HealthResponse> {
-  return requestJson<HealthResponse>("/health", { method: "GET", signal });
+  return requestJson<HealthResponse>("/health", { method: "GET", signal }, 8000);
+}
+
+export async function previewForeground(file: File, signal: AbortSignal): Promise<ForegroundPreview> {
+  const upload = await shrinkForUpload(file);
+  const body = new FormData();
+  body.append("image", upload);
+  const preview = await requestJson<Omit<ForegroundPreview, "upload">>("/v1/preprocessing/foreground", {
+    method: "POST",
+    body,
+    signal,
+  }, UPLOAD_TIMEOUT_MS);
+  return { ...preview, upload };
 }
 
 export async function createJob(
@@ -331,7 +378,10 @@ export async function createJob(
   signal?: AbortSignal
 ): Promise<JobCreatedResponse> {
   const formData = new FormData();
-  formData.append("image", await shrinkForUpload(file));
+  formData.append("image", options.reviewedForeground?.upload ?? await shrinkForUpload(file));
+  if (options.reviewedForeground) {
+    formData.append("foreground_mask", options.reviewedForeground.mask, "foreground.png");
+  }
   formData.append(
     "allow_external_processing",
     String(options.allow_external_processing)
@@ -344,6 +394,9 @@ export async function createJob(
   }
   if (options.mode && options.mode !== "auto") {
     formData.append("mode", options.mode);
+  }
+  if (options.quality) {
+    formData.append("quality", options.quality);
   }
 
   return requestJson<JobCreatedResponse>("/v1/jobs", {
@@ -475,7 +528,7 @@ export async function getSharedAsset(
   token: string,
   signal?: AbortSignal
 ): Promise<SharedAssetResponse> {
-  return requestJson<SharedAssetResponse>(
+  const get = () => requestJson<SharedAssetResponse>(
     `/v1/share/${encodeURIComponent(token)}`,
     {
       method: "GET",
@@ -483,6 +536,16 @@ export async function getSharedAsset(
       signal,
     }
   );
+  try {
+    return await get();
+  } catch (error) {
+    if (!(error instanceof Vision3DApiError) || !(
+      error.code === "NETWORK_ERROR" || error.code === "TIMEOUT" ||
+      error.status >= 500
+    )) throw error;
+    await waitForPoll(750, signal ?? new AbortController().signal);
+    return get();
+  }
 }
 
 export async function deleteModel(
@@ -518,7 +581,7 @@ export async function pollJobUntilDone(
 ): Promise<JobStatusResponse> {
   const { signal, dispose } = timedSignal(caller, timeoutMs);
   let delay = 1500;
-  let failures = 0;
+  let connectionLostAt: number | null = null;
   try {
     while (true) {
       try {
@@ -526,13 +589,19 @@ export async function pollJobUntilDone(
         checkAbort(signal);
         onUpdate(job);
         if (job.status === "succeeded" || job.status === "failed") return job;
-        failures = 0;
+        connectionLostAt = null;
       } catch (error) {
         if (
           signal.aborted || !(error instanceof Vision3DApiError) ||
-          !(error.code === "NETWORK_ERROR" || error.code === "TIMEOUT" || error.status >= 500) ||
-          ++failures > 2
+          !(error.code === "NETWORK_ERROR" || error.code === "TIMEOUT" || error.status >= 500)
         ) throw error;
+        connectionLostAt ??= Date.now();
+        if (Date.now() - connectionLostAt >= 45000) {
+          throw new Vision3DApiError(
+            "TIMEOUT",
+            "The server connection was interrupted. Check the same job again without re-uploading.",
+          );
+        }
       }
       await waitForPoll(delay, signal);
       delay = Math.min(Math.round(delay * 1.4), 6000);

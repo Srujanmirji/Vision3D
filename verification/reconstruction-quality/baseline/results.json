@@ -1,0 +1,87 @@
+{
+  "chair": {
+    "ok": true,
+    "seconds": 37.887836374982726,
+    "peak_rss_mib": 2276.0,
+    "file": "chair.glb",
+    "bytes": 697184,
+    "vertices": 11869,
+    "triangles": 19253,
+    "nondegenerate_triangles": 19253,
+    "bounds_extent": [
+      0.5752980709075928,
+      0.9459834694862366,
+      0.5461891889572144
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0
+  },
+  "shoe": {
+    "ok": true,
+    "seconds": 26.921934915997554,
+    "peak_rss_mib": 2634.5,
+    "file": "shoe.glb",
+    "bytes": 810456,
+    "vertices": 13554,
+    "triangles": 23704,
+    "nondegenerate_triangles": 23704,
+    "bounds_extent": [
+      0.9243499636650085,
+      0.8392732441425323,
+      0.4521651864051819
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0
+  },
+  "bottle": {
+    "ok": true,
+    "seconds": 23.258806166995782,
+    "peak_rss_mib": 4392.9,
+    "file": "bottle.glb",
+    "bytes": 615552,
+    "vertices": 10207,
+    "triangles": 13928,
+    "nondegenerate_triangles": 13928,
+    "bounds_extent": [
+      0.440768837928772,
+      0.8925125300884247,
+      0.502321720123291
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0
+  },
+  "toy": {
+    "ok": true,
+    "seconds": 23.326766916026827,
+    "peak_rss_mib": 3569.6,
+    "file": "toy.glb",
+    "bytes": 200736,
+    "vertices": 2421,
+    "triangles": 3484,
+    "nondegenerate_triangles": 3484,
+    "bounds_extent": [
+      0.23877817392349243,
+      0.5090251564979553,
+      0.1737726926803589
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0
+  },
+  "electronics": {
+    "ok": true,
+    "seconds": 23.616004417010117,
+    "peak_rss_mib": 2974.4,
+    "file": "electronics.glb",
+    "bytes": 849832,
+    "vertices": 14455,
+    "triangles": 23808,
+    "nondegenerate_triangles": 23808,
+    "bounds_extent": [
+      0.8770559430122375,
+      0.9169813990592957,
+      0.29002970457077026
+    ],
+    "base_color_textures": 1,
+    "color_vertex_primitives": 0
+  }
+}

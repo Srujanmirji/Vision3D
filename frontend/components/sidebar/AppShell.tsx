@@ -5,6 +5,15 @@ import { usePathname } from "next/navigation";
 import { Home, Layers, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui";
+import type { InferenceState } from "@/lib/api";
+
+export const inferenceText: Record<InferenceState, string> = {
+  unconfigured: "Inference unavailable",
+  unverified: "Inference unverified",
+  busy: "Inference busy",
+  ready: "Inference ready",
+  degraded: "Last generation failed",
+};
 
 interface NavItem {
   href: string;
@@ -64,9 +73,10 @@ function Vision3DMark() {
 export interface AppShellProps {
   children: ReactNode;
   backendOnline?: boolean | null;
+  inferenceState?: InferenceState;
 }
 
-export function AppShell({ children, backendOnline }: AppShellProps) {
+export function AppShell({ children, backendOnline, inferenceState }: AppShellProps) {
   const pathname = usePathname();
 
   const isActive = (item: NavItem) => {
@@ -149,8 +159,8 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
               {backendOnline === true
-                ? "Server-side inference API reachable via /api."
-                : "Start FastAPI on port 8000 for live 3D generation."}
+                ? inferenceText[inferenceState ?? "unverified"]
+                : "Live generation requires a connection to the API."}
             </p>
           </div>
         </div>
@@ -196,7 +206,7 @@ export function AppShell({ children, backendOnline }: AppShellProps) {
 
         <Badge tone={statusTone} dot>
           {backendOnline === true
-            ? "API Ready"
+            ? inferenceText[inferenceState ?? "unverified"]
             : backendOnline === false
             ? "API Offline"
             : "Checking"}

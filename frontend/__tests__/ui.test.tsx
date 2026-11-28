@@ -3,14 +3,25 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ImageInputPanel } from "@/components/upload/ImageInputPanel";
 import { ModelViewport } from "@/components/viewer/ModelViewport";
+import { AppShell } from "@/components/sidebar/AppShell";
 import { ExportDialog } from "@/components/export-dialog/ExportDialog";
 import LandingPage from "@/app/page";
 import { Button, Select, Tooltip } from "@/components/ui";
 import { SAMPLE_MODEL } from "@/lib/sample";
 
 vi.mock("@google/model-viewer", () => ({}));
+vi.mock("next/navigation", () => ({ usePathname: () => "/create" }));
 
 describe("Design system primitives", () => {
+  it("distinguishes a connected API from an unverified or failed inference worker", () => {
+    const { rerender } = render(<AppShell backendOnline inferenceState="unverified">Workspace</AppShell>);
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getAllByText("Inference unverified")).toHaveLength(2);
+    expect(screen.queryByText("Inference ready")).not.toBeInTheDocument();
+    rerender(<AppShell backendOnline inferenceState="degraded">Workspace</AppShell>);
+    expect(screen.getAllByText("Last generation failed")).toHaveLength(2);
+  });
+
   it("renders Button variants and accessible loading state", () => {
     render(
       <Button variant="primary" loading>

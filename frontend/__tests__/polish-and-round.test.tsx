@@ -2,7 +2,10 @@ import { createRef, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ImageInputPanel } from "@/components/upload/ImageInputPanel";
-import { availableModes } from "@/components/upload/ShapeModeSelect";
+import {
+  availableModes,
+  availableQualityOptions,
+} from "@/components/upload/ShapeModeSelect";
 import { formatElapsed } from "@/components/viewer/ElapsedTime";
 import { friendlyError } from "@/lib/errorCopy";
 import type { ValidatedImageInfo } from "@/lib/validation";
@@ -107,6 +110,26 @@ describe("shape mode", () => {
   it("lists only the modes the server reports", () => {
     expect(availableModes({ status: "ok", round_mode: true, box_mode: false })).toEqual(["auto", "round"]);
     expect(availableModes(null)).toEqual(["auto"]);
+  });
+
+  it("exposes quality controls strictly when advertised by the backend", () => {
+    expect(availableQualityOptions({ status: "ok" }, "sf3d-local")).toEqual([]);
+    panel({ qualityOptions: [], onQualityChange: vi.fn() });
+    expect(screen.queryByLabelText("Quality")).not.toBeInTheDocument();
+
+    const onQualityChange = vi.fn();
+    panel({
+      qualityOptions: [
+        { id: "standard", label: "Standard (1024px)" },
+        { id: "high", label: "High (2048px)" },
+      ],
+      quality: "standard",
+      onQualityChange,
+    });
+    const select = screen.getByLabelText("Quality");
+    expect(select).toBeInTheDocument();
+    fireEvent.change(select, { target: { value: "high" } });
+    expect(onQualityChange).toHaveBeenCalledWith("high");
   });
 });
 

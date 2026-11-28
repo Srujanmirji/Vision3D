@@ -2,11 +2,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ModelViewport } from "@/components/viewer/ModelViewport";
 import type { ModelAsset } from "@/lib/api";
+import type { ValidatedImageInfo } from "@/lib/validation";
 
 vi.mock("@google/model-viewer", () => ({}));
 vi.mock("@/components/viewer/ThreeWireframeCanvas", () => ({
-  ThreeWireframeCanvas: ({ src }: { src: string }) => (
-    <div data-testid="mock-wireframe" data-src={src} />
+  ThreeWireframeCanvas: ({
+    src,
+    mode,
+    showGrid,
+  }: {
+    src: string;
+    mode?: string;
+    showGrid?: boolean;
+  }) => (
+    <div
+      data-testid="mock-wireframe"
+      data-src={src}
+      data-mode={mode}
+      data-grid={String(Boolean(showGrid))}
+    />
   ),
 }));
 
@@ -40,6 +54,16 @@ const GENERATED_CHAIR: ModelAsset = {
   is_sample: false,
 };
 
+const UPLOADED_PHOTO: ValidatedImageInfo = {
+  file: new File(["jpeg"], "shoes.jpg", { type: "image/jpeg" }),
+  previewUrl: "blob:shoes-preview",
+  width: 800,
+  height: 600,
+  sizeBytes: 42000,
+  mimeType: "image/jpeg",
+  warning: null,
+};
+
 describe("Production 3D ModelViewport", () => {
   beforeEach(() => {
     // These tests exercise controls without waiting for the actual renderer.
@@ -48,15 +72,17 @@ describe("Production 3D ModelViewport", () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  it("renders actual backend model metadata, camera presets, and Textured/Wireframe toggle", async () => {
+  it("renders actual backend model metadata, all 6 camera presets, and Textured/Geometry/Wireframe toggles", async () => {
     render(
       <ModelViewport
         stage="result"
         model={GENERATED_SNEAKER}
-        uploadedImage={null}
+        uploadedImage={UPLOADED_PHOTO}
+        reviewedCutoutUrl="data:image/png;base64,cutout"
         jobStatus={null}
         error={null}
         autoRotate={false}
+        successNotice="3D model generated and validated."
         onAutoRotateChange={vi.fn()}
         onOpenArDialog={vi.fn()}
         onOpenExportDialog={vi.fn()}
@@ -69,25 +95,102 @@ describe("Production 3D ModelViewport", () => {
 
     expect(screen.getByText("Generated GLB")).toBeInTheDocument();
     expect(screen.getByText("Baked Texture")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "3D model generated and validated."
+    );
     expect(screen.getByText(/63,725 tris/)).toBeInTheDocument();
     expect(screen.getByText(/50,017 verts/)).toBeInTheDocument();
     expect(screen.getByText(/0\.79 × 0\.71 × 0\.47 u/)).toBeInTheDocument();
 
-    // Camera presets
-    for (const label of ["Perspective", "Front", "Rear", "Side"]) {
+    // All 6 camera presets including Top and Bottom
+    for (const label of [
+      "Perspective",
+      "Front",
+      "Rear",
+      "Side",
+      "Top",
+      "Bottom",
+    ]) {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
     }
 
-    // Shading toggle
+    fireEvent.click(screen.getByRole("button", { name: "Top" }));
+    expect(screen.getByRole("button", { name: "Top" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Bottom" }));
+    expect(screen.getByRole("button", { name: "Bottom" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+
+    // Shading toggle: Textured | Geometry | Wireframe
     const texturedBtn = screen.getByRole("button", { name: "Textured" });
+    const geometryBtn = screen.getByRole("button", { name: "Geometry" });
     const wireframeBtn = screen.getByRole("button", { name: "Wireframe" });
     expect(texturedBtn).toHaveAttribute("aria-pressed", "true");
+    expect(geometryBtn).toHaveAttribute("aria-pressed", "false");
     expect(wireframeBtn).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(geometryBtn);
+    expect(geometryBtn).toHaveAttribute("aria-pressed", "true");
+    expect(texturedBtn).toHaveAttribute("aria-pressed", "false");
 
     fireEvent.click(wireframeBtn);
     expect(wireframeBtn).toHaveAttribute("aria-pressed", "true");
-    expect(texturedBtn).toHaveAttribute("aria-pressed", "false");
-    await act(async () => { await import("@google/model-viewer"); });
+    expect(geometryBtn).toHaveAttribute("aria-pressed", "false");
+
+    // Before/After comparison toggle + Photo/Cutout layer switch + Align 3D Front
+    const compareBtn = screen.getByRole("button", { name: "Compare" });
+    expect(compareBtn).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(compareBtn);
+    expect(compareBtn).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Before · Source 2D")).toBeInTheDocument();
+    expect(
+      screen.getByAltText("Source input photo for 2D to 3D comparison")
+    ).toHaveAttribute("src", "blob:shoes-preview");
+
+    fireEvent.click(screen.getByRole("button", { name: "Cutout" }));
+    expect(
+      screen.getByAltText("Source input photo for 2D to 3D comparison")
+    ).toHaveAttribute("src", "data:image/png;base64,cutout");
+
+    fireEvent.click(screen.getByRole("button", { name: "Align 3D Front" }));
+    expect(screen.getByRole("button", { name: "Front" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+
+    // Ground grid & Lighting controls
+    const gridBtn = screen.getByRole("button", { name: "Ground grid" });
+    expect(gridBtn).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(gridBtn);
+    expect(gridBtn).toHaveAttribute("aria-pressed", "true");
+
+    const lightingBtn = screen.getByRole("button", {
+      name: "Lighting controls",
+    });
+    expect(lightingBtn).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(lightingBtn);
+    expect(lightingBtn).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByRole("region", { name: "Viewer lighting settings" })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Soft" }));
+    expect(screen.getByRole("button", { name: "Soft" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    fireEvent.change(screen.getByLabelText("Exposure"), {
+      target: { value: "1.2" },
+    });
+    expect(screen.getByText("1.20×")).toBeInTheDocument();
+
+    await act(async () => {
+      await import("@google/model-viewer");
+    });
   });
 
   it("resets camera preset and updates metadata cleanly when switching between generated models", async () => {
@@ -138,7 +241,9 @@ describe("Production 3D ModelViewport", () => {
     );
     expect(screen.getByText(/82,911 tris/)).toBeInTheDocument();
     expect(screen.getByText(/64,120 verts/)).toBeInTheDocument();
-    await act(async () => { await import("@google/model-viewer"); });
+    await act(async () => {
+      await import("@google/model-viewer");
+    });
   });
 
   it("switches cleanly between Orbit and Pan interaction modes", async () => {
@@ -164,6 +269,8 @@ describe("Production 3D ModelViewport", () => {
     fireEvent.click(panBtn);
     expect(panBtn).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText(/Pan active/i)).toBeInTheDocument();
-    await act(async () => { await import("@google/model-viewer"); });
+    await act(async () => {
+      await import("@google/model-viewer");
+    });
   });
 });

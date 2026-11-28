@@ -198,7 +198,7 @@ export default function PhoneCapturePage({ params }: CapturePageProps) {
                 />
                 {consentRequired ? (
                   <Checkbox
-                    label="Send this photo (location and camera data removed) to the hosted 3D AI provider. Hidden sides are inferred, not measured."
+                    label="Allow Vision3D to send this photo (location and camera data removed) if generation uses a hosted 3D AI provider. Hidden sides are inferred, not measured."
                     checked={consent}
                     onCheckedChange={setConsent}
                     disabled={stage === "sending"}

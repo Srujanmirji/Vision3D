@@ -1,0 +1,8 @@
+{
+  "publicOrigin": "https://vision3d-sigma.vercel.app",
+  "preview": true,
+  "retake": true,
+  "noAutomaticUpload": true,
+  "permissionDenialRecovery": true,
+  "physicalDevice": false
+}

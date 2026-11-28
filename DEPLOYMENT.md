@@ -234,3 +234,36 @@ Open [local Vision3D](http://localhost:3000). Local setup creates env files on f
 ```
 
 The local HTTPS browser suite uses an archived genuine GLB through the fixture provider to reproduce frontend and backend contract checks. For a fresh free provider run, use `cd backend && VISION3D_RUN_LIVE=1 ../.venv/bin/python -m pytest -q tests/test_live.py -k shoes`.
+
+## Demo recovery and Mac launchd
+
+The current Vercel deployment routes `/api/*` to the active tunnel origin; its frontend build reads that origin at build time. Verify three conditions separately. `/health/live` checks process reachability. `/health/ready` checks the store and provider configuration. `/health/inference` describes observed job state and the most recent successful provider. `unverified` is expected after startup until the first real AI job completes. A health poll does not spend inference capacity.
+
+A login agent cannot always read a checkout under macOS Downloads, even when the foreground shell can. Stage a private server snapshot under Application Support without copying data, sessions or environment files. The existing operator environment file references the permanent data directory and model installs. Use the staged directory consistently for the installed login agent. The recovery rehearsal used a temporary login-session launchd job named `com.vision3d.demo-rehearsal`. Stop it before switching to a login agent.
+
+```sh
+# From an accessible checkout
+runtime=$(sh scripts/stage-mac-runtime.sh)
+env_file="$HOME/vision3d-live.env"
+
+# Start the staged backend in the foreground
+VISION3D_ENV_FILE="$env_file" sh "$runtime/scripts/start-mac.sh"
+# Or install login-time supervision, with the foreground instance stopped
+VISION3D_ENV_FILE="$env_file" sh "$runtime/scripts/install-mac-autostart.sh"
+
+# Status and stop
+VISION3D_ENV_FILE="$env_file" sh "$runtime/scripts/status-mac.sh"
+VISION3D_ENV_FILE="$env_file" sh "$runtime/scripts/stop-mac.sh"
+```
+
+Mac supervision retries the local API while retaining the connector. Connector restarts retry separately. Quick Tunnel hostnames can rotate on reconnect and cannot be made stable by this supervisor. While using a Quick Tunnel, wait for the new upstream's `/health/ready` to return 200 before applying it. Redeploy a known frontend build with the updated production environment. This avoids uploading unrelated changes from a working checkout.
+
+```sh
+new_origin=$(cat "$HOME/Library/Application Support/Vision3D/tunnel-url")
+curl -fsS "$new_origin/health/ready"
+printf '%s' "$new_origin" | vercel env update VISION3D_BACKEND_ORIGIN production --project vision3d --yes
+vercel redeploy https://vision3d-sigma.vercel.app --target production
+curl -fsS https://vision3d-sigma.vercel.app/api/health/ready
+```
+
+If local DNS recently cached a negative answer, check the new hostname through a trusted public resolver and validate TLS when probing it. Keep the Cloudflare token on the backend host. A named tunnel uses a route such as `api.your-domain.example` to `http://127.0.0.1:8000`. No named connector credentials were available on the Mac and the inspected existing domain used Vercel DNS, so rehearsal remains on a Quick Tunnel. [Cloudflare named tunnel setup](https://developers.cloudflare.com/tunnel/get-started/) · [Applying production environment updates](https://vercel.com/docs/environment-variables/managing-environment-variables)

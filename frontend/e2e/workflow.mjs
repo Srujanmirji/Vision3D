@@ -93,6 +93,12 @@ async function run() {
     await page.getByRole("button", { name: "Generate 3D", exact: true }).click();
     assert.equal((await accepted).status(), 202);
     await page.getByText("3D model generated and validated.", { exact: true }).waitFor();
+    const statusBox = await page.getByRole("status").first().boundingBox();
+    assert.ok(statusBox && statusBox.height <= 56, "Success status should be compact");
+
+    // Quality controls remain hidden when not advertised by backend /health
+    assert.equal(await page.getByLabel("Quality").count(), 0);
+
     const pendingRequests = [];
     page.on("request", (request) => {
       if (new URL(request.url()).pathname.match(/\/api\/v1\/models\/[^/]+\/glb$/)) {
@@ -102,8 +108,43 @@ async function run() {
     await page.waitForFunction(() => document.querySelector("model-viewer")?.loaded);
     const source = await page.locator("model-viewer").evaluate((element) => element.src);
     assert.match(source, /^blob:/);
+
+    // Before & After 2D/3D comparison without re-fetching GLB
+    await page.getByRole("button", { name: "Compare", exact: true }).click();
+    await page.getByText("Before · Source 2D", { exact: true }).waitFor();
+    await page.getByRole("button", { name: "Align 3D Front", exact: true }).click();
+    assert.equal(await page.getByRole("button", { name: "Front", exact: true }).getAttribute("aria-pressed"), "true");
+    if (target) await page.screenshot({ path: path.join(target, "compare.png") });
+    await page.getByRole("button", { name: "Compare", exact: true }).click();
+    assert.equal(pendingRequests.length, 0);
+
+    // Top & Bottom camera presets
+    await page.getByRole("button", { name: "Top", exact: true }).click();
+    assert.equal(await page.locator("model-viewer").evaluate((el) => el.cameraOrbit), "0deg 2deg 98%");
+    await page.getByRole("button", { name: "Bottom", exact: true }).click();
+    assert.equal(await page.locator("model-viewer").evaluate((el) => el.cameraOrbit), "0deg 178deg 98%");
+    await page.getByRole("button", { name: "Perspective", exact: true }).click();
+
+    // Ground grid & Lighting controls
+    await page.getByRole("button", { name: "Ground grid" }).click();
+    await page.getByTestId("textured-ground-grid").waitFor();
+    await page.getByRole("button", { name: "Lighting controls" }).click();
+    await page.getByRole("region", { name: "Viewer lighting settings" }).waitFor();
+    await page.getByRole("button", { name: "Soft", exact: true }).click();
+    await page.getByLabel("Exposure").fill("1.2");
+    await page.getByRole("button", { name: "Reset", exact: true }).click();
+    await page.getByRole("button", { name: "Lighting controls" }).click();
+    await page.getByRole("button", { name: "Ground grid" }).click();
+
+    // Geometry-only inspection mode & Wireframe mode reusing shared blob URL
+    await page.getByRole("button", { name: "Geometry", exact: true }).click();
+    await page.locator('[data-testid="three-wireframe-canvas"][data-mode="geometry"] canvas').waitFor();
+    await page.getByText("Preparing geometry view…").waitFor({ state: "hidden" });
+    assert.equal(pendingRequests.length, 0);
+    if (target) await page.screenshot({ path: path.join(target, "geometry.png") });
+
     await page.getByRole("button", { name: "Wireframe", exact: true }).click();
-    await page.locator("canvas").first().waitFor();
+    await page.locator('[data-testid="three-wireframe-canvas"][data-mode="wireframe"] canvas').waitFor();
     await page.getByText("Building wireframe mesh…").waitFor({ state: "hidden" });
     assert.equal(pendingRequests.length, 0);
     if (target) await page.screenshot({ path: path.join(target, "wireframe.png") });
@@ -127,10 +168,16 @@ async function run() {
     const guest = await browser.newContext({ ignoreHTTPSErrors: true });
     await guest.addInitScript(recordPolicyViolations);
     const mobile = await guest.newPage();
+    await mobile.setViewportSize({ width: 375, height: 812 });
     await mobile.goto(share.mobile_url);
     await mobile.waitForFunction(() => document.querySelector("model-viewer")?.loaded);
     assert.equal((await guest.cookies()).length, 0);
     assert.deepEqual(await mobile.evaluate(() => window.visionCsp), []);
+    await mobile.getByText(/Native AR unavailable here/).waitFor();
+    assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth), 375);
+    const arControls = mobile.getByRole("group", { name: "Camera angle presets" }).getByRole("button");
+    const heights = await arControls.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().height));
+    assert.ok(heights.length > 0 && heights.every((height) => height >= 44));
     await mobile.goto(origin + "/ar/sample");
     await mobile.waitForFunction(() => document.querySelector("model-viewer")?.loaded);
 
