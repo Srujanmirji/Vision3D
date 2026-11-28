@@ -2,7 +2,8 @@
 Runs in the separate TripoSR environment (see scripts/setup-local-triposr.sh), not the backend's.
 Usage: infer.py <prepared.png> <out.glb> [mc_resolution] [texture_resolution|0]
        infer.py --serve   (load once; then one JSON request per stdin line, one JSON reply per stdout line:
-                           {"input", "output", "resolution", "texture"} -> {"ok": true, "timings": {...}})
+                           {"input", "output", "resolution", "texture", "max_triangles"}
+                           -> {"ok": true, "timings": {...}})
 texture_resolution > 0 bakes a real UV texture from the model (TripoSR bake_texture) instead of vertex colours.
 TRIPOSR_CODE must point at a checkout of github.com/VAST-AI-Research/TripoSR."""
 
@@ -53,7 +54,13 @@ def load() -> tuple[TSR, str]:
     return model, device
 
 
-def reconstruct(model: TSR, device: str, source: str, target: str, resolution: int, texture: int) -> dict[str, float]:
+RESOLUTION_STEP = 32
+MIN_RESOLUTION = 128
+
+
+def reconstruct(
+    model: TSR, device: str, source: str, target: str, resolution: int, texture: int, max_triangles: int = 100_000
+) -> dict[str, float]:
     timings: dict[str, float] = {}
     image = Image.open(source).convert("RGB")
     t = time.perf_counter()
@@ -64,13 +71,20 @@ def reconstruct(model: TSR, device: str, source: str, target: str, resolution: i
     timings["model"] = time.perf_counter() - t
 
     t = time.perf_counter()
-    with torch.no_grad():
-        mesh = model.extract_mesh(scene_codes, texture == 0, resolution=resolution)[0]
-    # Marching cubes leaves a few zero-area triangles; drop them before baking so the
-    # texture atlas is built on the same clean mesh the backend validates.
-    mesh.update_faces((mesh.area_faces > 1e-12) & mesh.unique_faces())
-    mesh.remove_unreferenced_vertices()
+    while True:
+        with torch.no_grad():
+            mesh = model.extract_mesh(scene_codes, texture == 0, resolution=resolution)[0]
+        # Marching cubes leaves a few zero-area triangles; drop them before baking so the
+        # texture atlas is built on the same clean mesh the backend validates.
+        mesh.update_faces((mesh.area_faces > 1e-12) & mesh.unique_faces())
+        mesh.remove_unreferenced_vertices()
+        # Detailed objects (headphones: 117k at 256) exceed the phone budget and would be rejected.
+        # A coarser grid keeps the shape; the texture is baked afterwards, so it stays sharp.
+        if len(mesh.faces) <= max_triangles or resolution - RESOLUTION_STEP < MIN_RESOLUTION:
+            break
+        resolution -= RESOLUTION_STEP
     timings["mesh"] = time.perf_counter() - t
+    timings["resolution"] = resolution
 
     if texture:
         t = time.perf_counter()
@@ -107,7 +121,10 @@ def serve() -> None:
     for line in sys.stdin:
         try:
             job = json.loads(line)
-            timings = reconstruct(model, device, job["input"], job["output"], job["resolution"], job["texture"])
+            timings = reconstruct(
+                model, device, job["input"], job["output"], job["resolution"], job["texture"],
+                job.get("max_triangles", 100_000),
+            )
             reply = {"ok": True, "timings": timings}
         except Exception as exc:  # noqa: BLE001 - report and keep serving
             reply = {"ok": False, "error": type(exc).__name__}

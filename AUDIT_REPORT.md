@@ -35,7 +35,7 @@ Every issue below gives the affected file, the cause and the fix. Reproduction s
 |---|---|---|---|
 | A-1 | P1 | Cancel or timeout while the model loads leaves the next job reading a stale reply | **Fixed** |
 | A-2 | P2 | Main-model failure fell back to TripoSR with no trace | **Fixed** (logging); UI part open |
-| A-3 | P2 | TripoSR fallback rejects outputs over 100k triangles (headphones: 117,761) | Open, needs approval |
+| A-3 | P2 | TripoSR fallback rejects outputs over 100k triangles (headphones: 117,761) | **Fixed** (option a) |
 | A-4 | P3 | The result view on `/create` doesn't say which model made it; the details page shows a raw ID | Open |
 | A-5 | P1 | Quick Tunnel URL changes on every restart, and the site is down until Vercel is updated | Open, owner action |
 | A-6 | P1 | AR on a physical iPhone or Android phone never verified | BLOCKED (needs a phone) |
@@ -81,11 +81,11 @@ Every issue below gives the affected file, the cause and the fix. Reproduction s
 
 **Impact:** the fallback fails exactly when it's needed. Detailed objects lose their backup.
 
-**Fix options, for approval:**
-- **(a)** Retry TripoSR at marching-cubes resolution 192 when the budget is exceeded.
-- **(b)** UV-preserving decimation.
+**Fixed with option (a).** The backend sends `max_triangles` to the worker. If the mesh is over budget, the worker re-extracts it on a grid coarser by 32 (minimum 128) before baking the texture, so the texture stays sharp. No new dependency was needed.
 
-Option (a) is smaller.
+**Verified on the real model:** the headphones now succeed at grid 224 with 90,111 triangles (`verification/audit-2026-11-28/headphones-triposr-fixed.png`). The shoe and chair outputs are unchanged, with identical triangle counts and file sizes.
+
+Test: `test_worker_is_told_the_triangle_budget`. It failed before the fix.
 
 ### A-5 (P1): the site depends on a changing tunnel URL
 

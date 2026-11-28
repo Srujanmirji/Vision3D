@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Protocol
 
 from .config import Settings
-from .mesh import finish_mesh
+from .mesh import MAX_TRIANGLES, finish_mesh
 from .providers import (
     LOCAL_MESH_RESOLUTION,
     LOCAL_SCRIPTS,
@@ -183,6 +183,7 @@ async def local_runner(
     request = {
         "input": str(prepared), "output": str(raw),
         "resolution": LOCAL_MESH_RESOLUTION, "texture": LOCAL_TEXTURE_RESOLUTION,
+        "max_triangles": MAX_TRIANGLES,
     }
     await WARM.reconstruct(command, local_env(home), request)
     stage("validating")
