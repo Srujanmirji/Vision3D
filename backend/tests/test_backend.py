@@ -83,6 +83,17 @@ def test_unsafe_input_and_non_glb(tmp_path: Path) -> None:
         document(result, 10_000)
 
 
+def test_finished_meshes_carry_smooth_normals(tmp_path: Path) -> None:
+    # Without NORMAL, three.js shades every triangle flat and generated surfaces look blotchy.
+    source = tmp_path / "source.glb"
+    colored_box(source)
+    for allow_shape in (False, True):
+        output = tmp_path / f"final-{allow_shape}.glb"
+        finish_mesh(source, output, 10_000_000, allow_shape=allow_shape)
+        data = document(output, 10_000_000)
+        assert all("NORMAL" in p["attributes"] for m in data["meshes"] for p in m["primitives"])
+
+
 def test_texture_bake_retains_multiple_source_colors(tmp_path: Path) -> None:
     source, final = tmp_path / "source.glb", tmp_path / "final.glb"
     colored_box(source)

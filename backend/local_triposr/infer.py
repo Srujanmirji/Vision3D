@@ -83,6 +83,8 @@ def reconstruct(model: TSR, device: str, source: str, target: str, resolution: i
         mesh = trimesh.Trimesh(
             vertices=mesh.vertices[baked["vmapping"]],
             faces=baked["indices"],
+            # Smooth normals from the welded mesh; without them viewers shade each triangle flat.
+            vertex_normals=mesh.vertex_normals[baked["vmapping"]],
             visual=trimesh.visual.TextureVisuals(uv=baked["uvs"], material=material),
             process=False,
         )
@@ -91,7 +93,7 @@ def reconstruct(model: TSR, device: str, source: str, target: str, resolution: i
     # Same orientation fix as TripoSR's demo (tsr.utils.to_gradio_3d_orientation): glTF is Y-up.
     mesh.apply_transform(trimesh.transformations.rotation_matrix(-np.pi / 2, [1, 0, 0]))
     mesh.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0]))
-    mesh.export(target)
+    mesh.export(target, include_normals=True)
     return timings
 
 
