@@ -239,6 +239,8 @@ def finish_mesh(source: Path, output: Path, limit: int, allow_shape: bool) -> Me
             mesh = trimesh.Trimesh(
                 vertices=mesh.vertices[remap],
                 faces=indices,
+                # Normals from the welded mesh, so UV seams do not show as hard edges.
+                vertex_normals=mesh.vertex_normals[remap],
                 visual=trimesh.visual.TextureVisuals(uv=uvs, material=material),  # type: ignore[no-untyped-call]
                 process=False,
             )
@@ -254,7 +256,8 @@ def finish_mesh(source: Path, output: Path, limit: int, allow_shape: bool) -> Me
             raise Failure(
                 "INVALID_MODEL", "Provider output has neither an embedded texture nor vertex colors."
             )
-        mesh.export(output, file_type="glb")
+        # Without NORMAL, viewers shade every triangle flat and the surface looks blotchy.
+        mesh.export(output, file_type="glb", include_normals=True)
     final = document(output, limit)
     mesh = load_mesh(output)
     if len(mesh.faces) > MAX_TRIANGLES or not (mesh.area_faces > 1e-12).all():
