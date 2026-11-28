@@ -1,0 +1,2 @@
+{"image": "bottle.jpg", "chain": "round", "status": "succeeded", "provider": "round", "error": null, "seconds": 3.1, "peak_worker_rss_mb": 63, "bytes": 1364296, "triangles": 40960, "vertices": 20642, "appearance": "native_texture", "texture": null}
+{"image": "electronics.jpg", "chain": "box", "status": "succeeded", "provider": "box", "error": null, "seconds": 2.5, "peak_worker_rss_mb": 63, "bytes": 587208, "triangles": 12, "vertices": 24, "appearance": "native_texture", "texture": null}

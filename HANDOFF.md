@@ -465,3 +465,18 @@ The blockers are now:
 5. Fix the contracts before building the backend.
 
 This was the review order before the backend phase. Current status is above.
+
+## Open issues from the independent audit — 28 November 2026
+
+See [AUDIT_REPORT.md](AUDIT_REPORT.md). Fixed and tested in this audit: A-1 (stale model reply after a cancel during load) and A-2 (fallback now logged). Remaining:
+
+- [ ] A-5 (P1): set up a named Cloudflare tunnel so the site survives restarts (owner: needs a domain)
+- [ ] A-6 (P1): run AR_DEVICE_TESTING.md on one iPhone and one ARCore Android phone
+- [x] A-3 (P2): TripoSR re-extracts on a coarser grid when over the 100k-triangle budget (headphones verified)
+- [ ] S-1 (P2): per-visitor upload rate limit behind Vercel and the tunnel (approve design)
+- [ ] S-2 (P2): hide `/docs` and `/openapi.json` on the public backend
+- [ ] S-3 (P2): decide the community Space fallback: turn it off, or reword the consent
+- [ ] A-2 UI (P2): show which model made the result, with a note when it was the backup
+- [ ] A-11 (P3): raise `/create` buttons and the consent checkbox to 44 px hit areas
+- [ ] A-12 (P3): decide whether before/after comparison and a geometry mode are wanted
+- [ ] Test in a current Firefox and in Safari on a Mac and an iPhone; install a frontend coverage tool
