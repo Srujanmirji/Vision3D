@@ -120,8 +120,14 @@ class WarmModel:
         self.command = command
         self.loop = asyncio.get_running_loop()
         assert self.process.stdout is not None
-        ready = await self.process.stdout.readline()
-        if not ready or not json.loads(ready).get("ready"):
+        try:
+            ready = await self.process.stdout.readline()
+            started = bool(ready) and json.loads(ready).get("ready") is True
+        except BaseException:
+            # Cancelled or timed out while loading: the unread "ready" line would desync the next job.
+            await self.stop()
+            raise
+        if not started:
             await self.stop()
             raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model could not start.", 503)
         return self.process
@@ -366,6 +372,8 @@ class Jobs:
                     if retry == 0:
                         stage("retrying")
                         await asyncio.sleep(0.5)
+            # Without this, a failing main model looks like poor quality from the fallback.
+            event("provider_failed", job_id=key, provider=provider.id, code=failure)
         self.fail(key, failure if failure in ERRORS else "PROVIDER_UNAVAILABLE")
 
     def cancel(self, key: str) -> None:

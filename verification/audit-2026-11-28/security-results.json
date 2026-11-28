@@ -1,0 +1,127 @@
+[
+ {
+  "test": "upload rejects oversized 11 MB body",
+  "result": "PASS",
+  "detail": "HTTP 413 INVALID_IMAGE"
+ },
+ {
+  "test": "upload rejects text file named .jpg",
+  "result": "PASS",
+  "detail": "HTTP 422 INVALID_IMAGE"
+ },
+ {
+  "test": "upload rejects SVG with script",
+  "result": "PASS",
+  "detail": "HTTP 422 INVALID_IMAGE"
+ },
+ {
+  "test": "upload rejects GIF (not allowlisted)",
+  "result": "PASS",
+  "detail": "HTTP 422 INVALID_IMAGE"
+ },
+ {
+  "test": "upload rejects decompression bomb 30000x30000 PNG",
+  "result": "PASS",
+  "detail": "HTTP 422 INVALID_IMAGE"
+ },
+ {
+  "test": "upload rejects 8x8 image (below 16 px)",
+  "result": "PASS",
+  "detail": "HTTP 422 INVALID_IMAGE"
+ },
+ {
+  "test": "real box-mode job succeeds",
+  "result": "PASS",
+  "detail": "provider=box"
+ },
+ {
+  "test": "other session cannot read models",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "other session cannot read models/glb",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "other session cannot read jobs",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "other session cannot delete model",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "forged session cookie is rejected",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "other session's library is empty",
+  "result": "PASS",
+  "detail": "0 models"
+ },
+ {
+  "test": "foreign Origin cannot create share",
+  "result": "PASS",
+  "detail": "HTTP 403"
+ },
+ {
+  "test": "foreign Origin cannot delete",
+  "result": "PASS",
+  "detail": "HTTP 403"
+ },
+ {
+  "test": "CORS preflight denies foreign origin",
+  "result": "PASS",
+  "detail": "HTTP 400"
+ },
+ {
+  "test": "share link serves GLB without a session",
+  "result": "PASS",
+  "detail": "HTTP 200"
+ },
+ {
+  "test": "share GLB is no-store and no-referrer",
+  "result": "PASS",
+  "detail": "private, no-store"
+ },
+ {
+  "test": "tampered share token is 404",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "expired share link is refused",
+  "result": "PASS",
+  "detail": "HTTP 410"
+ },
+ {
+  "test": "owner deletes model",
+  "result": "PASS",
+  "detail": "HTTP 204"
+ },
+ {
+  "test": "deleting the model revokes its share link",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "deleted model file is gone",
+  "result": "PASS",
+  "detail": "HTTP 404"
+ },
+ {
+  "test": "9th upload from 9 *different* visitors is refused (one shared bucket behind the tunnel)",
+  "result": "PASS",
+  "detail": "codes=[422, 422, 422, 422, 422, 422, 422, 422, 429]"
+ },
+ {
+  "test": "client IP header is ignored from an untrusted peer",
+  "result": "PASS",
+  "detail": "HTTP 429"
+ }
+]
