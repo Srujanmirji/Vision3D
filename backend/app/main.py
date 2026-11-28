@@ -45,7 +45,7 @@ from .storage import Storage, utc
 
 COOKIE = "vision3d_session"
 Mode = Literal["auto", "round", "box"]
-LOCAL_KINDS = ("local", "round", "box")  # providers that keep photos on this machine
+LOCAL_KINDS = ("sf3d", "local", "round", "box")  # providers that keep photos on this machine
 GLB = "model/gltf-binary"
 DOWNLOAD: dict[int | str, dict[str, Any]] = {
     200: {"content": {GLB: {"schema": {"type": "string", "format": "binary"}}}},
@@ -65,8 +65,10 @@ Offset = Annotated[int, Query(ge=0)]
 
 
 def configured_providers(settings: Settings) -> tuple[Provider, ...]:
-    """Providers in the order a job tries them: local TripoSR first, then hosted Spaces as fallbacks."""
+    """Providers in the order a job tries them: local SF3D, local TripoSR, then hosted Spaces as fallbacks."""
     chain: list[Provider] = []
+    if settings.sf3d_home:
+        chain.append(Provider("sf3d-local", "Stable Fast 3D on this computer", str(settings.sf3d_home), "sf3d", True))
     if settings.local_home:
         chain.append(Provider("triposr-local", "TripoSR on this computer", str(settings.local_home), "local", True))
     if settings.primary_space:

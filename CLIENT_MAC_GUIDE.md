@@ -13,19 +13,24 @@ All commands are typed in **Terminal** (Applications > Utilities > Terminal), fr
    ```sh
    brew install python@3.13 cloudflared
    ```
-3. Set up Vision3D and the local 3D model. The model download is about 3 GB and the step takes a while:
+3. Get access to the main 3D model, Stable Fast 3D. It is free for organisations under USD 1M a year in revenue.
+   - Create a free account at [huggingface.co](https://huggingface.co).
+   - Open [stabilityai/stable-fast-3d](https://huggingface.co/stabilityai/stable-fast-3d), read the licence and click **Agree and access repository**.
+4. Set up Vision3D and both local 3D models. The downloads total about 7 GB, so this takes a while. The second script asks you to log in to Hugging Face the first time: run the command it prints, choose browser login, then run the script again.
    ```sh
    cd ~/Vision3D
    sh scripts/setup.sh
    sh scripts/setup-local-triposr.sh
+   sh scripts/setup-local-sf3d.sh
    ```
-4. Open `backend/.env` in a text editor and set:
+5. Open `backend/.env` in a text editor and set:
    ```sh
+   LOCAL_SF3D_HOME=~/vision3d-sf3d
    LOCAL_TRIPOSR_HOME=~/vision3d-triposr
    PUBLIC_APP_URL=https://your-site.vercel.app
    VISION3D_DATA_DIR=~/vision3d-data
    ```
-5. Check that it starts (see below), then turn on auto-start.
+6. Check that it starts (see below), then turn on auto-start.
 
 ## Start and stop by hand
 
@@ -115,7 +120,8 @@ Keep the token secret: anyone who has it can serve traffic for that hostname.
 Share links and capture tokens are removed from these logs.
 
 **Backend not ready**
-- `No generation provider is configured`: `LOCAL_TRIPOSR_HOME` in `backend/.env` is missing or wrong. Re-run `sh scripts/setup-local-triposr.sh` and check the path.
+- `No generation provider is configured`: `LOCAL_SF3D_HOME` and `LOCAL_TRIPOSR_HOME` in `backend/.env` are missing or wrong. Re-run the two `setup-local-*.sh` scripts and check the paths.
+- The first model after a restart takes about 20 s longer while Stable Fast 3D loads. That is normal.
 - `The backend stopped while starting`: read the lines printed below it, or the end of `backend.log`. If it names `setup-local-triposr.sh`, the model install is incomplete: run it again.
 - `Port 8000 is already in use`: another copy is running. Run `sh scripts/stop-mac.sh`, or close the other Terminal window.
 - `is missing. Run: sh scripts/setup.sh`: run the one-time setup again.

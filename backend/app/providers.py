@@ -16,8 +16,9 @@ from .lathe import build_round_object
 from .mesh import finish_mesh
 from .schemas import Failure
 
-Kind = Literal["triposr", "hunyuan", "local", "round", "box"]
+Kind = Literal["triposr", "hunyuan", "local", "sf3d", "round", "box"]
 LOCAL_SCRIPTS = Path(__file__).resolve().parents[1] / "local_triposr"
+SF3D_SCRIPT = Path(__file__).resolve().parents[1] / "local_sf3d" / "infer.py"
 LOCAL_MESH_RESOLUTION = 256  # 384 is smoother but exceeds the 100k-triangle phone budget
 LOCAL_TEXTURE_RESOLUTION = 2048
 COMMUNITY = "AleenDG/3DGenTripoSR"
@@ -90,6 +91,13 @@ def local_env(home: Path) -> dict[str, str]:
     env = {k: v for k, v in os.environ.items() if k != "HF_TOKEN"}
     # Models are downloaded by setup-local-triposr.sh; never fetch during a job.
     env.update(TRIPOSR_CODE=str(home / "TripoSR"), HF_HUB_OFFLINE="1", PYTORCH_ENABLE_MPS_FALLBACK="1")
+    return env
+
+
+def sf3d_env(home: Path) -> dict[str, str]:
+    env = {k: v for k, v in os.environ.items() if k != "HF_TOKEN"}
+    # Weights are downloaded by setup-local-sf3d.sh; never fetch during a job.
+    env.update(SF3D_CODE=str(home / "stable-fast-3d"), HF_HUB_OFFLINE="1")
     return env
 
 
