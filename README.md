@@ -91,7 +91,7 @@ Keep provider tokens (`HF_TOKEN`) in the backend environment only, never in `NEX
 
 ## Current status and limits
 
-- **Generation:** about 26–29 s per photo with local TripoSR on an Apple M5, through the public URL (90–130 s on the community Space).
+- **Generation:** about 20–25 s per photo with local Stable Fast 3D on an Apple M5 (CPU), plus about 20 s for the first job after a restart; local TripoSR (26–29 s) is the fallback. See [DEPLOYMENT.md](DEPLOYMENT.md#local-stable-fast-3d-main-model-on-a-mac).
 - **Sharing:** share links and the desktop QR handoff have been verified.
 - **Phones:** AR on real iPhone and Android devices (Quick Look, Scene Viewer and WebXR) is **not yet tested**. See [AR_DEVICE_TESTING.md](AR_DEVICE_TESTING.md).
 - **Provider:** generation depends on a community Hugging Face Space the project doesn't control. Hugging Face now needs a paid plan to create your own Gradio or Docker Space.

@@ -110,6 +110,25 @@ On a shared Caddy host, import a separate site configuration instead of replacin
 
 The API accepts browser mutations from the configured frontend origin. Owner operations use a Secure, HttpOnly session cookie. Read-only assets use expiring, revocable URLs. Shared GLBs return `model/gltf-binary`, support GET, HEAD and byte ranges, and have public asset CORS with no-store caching. Model Viewer generates a `model/vnd.usdz+zip` Blob for Quick Look on supported iPhones. There is no HTTP USDZ endpoint. The export dialog's **Download USDZ** button runs the same three.js converter in the user's browser, so no server MIME setup is needed for USDZ.
 
+## Local Stable Fast 3D (main model on a Mac)
+
+Stable Fast 3D (SF3D, Stability AI) is the main model when installed, with local TripoSR as its fallback. In a side-by-side test on the sample photos, SF3D gave cleaner shapes (the chair) and truer colours (the shoe). TripoSR was better on the headphones. Both fail on cluttered photos.
+
+- **Speed:** about 20–25 s per photo on an Apple M5 (16 GB), plus about 20 s to load the model for the first job after a restart. It runs on the CPU, because SF3D's Metal kernel does not compile on current macOS and its MPS path needs over 32 GB of memory. The M1 Air hasn't been measured.
+- **Licence:** [Stability AI Community License](https://huggingface.co/stabilityai/stable-fast-3d/blob/main/LICENSE.md), free for organisations under USD 1M annual revenue. The weights (4 GB) are gated: accept the licence on Hugging Face with the account you log in with.
+- **Output:** a 1024 px texture and about 10–25k triangles, under 1 MB. The worker drops zero-area triangles and makes the material matte; SF3D's predicted gloss and normal map look wet and blotchy on photo textures.
+
+```sh
+sh scripts/setup-local-sf3d.sh   # once: Homebrew Python 3.12, libomp and CMake, PyTorch, ~4 GB weights
+# then add to backend/.env, next to LOCAL_TRIPOSR_HOME:
+LOCAL_SF3D_HOME=~/vision3d-sf3d
+```
+
+- **Pipeline:** each job sends the photo to `backend/local_sf3d/infer.py`, which stays loaded between jobs, removes the background with `u2net`, and writes the GLB. Only one local model is kept in memory: falling back to TripoSR unloads SF3D, and the next SF3D job loads it again.
+- **Offline:** jobs run with `HF_HUB_OFFLINE=1`; the setup script pre-downloads the weights and `u2net`.
+- **Bad install:** if `LOCAL_SF3D_HOME` is set but incomplete, the backend refuses to start and names the setup script.
+- **Pins:** SF3D commit `ff21fc4`. Its `gpytoolbox` 0.2.0 pin does not build on current macOS, so the setup installs the newer wheel, which has the same API.
+
 ## Local TripoSR (recommended on a Mac)
 
 Run generation on the Mac itself instead of the community Hugging Face Space: about 26 s per photo on an Apple M5, versus 90–130 s on the community Space. The M1 Air hasn't been measured.

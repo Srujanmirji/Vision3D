@@ -12,7 +12,15 @@ from typing import Protocol
 
 from .config import Settings
 from .mesh import finish_mesh
-from .providers import LOCAL_MESH_RESOLUTION, LOCAL_SCRIPTS, LOCAL_TEXTURE_RESOLUTION, Provider, local_env
+from .providers import (
+    LOCAL_MESH_RESOLUTION,
+    LOCAL_SCRIPTS,
+    LOCAL_TEXTURE_RESOLUTION,
+    SF3D_SCRIPT,
+    Provider,
+    local_env,
+    sf3d_env,
+)
 from .schemas import Failure, MeshInfo
 from .storage import Storage
 
@@ -77,16 +85,17 @@ async def run_step(args: list[str], env: dict[str, str]) -> None:
             await process.wait()
 
 
-class WarmTripoSR:
-    """One TripoSR process that keeps the model loaded between jobs (saves ~5 s each).
+class WarmModel:
+    """One model process (TripoSR or SF3D) that stays loaded between jobs, saving its load time each job.
 
-    Jobs run one at a time (the queue gate), so it handles one request at a time. If a request is
-    cancelled or times out, its state is unknown: the process is killed and the next job starts a new one.
+    Jobs run one at a time (the queue gate), so it handles one request at a time. Only one model is kept
+    in memory: asking for the other one replaces it. If a request is cancelled or times out, its state
+    is unknown: the process is killed and the next job starts a new one.
     """
 
     def __init__(self) -> None:
         self.process: asyncio.subprocess.Process | None = None
-        self.home: Path | None = None
+        self.command: tuple[str, ...] = ()
         self.loop: asyncio.AbstractEventLoop | None = None
 
     def forget_foreign(self) -> None:
@@ -96,34 +105,30 @@ class WarmTripoSR:
                 os.kill(self.process.pid, signal.SIGKILL)
             self.process = None
 
-    async def start(self, home: Path) -> asyncio.subprocess.Process:
+    async def start(self, command: tuple[str, ...], env: dict[str, str]) -> asyncio.subprocess.Process:
         self.forget_foreign()
-        if self.process and self.process.returncode is None and self.home == home:
+        if self.process and self.process.returncode is None and self.command == command:
             return self.process
         await self.stop()
         self.process = await asyncio.create_subprocess_exec(
-            str(home / "venv" / "bin" / "python"), str(LOCAL_SCRIPTS / "infer.py"), "--serve",
-            env=local_env(home),
+            *command,
+            env=env,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
-        self.home = home
+        self.command = command
         self.loop = asyncio.get_running_loop()
         assert self.process.stdout is not None
         ready = await self.process.stdout.readline()
         if not ready or not json.loads(ready).get("ready"):
             await self.stop()
-            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR could not start.", 503)
+            raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model could not start.", 503)
         return self.process
 
-    async def reconstruct(self, home: Path, source: Path, target: Path) -> None:
-        process = await self.start(home)
+    async def reconstruct(self, command: tuple[str, ...], env: dict[str, str], request: dict[str, object]) -> None:
+        process = await self.start(command, env)
         assert process.stdin is not None and process.stdout is not None
-        request = {
-            "input": str(source), "output": str(target),
-            "resolution": LOCAL_MESH_RESOLUTION, "texture": LOCAL_TEXTURE_RESOLUTION,
-        }
         answered = False
         try:
             process.stdin.write((json.dumps(request) + "\n").encode())
@@ -135,9 +140,9 @@ class WarmTripoSR:
                 await self.stop()
         if not line:
             await self.stop()
-            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR stopped unexpectedly.", 503)
+            raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model stopped unexpectedly.", 503)
         if not json.loads(line).get("ok"):
-            raise Failure("PROVIDER_UNAVAILABLE", "Local TripoSR failed on this photo.", 503)
+            raise Failure("PROVIDER_UNAVAILABLE", "The local 3D model failed on this photo.", 503)
 
     async def stop(self) -> None:
         self.forget_foreign()
@@ -147,7 +152,7 @@ class WarmTripoSR:
         self.process = None
 
 
-WARM = WarmTripoSR()
+WARM = WarmModel()
 
 
 async def local_runner(
@@ -168,7 +173,30 @@ async def local_runner(
         prepared = cutout
     stage("provider_running")
     raw = folder / "raw.glb"
-    await WARM.reconstruct(home, prepared, raw)
+    command = (str(home / "venv" / "bin" / "python"), str(LOCAL_SCRIPTS / "infer.py"), "--serve")
+    request = {
+        "input": str(prepared), "output": str(raw),
+        "resolution": LOCAL_MESH_RESOLUTION, "texture": LOCAL_TEXTURE_RESOLUTION,
+    }
+    await WARM.reconstruct(command, local_env(home), request)
+    stage("validating")
+    return await asyncio.to_thread(finish_mesh, raw, folder / "model.glb", config.max_model, False)
+
+
+async def sf3d_runner(
+    provider: Provider,
+    folder: Path,
+    remove: bool,
+    config: Settings,
+    stage: Callable[[str], None],
+) -> MeshInfo:
+    """Stable Fast 3D on this machine; its worker removes the background itself."""
+    home = Path(provider.space)
+    stage("provider_running")
+    raw = folder / "raw.glb"
+    command = (str(home / "venv" / "bin" / "python"), str(SF3D_SCRIPT), "--serve")
+    request = {"input": str(folder.parent / "input.png"), "output": str(raw), "remove": remove}
+    await WARM.reconstruct(command, sf3d_env(home), request)
     stage("validating")
     return await asyncio.to_thread(finish_mesh, raw, folder / "model.glb", config.max_model, False)
 
@@ -182,6 +210,8 @@ async def subprocess_runner(
 ) -> MeshInfo:
     if provider.kind == "local":
         return await local_runner(provider, folder, remove, config, stage)
+    if provider.kind == "sf3d":
+        return await sf3d_runner(provider, folder, remove, config, stage)
     env = dict(os.environ)
     env.pop("HF_TOKEN", None)
     if provider.use_token and config.hf_token:
