@@ -32,7 +32,7 @@ Each GLB was then rendered from six orthographic directions in headless Chrome (
 | Toys (cluttered) | SF3D | Job PASS, shape FAIL | 20.9 s | 3,484 | 0.20 MB |
 | Shoe | TripoSR | PASS | 24.3 s (first job, includes load) | 63,718 | 4.52 MB |
 | Chair | TripoSR | PASS, with defects | 22.8 s | 87,099 | 5.17 MB |
-| Headphones | TripoSR | **FAIL** `INVALID_MODEL` | 23.8 s | 117,761 raw | – |
+| Headphones | TripoSR | **FAIL** `INVALID_MODEL` before A-3 fix; **PASS** after (grid 224) | 23.8 s → 26.4 s | 117,761 raw → 90,111 | 5.39 MB |
 | Bottle | TripoSR | PASS | 18.3 s | 69,767 | 4.63 MB |
 | Toys (cluttered) | TripoSR | Job PASS, shape FAIL | 14.2 s | 38,526 | 3.79 MB |
 | Bottle | Round mode | PASS | 3.1 s | 40,960 | 1.36 MB |

@@ -76,7 +76,7 @@ See [AUDIT_REPORT.md](AUDIT_REPORT.md). Fixed and tested in this audit: A-1 (sta
 
 - [ ] A-5 (P1): set up a named Cloudflare tunnel so the site survives restarts (owner: needs a domain)
 - [ ] A-6 (P1): run AR_DEVICE_TESTING.md on one iPhone and one ARCore Android phone
-- [ ] A-3 (P2): stop TripoSR fallback failing on outputs over 100k triangles (approve option a or b)
+- [x] A-3 (P2): TripoSR re-extracts on a coarser grid when over the 100k-triangle budget (headphones verified)
 - [ ] S-1 (P2): per-visitor upload rate limit behind Vercel and the tunnel (approve design)
 - [ ] S-2 (P2): hide `/docs` and `/openapi.json` on the public backend
 - [ ] S-3 (P2): decide the community Space fallback: turn it off, or reword the consent

@@ -16,6 +16,7 @@ from test_backend import fixture_runner, photo
 from app.config import Settings
 from app.jobs import WARM, local_runner
 from app.main import configured_providers, create_app
+from app.mesh import MAX_TRIANGLES
 from app.providers import Provider
 from app.schemas import Failure, MeshInfo
 
@@ -48,6 +49,8 @@ for line in sys.stdin:
     if {fail_step!r} == "hang":
         import time; time.sleep(60)
     job = json.loads(line)
+    with open({str(tmp_path / "calls.log")!r}, "a") as log:
+        log.write("job|" + str(job.get("max_triangles")) + "\\n")
     ok = {fail_step!r} != "infer.py"
     if ok:
         shutil.copy({str(glb)!r}, job["output"])
@@ -105,6 +108,12 @@ def test_local_pipeline_runs_offline_without_token_and_validates(
     calls = (tmp_path / "calls.log").read_text().splitlines()
     assert calls.count("serve|1|none") == 1  # model loaded once for both jobs, offline, no token
     assert calls.count(f"prep.py|1|none|{home / 'TripoSR'}") == 2
+
+
+def test_worker_is_told_the_triangle_budget(tmp_path: Path) -> None:
+    """Without the budget the worker can return 117k triangles, which the backend then rejects (A-3)."""
+    asyncio.run(run_jobs(fake_home(tmp_path), tmp_path))
+    assert f"job|{MAX_TRIANGLES}" in (tmp_path / "calls.log").read_text().splitlines()
 
 
 def test_local_pipeline_skips_background_removal_when_off(tmp_path: Path) -> None:
